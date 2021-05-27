@@ -23,7 +23,7 @@ class ArgumentError : public std::exception
 {
 public:
     explicit ArgumentError(std::string_view error_message)
-            : m_error(error_message.data())
+        : m_error(error_message.data())
     { }
 
     const char* what() const noexcept override
@@ -387,6 +387,11 @@ private:
 
     char peek()
     {
+        if (m_parse_data.empty())
+        {
+            return '\0';
+        }
+
         char top_char = m_parse_data.front();
         m_parse_data.pop_front();
 
@@ -509,15 +514,111 @@ private:
     std::deque<char> m_parse_data;
 };
 
+
 class Parser
 {
 public:
     explicit Parser(std::vector<Lexeme> lexemes)
-        : m_lexemes(std::move(lexemes))
-    { }
+    {
+        std::move(lexemes.begin(), lexemes.end(), std::back_inserter(m_lexemes));
+    }
+
+    void parse()
+    {
+        while (!m_lexemes.empty())
+        {
+            parse_expression();
+
+            if (!m_lexemes.empty())
+            {
+                assert_syntax(pop_lexeme(), lexeme_t::key_semicolon, "';' expected");
+            }
+        }
+    }
 
 private:
-    std::vector<Lexeme> m_lexemes;
+    template <typename MapContainer, typename String>
+    static bool contains(MapContainer&& container, String&& key)
+    {
+        return container.find(key) != container.end();
+    }
+
+    static std::string extract_value(const Lexeme& lexeme)
+    {
+        return lexeme.optional_data.value();
+    }
+
+    static bool is_datatype(const Lexeme& lexeme) noexcept
+    {
+        return lexeme.type == lexeme_t::key_string || lexeme.type == lexeme_t::key_integer;
+    }
+
+    static bool is_symbol(const Lexeme& lexeme) noexcept
+    {
+        return lexeme.type == lexeme_t::symbol;
+    }
+
+    Lexeme pop_lexeme()
+    {
+        Lexeme lexeme = m_lexemes.front();
+        m_lexemes.pop_front();
+
+        return lexeme;
+    }
+
+    static void assert_syntax(const Lexeme& lexeme, lexeme_t expected_type, std::string_view error_msg)
+    {
+        if (lexeme.type != expected_type)
+        {
+            throw SyntaxError(error_msg);
+        }
+    }
+
+    void parse_expression()
+    {
+        Lexeme lexeme = pop_lexeme();
+
+        if (is_datatype(lexeme))
+        {
+            parse_assignment(lexeme);
+        }
+        else if (is_symbol(lexeme))
+        {
+            if (!contains(m_symbol_table, extract_value(lexeme)))
+            {
+                throw ArgumentError("Variable not found: " + extract_value(lexeme));
+            }
+            else {
+                std::cout << "Found variable with payload: " << extract_value(m_symbol_table[extract_value(lexeme)]) << "\n";
+            }
+        }
+    }
+
+    void parse_assignment(const Lexeme& datatype)
+    {
+        Lexeme variable_name = pop_lexeme();
+        Lexeme variable_payload;
+
+        assert_syntax(variable_name, lexeme_t::symbol, "Variable name expected");
+        assert_syntax(pop_lexeme(), lexeme_t::key_assign, "'=' expected");
+
+        variable_payload = pop_lexeme();
+
+        if (datatype.type == lexeme_t::key_string)
+        {
+            assert_syntax(variable_payload, lexeme_t::string_literal, "String literal expected");
+        }
+        else if (datatype.type == lexeme_t::key_integer)
+        {
+            assert_syntax(variable_payload, lexeme_t::number_literal, "Number literal expected");
+        }
+
+        m_symbol_table[extract_value(variable_name)] = variable_payload;
+    }
+
+    std::unordered_map<std::string, Lexeme> m_symbol_table;
+
+    std::deque<Lexeme> m_lexemes;
 };
 
 
@@ -540,15 +641,15 @@ void test_casts()
 
     assert(std::dynamic_pointer_cast<FunctionObject>(function_ptr)->return_type() == lexeme_t::null_type);
     assert(std::make_shared<StringLiteralObject>("String")->value() ==
-        std::dynamic_pointer_cast<StringLiteralObject>(
-            std::dynamic_pointer_cast<FunctionObject>(function_ptr)->instructions()[0])->value());
+           std::dynamic_pointer_cast<StringLiteralObject>(
+               std::dynamic_pointer_cast<FunctionObject>(function_ptr)->instructions()[0])->value());
 
     std::vector<std::string> test_values = {"String", "String 2"};
     for (std::size_t i = 0; i < test_values.size(); i++)
     {
         assert(std::make_shared<StringLiteralObject>(test_values[i])->value() ==
-            std::dynamic_pointer_cast<StringLiteralObject>(
-                std::dynamic_pointer_cast<FunctionObject>(function_ptr)->arguments()[i])->value());
+               std::dynamic_pointer_cast<StringLiteralObject>(
+                   std::dynamic_pointer_cast<FunctionObject>(function_ptr)->arguments()[i])->value());
     }
 }
 
@@ -556,8 +657,8 @@ void test_evaluate_add_numbers()
 {
     auto argument =
         std::make_shared<BinaryAdditionObject>(
-        std::make_shared<NumberObject>(10),
-        std::make_shared<NumberObject>(20));
+            std::make_shared<NumberObject>(10),
+            std::make_shared<NumberObject>(20));
 
     std::shared_ptr<NumberObject> value =
         std::dynamic_pointer_cast<NumberObject>(BinaryAdditionObject(
@@ -598,17 +699,17 @@ void test_evaluate_div_numbers()
 {
     auto argument1 =
         std::make_shared<BinaryDivisionObject>(
-        std::make_shared<NumberObject>(20),
-        std::make_shared<NumberObject>(2));
+            std::make_shared<NumberObject>(20),
+            std::make_shared<NumberObject>(2));
 
     auto argument2 =
         std::make_shared<BinaryDivisionObject>(
-        std::make_shared<NumberObject>(10),
-        std::make_shared<NumberObject>(2));
+            std::make_shared<NumberObject>(10),
+            std::make_shared<NumberObject>(2));
 
     std::shared_ptr<NumberObject> value =
         std::dynamic_pointer_cast<NumberObject>(BinaryDivisionObject(
-        argument1, argument2).evaluate());
+            argument1, argument2).evaluate());
 
     assert(value->value() == 2);
 }
@@ -617,8 +718,8 @@ void test_bad_evaluate_numbers()
 {
     auto argument =
         std::make_shared<BinaryAdditionObject>(
-        std::make_shared<NumberObject>(10),
-        std::make_shared<StringLiteralObject>("Text"));
+            std::make_shared<NumberObject>(10),
+            std::make_shared<StringLiteralObject>("Text"));
 
     try {
         std::shared_ptr<NumberObject> value =
@@ -658,23 +759,23 @@ void debug_print_lexemes(const std::vector<Lexeme>& lexemes)
                 break;
 
             case lexeme_t::key_if:
-                std::cout << "If: " << lexeme.optional_data.value() << "\n";
+                std::cout << "If keyword\n";
                 break;
 
             case lexeme_t::key_for:
-                std::cout << "For: " << lexeme.optional_data.value() << "\n";
+                std::cout << "For keyword\n";
                 break;
 
             case lexeme_t::key_while:
-                std::cout << "While: " << lexeme.optional_data.value() << "\n";
+                std::cout << "While keyword\n";
                 break;
 
             case lexeme_t::key_string:
-                std::cout << "String: " << lexeme.optional_data.value() << "\n";
+                std::cout << "String keyword\n";
                 break;
 
             case lexeme_t::key_integer:
-                std::cout << "Integer: " << lexeme.optional_data.value() << "\n";
+                std::cout << "Integer keyword\n";
                 break;
 
             case lexeme_t::null_type:
@@ -764,7 +865,11 @@ int main()
     test_evaluate_add_numbers();
     test_bad_evaluate_numbers();
 
-    std::string payload = R"((((2 + 1) + 10 + 20) + 30 + 40))";
+    std::string payload = ""
+      "string Lexeme = \"lorem ipsum\";"
+      "integer Int = 123;"
+      "Int;"
+      "Lexeme;";
 
     std::istringstream data(payload);
 
@@ -772,7 +877,6 @@ int main()
 
     std::vector<Lexeme> lexemes = lexer.tokenize();
 
-    debug_print_lexemes(lexemes);
-
     Parser parser(std::move(lexemes));
+    parser.parse();
 }
