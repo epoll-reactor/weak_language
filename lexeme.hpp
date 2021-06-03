@@ -22,6 +22,14 @@ enum struct lexeme_t
     star_assign,    // *=
     slash_assign,   // /=
 
+    left_paren,     // (
+    right_paren,    // )
+    left_brace,     // {
+    right_brace,    // }
+
+    colon,          // :
+    semicolon,      // ;
+
     num,
     symbol,
     string_literal,

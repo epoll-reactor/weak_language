@@ -8,8 +8,6 @@
 #include "lexeme.hpp"
 
 
-#define LOG(x) (std::cout << x << '\n');
-
 class Lexer
 {
 public:
@@ -17,6 +15,10 @@ public:
         : m_input((std::istreambuf_iterator<char>(data)), std::istreambuf_iterator<char>())
     { }
 
+    /// @pre    m_input is constructed
+    /// @post   m_current_index == m_input size. It means that all symbols were processed
+    /// @throw  std::runtime_error if the analyzed data is incorrect
+    /// @return correct Lexeme's array
     std::vector<Lexeme> tokenize()
     {
         std::vector<Lexeme> lexemes;
@@ -33,10 +35,6 @@ public:
                 case '\f':
                 case '\v':
                 case '\t':
-                    while (has_next() && isspace(current()))
-                    {
-                        peek();
-                    }
                     break;
 
                 case '0'...'9':
@@ -67,12 +65,12 @@ public:
     }
 
 private:
-    char current()
+    char current() const
     {
         return m_input.at(m_current_index);
     }
 
-    char previous()
+    char previous() const
     {
         return m_input.at(m_current_index - 1);
     }
@@ -82,7 +80,7 @@ private:
         return m_input.at(m_current_index++);
     }
 
-    bool has_next()
+    bool has_next() const noexcept
     {
         return m_current_index < m_input.size();
     }
@@ -95,6 +93,10 @@ private:
         }
     }
 
+    /// @pre    previous() returns digit
+    /// @post   m_current_index points to first element after number literal (with dot or not)
+    /// @throw  std::runtime if digit does not match the pattern \b\d+(\.\d+)?\b
+    /// @return correct digit
     Lexeme process_digit()
     {
         std::string digit(1, previous());
@@ -115,6 +117,10 @@ private:
         return Lexeme{std::move(digit), lexeme_t::num};
     }
 
+    /// @pre    previous() returns first character after opening quote
+    /// @post   m_current_index points to closing quote
+    /// @throw  std::runtime_error if no closing quote was found
+    /// @return string literal content without quotes
     Lexeme process_string_literal()
     {
         std::string literal(1, previous());
@@ -132,12 +138,14 @@ private:
         return Lexeme{std::move(literal), lexeme_t::string_literal};
     }
 
-    static bool is_alphanumeric(char token)
+    static bool is_alphanumeric(char token) noexcept
     {
         return isalpha(token) || token == '_';
     }
 
-    Lexeme process_symbol()
+    /// @pre    previous() returns alphanumeric ([a-zA-Z0-9_])
+    /// @post   m_current_index points to whitespace or operator after symbol
+    Lexeme process_symbol() noexcept
     {
         std::string symbol(1, previous());
 
@@ -149,10 +157,16 @@ private:
         return Lexeme{std::move(symbol), lexeme_t::symbol};
     }
 
+    /// @pre    previous() returns operator
+    /// @post   m_current_index points to first element after longest parsed operator
+    /// @throw  std::runtime error if operator not found
+    /// @return the longest parsed operator
     Lexeme process_operator()
     {
         std::string op(1, previous());
         lexeme_t type;
+
+        syntax_error_if(m_operators.find(op) == m_operators.end(), "Unknown operator: " + op);
 
         while (has_next() && m_operators.find(op) != m_operators.end())
         {
@@ -185,7 +199,15 @@ private:
         {"/=", lexeme_t::slash_assign},
 
         {".", lexeme_t::dot},
-        {",", lexeme_t::comma}
+        {",", lexeme_t::comma},
+
+        {"(", lexeme_t::left_paren},
+        {")", lexeme_t::right_paren},
+        {"{", lexeme_t::left_brace},
+        {"}", lexeme_t::right_brace},
+
+        {":", lexeme_t::colon},
+        {";", lexeme_t::semicolon}
     };
 
     std::size_t m_current_index{0};

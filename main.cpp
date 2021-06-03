@@ -8,6 +8,7 @@ int main()
     lexer_string_literal_test();
     lexer_symbol_test();
     lexer_operator_test();
+    lexer_expression_test();
 
     std::cout << "All test passed successfully\n";
 

@@ -200,6 +200,46 @@ void lexer_operator_test()
         Lexeme{"", lexeme_t::minus},
         Lexeme{"", lexeme_t::plus},
     });
+
+    // Unknown operators
+    lexer_detail::assert_exception("<");
+    lexer_detail::assert_exception("+++^+++");
+    lexer_detail::assert_exception("@@@@@@@");
+}
+
+void lexer_expression_test()
+{
+    lexer_detail::run_test(
+        "void f(int a, int b, int c) {"
+        "  int variable_0 = 123;"
+        "  string literal_1 = \"Lorem ipsum\";"
+        "}",
+    {
+        Lexeme{"void",      lexeme_t::symbol},
+        Lexeme{"f",         lexeme_t::symbol},
+        Lexeme{"",          lexeme_t::left_paren},
+        Lexeme{"int",       lexeme_t::symbol},
+        Lexeme{"a",         lexeme_t::symbol},
+        Lexeme{"",          lexeme_t::comma},
+        Lexeme{"int",       lexeme_t::symbol},
+        Lexeme{"b",         lexeme_t::symbol},
+        Lexeme{"",          lexeme_t::comma},
+        Lexeme{"int",       lexeme_t::symbol},
+        Lexeme{"c",         lexeme_t::symbol},
+        Lexeme{"",          lexeme_t::right_paren},
+        Lexeme{"",          lexeme_t::left_brace},
+        Lexeme{"int",       lexeme_t::symbol},
+        Lexeme{"variable_0",lexeme_t::symbol},
+        Lexeme{"",          lexeme_t::assign},
+        Lexeme{"123",       lexeme_t::num},
+        Lexeme{"",          lexeme_t::semicolon},
+        Lexeme{"string",    lexeme_t::symbol},
+        Lexeme{"literal_1", lexeme_t::symbol},
+        Lexeme{"",          lexeme_t::assign},
+        Lexeme{"Lorem ipsum", lexeme_t::string_literal},
+        Lexeme{"",          lexeme_t::semicolon},
+        Lexeme{"",          lexeme_t::right_brace}
+    });
 }
 
 #endif //LEXER_TEST_HPP
