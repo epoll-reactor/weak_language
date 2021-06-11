@@ -1,16 +1,16 @@
 #include <iostream>
 
-#include "../include/lexer_test.hpp"
+#include "../include/tests/lexer_tests.hpp"
+#include "../include/tests/parser_tests.hpp"
+#include "../include/tests/expression_test.hpp"
 
 int main()
 {
-    lexer_number_literal_tests();
-    lexer_string_literal_test();
-    lexer_symbol_test();
-    lexer_operator_test();
-    lexer_expression_test();
+    run_lexer_tests();
+    run_expression_tests();
+    run_parser_tests();
 
-    std::cout << "All test passed successfully\n";
+    std::cout << "All tests passed successfully\n";
 
     return 0;
 }
