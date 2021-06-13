@@ -110,7 +110,7 @@ public:
         switch (previous().type)
         {
             case lexeme_t::left_brace:
-                break;
+                return block();
 
             case lexeme_t::num:
                 return binary(std::make_shared<expression::Number>(previous().data));
@@ -132,10 +132,20 @@ public:
 
         while (current().type != lexeme_t::right_brace)
         {
-            stmts.push_back(primary());
-            require({lexeme_t::semicolon});
+            auto stmt = primary();
+
+            if (auto block = std::dynamic_pointer_cast<expression::Block>(stmt))
+            {
+                stmts.push_back(std::move(block));
+
+                peek();
+            }
+            else {
+                stmts.push_back(std::move(stmt));
+
+                require({lexeme_t::semicolon});
+            }
         }
-        peek();
 
         return std::make_shared<expression::Block>(std::move(stmts));
     }
@@ -146,17 +156,19 @@ public:
 
         while (has_next())
         {
-            std::shared_ptr<expression::Object> expression = primary();
-
-            if (previous().type == lexeme_t::left_brace)
+            if (current().type == lexeme_t::left_brace)
             {
+                require({lexeme_t::left_brace});
+
                 root->add(block());
+
+                require({lexeme_t::right_brace});
             }
             else {
+                root->add(primary());
+
                 require({lexeme_t::semicolon});
             }
-
-            root->add(expression);
         }
 
         return root;

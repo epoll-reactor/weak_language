@@ -48,8 +48,6 @@ void run_block_test(std::string_view data, std::shared_ptr<expression::Block> as
         auto block = std::dynamic_pointer_cast<expression::Block>(object);
         const auto& block_statements = block->statements();
 
-        tree_print(block);
-
         assert(assertion_block->statements().size() == block_statements.size());
 
         for (std::size_t i = 0; i < block_statements.size(); i++)
@@ -224,7 +222,6 @@ void run_parser_tests()
        )
     }});
 
-    /// Nested blocks in process...
     parser_detail::run_block_test(
         "{"
         "   1 + 1;"
@@ -244,6 +241,76 @@ void run_parser_tests()
                 alloc_num("2")
             )
         }})
+    });
+
+    parser_detail::run_block_test(
+        "{"
+        "   {"
+        "       1 + 1;"
+        "   }"
+        "}",
+    {
+        alloc_block({
+            alloc_block({
+                alloc_binary(
+                    lexeme_t::plus,
+                    alloc_num("1"),
+                    alloc_num("1")
+                )
+            })
+        })
+    });
+
+    parser_detail::run_block_test(
+        "{"
+        "   {"
+        "       {"
+        "           {"
+        "               \"So deep\";"
+        "           }"
+        "       }"
+        "   }"
+        "}",
+    {
+        alloc_block({
+            alloc_block({
+                alloc_block({
+                    alloc_block({
+                        alloc_string({
+                            "So deep"
+                        })
+                    })
+                })
+            })
+        })
+    });
+
+    parser_detail::run_block_test(
+        "{"
+        "   {"
+        "       \"Lorem ipsum\";"
+        "   }"
+        "   \"Lorem ipsum 2\";"
+        "   \"Lorem ipsum 3\";"
+        "   {"
+        "       1 + 1;"
+        "   }"
+        "}",
+    {
+        alloc_block({
+            alloc_block({
+                alloc_string("Lorem ipsum")
+            }),
+            alloc_string("Lorem ipsum 2"),
+            alloc_string("Lorem ipsum 3"),
+            alloc_block({
+                alloc_binary(
+                    lexeme_t::plus,
+                    alloc_num("1"),
+                    alloc_num("1")
+                )
+            })
+        })
     });
 
     std::cout << "Parser tests passed successfully\n";

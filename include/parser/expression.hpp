@@ -218,8 +218,13 @@ public:
 
             for (std::size_t i = 0; i < m_statements.size(); i++)
             {
-                return m_statements[i]->same_with(derived->m_statements[i]);
+                if (!m_statements[i]->same_with(derived->m_statements[i]))
+                {
+                    return false;
+                }
             }
+
+            return true;
         }
         else {
             return false;
