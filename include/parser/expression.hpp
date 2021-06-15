@@ -269,6 +269,65 @@ private:
     std::shared_ptr<Block> m_block;
 };
 
+class If : public Object
+{
+public:
+    If(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> body)
+        : m_exit_condition(std::move(exit_condition))
+        , m_body(std::move(body))
+    { }
+
+    If(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> body, std::shared_ptr<Block> else_body)
+        : m_exit_condition(std::move(exit_condition))
+        , m_body(std::move(body))
+        , m_else_body(std::move(else_body))
+    { }
+
+    std::shared_ptr<Object> condition() const noexcept
+    {
+        return m_exit_condition;
+    }
+
+    std::shared_ptr<Object> body() const noexcept
+    {
+        return m_body;
+    }
+
+    std::shared_ptr<Object> else_body() const noexcept
+    {
+        return m_else_body;
+    }
+
+    bool same_with(std::shared_ptr<Object> other) const noexcept override
+        {
+            if (auto derived = std::dynamic_pointer_cast<If>(other))
+            {
+                if (!m_else_body && !derived->m_else_body)
+                {
+                    return m_exit_condition->same_with(derived->m_exit_condition)
+                        && m_body->same_with(derived->m_body);
+                }
+                else if (m_else_body && derived->m_else_body) {
+
+                    return m_exit_condition->same_with(derived->m_exit_condition)
+                        && m_body->same_with(derived->m_body)
+                        && m_else_body->same_with(derived->m_else_body);
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+
+private:
+    std::shared_ptr<Object> m_exit_condition;
+    std::shared_ptr<Block> m_body;
+    std::shared_ptr<Block> m_else_body;
+};
+
 } // namespace expression
 
 #endif // PARSE_OBJECT_HPP

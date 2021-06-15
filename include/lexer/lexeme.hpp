@@ -1,4 +1,4 @@
-#ifndef LEXEME_HPP
+    #ifndef LEXEME_HPP
 #define LEXEME_HPP
 
 #include <string>
@@ -49,58 +49,32 @@ std::string dispatch_lexeme(lexeme_t o)
     switch (o)
     {
 
-        case lexeme_t::dot:
-            return ".";
-        case lexeme_t::comma:
-            return ",";
-        case lexeme_t::plus:
-            return "+";
-        case lexeme_t::minus:
-            return "-";
-        case lexeme_t::inc:
-            return "++";
-        case lexeme_t::dec:
-            return "--";
-        case lexeme_t::star:
-            return "*";
-        case lexeme_t::slash:
-            return "/";
-        case lexeme_t::assign:
-            return "=";
-        case lexeme_t::plus_assign:
-            return "+=";
-        case lexeme_t::minus_assign:
-            return "-=";
-        case lexeme_t::star_assign:
-            return "*=";
-        case lexeme_t::slash_assign:
-            return "/=";
-        case lexeme_t::left_paren:
-            return "(";
-        case lexeme_t::right_paren:
-            return ")";
-        case lexeme_t::left_brace:
-            return "{";
-        case lexeme_t::right_brace:
-            return "}";
-        case lexeme_t::colon:
-            return ":";
-        case lexeme_t::semicolon:
-            return ";";
-        case lexeme_t::num:
-            return "<number>";
-        case lexeme_t::symbol:
-            return "<symbol>";
-        case lexeme_t::string_literal:
-            return "<string literal>";
-        case lexeme_t::none:
-            return "<none>";
-        case lexeme_t::equal:
-            return "==";
-        case lexeme_t::end_of_data:
-            return "<EOF>";
-        default:
-            return "<unknown>";
+        case lexeme_t::dot:             return ".";
+        case lexeme_t::comma:           return ",";
+        case lexeme_t::plus:            return "+";
+        case lexeme_t::minus:           return "-";
+        case lexeme_t::inc:             return "++";
+        case lexeme_t::dec:             return "--";
+        case lexeme_t::star:            return "*";
+        case lexeme_t::slash:           return "/";
+        case lexeme_t::assign:          return "=";
+        case lexeme_t::plus_assign:     return "+=";
+        case lexeme_t::minus_assign:    return "-=";
+        case lexeme_t::star_assign:     return "*=";
+        case lexeme_t::slash_assign:    return "/=";
+        case lexeme_t::left_paren:      return "(";
+        case lexeme_t::right_paren:     return ")";
+        case lexeme_t::left_brace:      return "{";
+        case lexeme_t::right_brace:     return "}";
+        case lexeme_t::colon:           return ":";
+        case lexeme_t::semicolon:       return ";";
+        case lexeme_t::num:             return "<number>";
+        case lexeme_t::symbol:          return "<symbol>";
+        case lexeme_t::string_literal:  return "<string literal>";
+        case lexeme_t::none:            return "<none>";
+        case lexeme_t::equal:           return "==";
+        case lexeme_t::end_of_data:     return "<EOF>";
+        default:                        return "<unknown>";
     }
 }
 

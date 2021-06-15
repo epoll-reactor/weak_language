@@ -21,14 +21,21 @@ void tree_print(std::shared_ptr<expression::Object> ptr)
         std::cout << "}";
     }
     else if (auto block = std::dynamic_pointer_cast<expression::Block>(ptr)) {
-        std::cout << "{\n";
+        std::cout << "{ ";
         for (const auto& statement : block->statements())
         {
-            std::cout << "    ";
+            std::cout << " ";
             tree_print(statement);
-            std::cout << '\n';
+            std::cout << " ";
         }
-        std::cout << "}\n";
+        std::cout << "} ";
+    }
+    else if (auto if_statement = std::dynamic_pointer_cast<expression::If>(ptr)) {
+        std::cout << "if (";
+        tree_print(if_statement->condition());
+        std::cout << ") ";
+        tree_print(if_statement->body());
+        std::cout << " ";
     }
     else if (const auto numeric = std::dynamic_pointer_cast<expression::Number>(ptr)) {
         std::cout << numeric->value();

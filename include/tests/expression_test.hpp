@@ -184,6 +184,44 @@ void parse_object_while_tests()
     assert(while_object->body()->same_with(while_body));
 }
 
+void parse_object_if_tests()
+{
+    auto if_block = std::make_shared<expression::If>(
+        std::make_shared<expression::Binary>(
+            lexeme_t::equal,
+            std::make_shared<expression::String>("1"),
+            std::make_shared<expression::String>("1")
+        ),
+        /// If body
+        std::make_shared<expression::Block>(std::vector<std::shared_ptr<expression::Object>>{
+            std::make_shared<expression::String>("1")
+        })
+    );
+
+    assert(!if_block->else_body());
+}
+
+void parse_object_if_else_tests()
+{
+    auto if_block = std::make_shared<expression::If>(
+        std::make_shared<expression::Binary>(
+            lexeme_t::equal,
+            std::make_shared<expression::String>("1"),
+            std::make_shared<expression::String>("1")
+        ),
+        /// If body
+        std::make_shared<expression::Block>(std::vector<std::shared_ptr<expression::Object>>{
+            std::make_shared<expression::String>("1")
+        }),
+        /// Else body
+        std::make_shared<expression::Block>(std::vector<std::shared_ptr<expression::Object>>{
+            std::make_shared<expression::String>("1")
+        })
+    );
+
+    assert(if_block->else_body());
+}
+
 void run_expression_tests()
 {
     std::cout << "Running parse tree tests...\n====\n";
@@ -195,6 +233,8 @@ void run_expression_tests()
     parse_object_unary_operation_test();
     parse_object_nested_expression_test();
     parse_object_while_tests();
+    parse_object_if_tests();
+    parse_object_if_else_tests();
     parse_object_deep_nested_expression_test(10);
     parse_object_deep_nested_expression_test(100);
     parse_object_deep_nested_expression_test(1000);

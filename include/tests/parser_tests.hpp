@@ -41,9 +41,7 @@ void run_block_test(std::string_view data, std::shared_ptr<expression::Block> as
 
     Parser parser(lexer.tokenize());
 
-    const std::shared_ptr<expression::RootObject> parsed_trees = parser.parse();
-
-    for (const auto& object : parsed_trees->get())
+    for (const auto& object : parser.parse()->get())
     {
         auto block = std::dynamic_pointer_cast<expression::Block>(object);
         const auto& block_statements = block->statements();
@@ -54,8 +52,6 @@ void run_block_test(std::string_view data, std::shared_ptr<expression::Block> as
         {
             assert(block_statements[i]->same_with(assertion_block->statements()[i]));
         }
-
-        break;
     }
 }
 
@@ -80,15 +76,16 @@ void run_parser_tests()
     auto alloc_block = [](std::vector<std::shared_ptr<expression::Object>> expressions) {
         return std::make_shared<expression::Block>(std::move(expressions));
     };
+    auto alloc_if = [](std::shared_ptr<expression::Object> exit_condition, std::shared_ptr<expression::Block> body) {
+        return std::make_shared<expression::If>(std::move(exit_condition), std::move(body));
+    };
 
     parser_detail::run_test("1;", {{
         alloc_num("1")
     }});
 
-    parser_detail::run_test("1;2;3;4;5;6;7;8;9;", {
-        {alloc_num("1")},{alloc_num("2")},{alloc_num("3")},
-        {alloc_num("4")},{alloc_num("5")},{alloc_num("6")},
-        {alloc_num("7")},{alloc_num("8")},{alloc_num("9")}
+    parser_detail::run_test("1;2;3;", {
+        {alloc_num("1")},{alloc_num("2")},{alloc_num("3")}
     });
 
     parser_detail::run_test("\"123\";", {{
@@ -286,16 +283,16 @@ void run_parser_tests()
     });
 
     parser_detail::run_block_test(
-        "{"
-        "   {"
-        "       \"Lorem ipsum\";"
-        "   }"
-        "   \"Lorem ipsum 2\";"
-        "   \"Lorem ipsum 3\";"
-        "   {"
-        "       1 + 1;"
-        "   }"
-        "}",
+        "{                          "
+        "   {                       "
+        "       \"Lorem ipsum\";    "
+        "   }                       "
+        "   \"Lorem ipsum 2\";      "
+        "   \"Lorem ipsum 3\";      "
+        "   {                       "
+        "       1 + 1;              "
+        "   }                       "
+        "}                          ",
     {
         alloc_block({
             alloc_block({
@@ -311,6 +308,76 @@ void run_parser_tests()
                 )
             })
         })
+    });
+
+    parser_detail::run_test(
+        "if (1 == 2)"
+        "{"
+        "   3 + 4;"
+        "   {"
+        "       \"Block\";"
+        "   }"
+        "}",
+        {
+            alloc_if(
+                alloc_binary(
+                    lexeme_t::equal,
+                    alloc_num("1"),
+                    alloc_num("2")
+                ),
+                alloc_block({
+                    alloc_binary(
+                        lexeme_t::plus,
+                        alloc_num("3"),
+                        alloc_num("4")
+                    ),
+                    alloc_block({
+                        alloc_string("Block")
+                    })
+                })
+            )
+        });
+
+    parser_detail::run_test(
+        "if (1 == 2)"
+        "{"
+        "   if (0 == 0)"
+        "   {"
+        "       if (1)"
+        "       {"
+        "           1 + 2;"
+        "       }"
+        "   }"
+        "}",
+    {
+        alloc_if(
+            alloc_binary(
+                lexeme_t::equal,
+                alloc_num("1"),
+                alloc_num("2")
+            ),
+            alloc_block({
+                alloc_if(
+                    alloc_binary(
+                        lexeme_t::equal,
+                        alloc_num("0"),
+                        alloc_num("0")
+                    ),
+                    alloc_block({
+                        alloc_if(
+                            alloc_num("1"),
+                            alloc_block({
+                                alloc_binary(
+                                    lexeme_t::plus,
+                                    alloc_num("1"),
+                                    alloc_num("2")
+                                )
+                            })
+                        )
+                    })
+                )
+            })
+        )
     });
 
     std::cout << "Parser tests passed successfully\n";
