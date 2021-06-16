@@ -101,6 +101,9 @@ void lexer_number_literal_tests()
 
 void lexer_string_literal_tests()
 {
+    lexer_detail::run_test("\"\"", {
+        Lexeme{"", lexeme_t::string_literal}
+    });
     lexer_detail::run_test("\"text\"", {
        Lexeme{"text", lexeme_t::string_literal}
     });

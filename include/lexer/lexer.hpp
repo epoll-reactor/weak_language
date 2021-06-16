@@ -56,9 +56,7 @@ public:
                     break;
 
                 case '\"':
-                    peek(); // Eat opening '"'
                     lexemes.emplace_back(process_string_literal());
-                    peek(); // Eat closing '"'
                     break;
 
                 default:
@@ -154,6 +152,11 @@ private:
     /// @return string literal content without quotes
     Lexeme process_string_literal()
     {
+        peek(); /// Eat opening "
+
+        if (previous() == '\"')
+            return Lexeme{"", lexeme_t::string_literal};
+
         std::string literal(1, previous());
 
         while (has_next() && current() != '\"')
@@ -165,6 +168,8 @@ private:
 
             literal += peek();
         }
+
+        peek(); /// Eat closing "
 
         return Lexeme{std::move(literal), lexeme_t::string_literal};
     }
