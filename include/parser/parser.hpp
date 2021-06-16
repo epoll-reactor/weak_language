@@ -4,10 +4,11 @@
 #include <optional>
 
 #include "../lexer/lexeme.hpp"
-#include "../parser/expression.hpp"
+#include "../parser/ast.hpp"
 #include "../parser/parse_error.hpp"
 #include "../tests/test_utility.hpp"
 
+/// LL Syntax analyzer.
 class Parser
 {
 public:
@@ -15,9 +16,9 @@ public:
         : m_input(std::move(lexemes))
     { }
 
-    std::shared_ptr<expression::RootObject> parse()
+    std::shared_ptr<ast::RootObject> parse()
     {
-        std::shared_ptr<expression::RootObject> root = std::make_shared<expression::RootObject>();
+        std::shared_ptr<ast::RootObject> root = std::make_shared<ast::RootObject>();
 
         while (has_next())
         {
@@ -65,18 +66,18 @@ private:
 
     bool has_next() const noexcept
     {
-        return m_current_index < m_input.size() && m_input[m_current_index].type != lexeme_t::end_of_data;
+        return m_current_index < m_input.size() && current().type != lexeme_t::end_of_data;
     }
 
-    static bool is_block(std::shared_ptr<expression::Object> statement)
+    static bool is_block(std::shared_ptr<ast::Object> statement)
     {
-        return std::dynamic_pointer_cast<expression::Block>(statement).operator bool();
+        return std::dynamic_pointer_cast<ast::Block>(statement).operator bool();
     }
 
-    static bool is_block_statement(std::shared_ptr<expression::Object> statement)
+    static bool is_block_statement(std::shared_ptr<ast::Object> statement)
     {
-        return std::dynamic_pointer_cast<expression::If>(statement).operator bool()
-            || std::dynamic_pointer_cast<expression::While>(statement).operator bool();
+        return std::dynamic_pointer_cast<ast::If>(statement).operator bool()
+            || std::dynamic_pointer_cast<ast::While>(statement).operator bool();
     }
 
     std::optional<Lexeme> match(const std::vector<lexeme_t>& expected_types)
@@ -107,7 +108,7 @@ private:
         }
     }
 
-    std::shared_ptr<expression::Object> additive(std::shared_ptr<expression::Object> ptr)
+    std::shared_ptr<ast::Object> additive(std::shared_ptr<ast::Object> ptr)
     {
         auto expr = multiplicative(ptr);
 
@@ -115,13 +116,13 @@ private:
         {
             if (previous().type == lexeme_t::plus)
             {
-                expr = std::make_shared<expression::Binary>(lexeme_t::plus, ptr, multiplicative(ptr));
+                expr = std::make_shared<ast::Binary>(lexeme_t::plus, ptr, multiplicative(ptr));
                 continue;
             }
 
             if (previous().type == lexeme_t::minus)
             {
-                expr = std::make_shared<expression::Binary>(lexeme_t::minus, ptr, multiplicative(ptr));
+                expr = std::make_shared<ast::Binary>(lexeme_t::minus, ptr, multiplicative(ptr));
                 continue;
             }
 
@@ -131,7 +132,7 @@ private:
         return expr;
     }
 
-    std::shared_ptr<expression::Object> multiplicative(std::shared_ptr<expression::Object> ptr)
+    std::shared_ptr<ast::Object> multiplicative(std::shared_ptr<ast::Object> ptr)
     {
         auto expr = primary();
 
@@ -139,13 +140,13 @@ private:
         {
             if (previous().type == lexeme_t::star)
             {
-                expr = std::make_shared<expression::Binary>(lexeme_t::star, ptr, multiplicative(ptr));
+                expr = std::make_shared<ast::Binary>(lexeme_t::star, ptr, multiplicative(ptr));
                 continue;
             }
 
             if (previous().type == lexeme_t::slash)
             {
-                expr = std::make_shared<expression::Binary>(lexeme_t::slash, ptr, multiplicative(ptr));
+                expr = std::make_shared<ast::Binary>(lexeme_t::slash, ptr, multiplicative(ptr));
                 continue;
             }
 
@@ -155,7 +156,7 @@ private:
         return expr;
     }
 
-    std::shared_ptr<expression::Object> binary(std::shared_ptr<expression::Object> ptr)
+    std::shared_ptr<ast::Object> binary(std::shared_ptr<ast::Object> ptr)
     {
         if (end_of_expression())
         {
@@ -166,12 +167,12 @@ private:
 
         peek();
 
-        return std::make_shared<expression::Binary>(op, ptr, additive(ptr));
+        return std::make_shared<ast::Binary>(op, ptr, additive(ptr));
     }
 
-    std::shared_ptr<expression::Block> block()
+    std::shared_ptr<ast::Block> block()
     {
-        std::vector<std::shared_ptr<expression::Object>> stmts;
+        std::vector<std::shared_ptr<ast::Object>> stmts;
 
         while (current().type != lexeme_t::right_brace)
         {
@@ -189,10 +190,10 @@ private:
             }
         }
 
-        return std::make_shared<expression::Block>(std::move(stmts));
+        return std::make_shared<ast::Block>(std::move(stmts));
     }
 
-    std::shared_ptr<expression::Object> if_statement()
+    std::shared_ptr<ast::Object> if_statement()
     {
         require({lexeme_t::left_paren});
 
@@ -214,15 +215,15 @@ private:
 
             require({lexeme_t::right_brace});
 
-            return std::make_shared<expression::If>(std::move(if_condition), std::move(if_body), std::move(else_body));
+            return std::make_shared<ast::If>(std::move(if_condition), std::move(if_body), std::move(else_body));
         }
         else {
 
-            return std::make_shared<expression::If>(std::move(if_condition), std::move(if_body));
+            return std::make_shared<ast::If>(std::move(if_condition), std::move(if_body));
         }
     }
 
-    std::shared_ptr<expression::Object> while_statement()
+    std::shared_ptr<ast::Object> while_statement()
     {
         require({lexeme_t::left_paren});
 
@@ -236,10 +237,10 @@ private:
 
         require({lexeme_t::right_brace});
 
-        return std::make_shared<expression::While>(std::move(while_condition), std::move(while_body));
+        return std::make_shared<ast::While>(std::move(while_condition), std::move(while_body));
     }
 
-    std::shared_ptr<expression::Object> primary()
+    std::shared_ptr<ast::Object> primary()
     {
         peek();
 
@@ -255,16 +256,16 @@ private:
                 return block();
 
             case lexeme_t::num:
-                return binary(std::make_shared<expression::Number>(previous().data));
+                return binary(std::make_shared<ast::Number>(previous().data));
 
             case lexeme_t::string_literal:
-                return std::make_shared<expression::String>(previous().data);
+                return std::make_shared<ast::String>(previous().data);
 
             case lexeme_t::symbol:
-                return binary(std::make_shared<expression::Symbol>(previous().data));
+                return binary(std::make_shared<ast::Symbol>(previous().data));
 
             default:
-                throw ParseError("Unknown expression: " + dispatch_lexeme(previous().type));
+                throw ParseError("Unknown ast: " + dispatch_lexeme(previous().type));
         }
     }
 

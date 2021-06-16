@@ -6,7 +6,7 @@
 
 #include "../parser/parse_error.hpp"
 
-namespace expression {
+namespace ast {
 
 class Object
 {
@@ -328,6 +328,6 @@ private:
     std::shared_ptr<Block> m_else_body;
 };
 
-} // namespace expression
+} // namespace ast
 
 #endif // PARSE_OBJECT_HPP

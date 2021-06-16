@@ -11,7 +11,7 @@
 
 namespace parser_detail {
 
-void run_test(std::string_view data, std::vector<std::shared_ptr<expression::Object>> assertion_trees)
+void run_test(std::string_view data, std::vector<std::shared_ptr<ast::Object>> assertion_trees)
 {
     Lexer lexer = LexerBuilder{}
         .operators(test_operators)
@@ -21,7 +21,7 @@ void run_test(std::string_view data, std::vector<std::shared_ptr<expression::Obj
 
     Parser parser(lexer.tokenize());
 
-    const std::shared_ptr<expression::RootObject> parsed_trees = parser.parse();
+    const std::shared_ptr<ast::RootObject> parsed_trees = parser.parse();
 
     for (std::size_t i = 0; i < parsed_trees->get().size(); i++)
     {
@@ -31,7 +31,7 @@ void run_test(std::string_view data, std::vector<std::shared_ptr<expression::Obj
     }
 }
 
-void run_block_test(std::string_view data, std::shared_ptr<expression::Block> assertion_block)
+void run_block_test(std::string_view data, std::shared_ptr<ast::Block> assertion_block)
 {
     Lexer lexer = LexerBuilder{}
         .operators(test_operators)
@@ -43,7 +43,7 @@ void run_block_test(std::string_view data, std::shared_ptr<expression::Block> as
 
     for (const auto& object : parser.parse()->get())
     {
-        auto block = std::dynamic_pointer_cast<expression::Block>(object);
+        auto block = std::dynamic_pointer_cast<ast::Block>(object);
         const auto& block_statements = block->statements();
 
         assert(assertion_block->statements().size() == block_statements.size());
@@ -86,28 +86,28 @@ void run_parser_tests()
     std::cout << "Running parser tests...\n====\n";
 
     auto alloc_num = [](std::string_view data) {
-        return std::make_shared<expression::Number>(data.data());
+        return std::make_shared<ast::Number>(data.data());
     };
     auto alloc_symbol = [](std::string_view data) {
-        return std::make_shared<expression::Symbol>(data.data());
+        return std::make_shared<ast::Symbol>(data.data());
     };
     auto alloc_string = [](std::string_view data) {
-        return std::make_shared<expression::String>(data.data());
+        return std::make_shared<ast::String>(data.data());
     };
     auto alloc_binary = [](lexeme_t type, auto lhs, auto rhs) {
-        return std::make_shared<expression::Binary>(type, lhs, rhs);
+        return std::make_shared<ast::Binary>(type, lhs, rhs);
     };
-    auto alloc_block = [](std::vector<std::shared_ptr<expression::Object>> expressions) {
-        return std::make_shared<expression::Block>(std::move(expressions));
+    auto alloc_block = [](std::vector<std::shared_ptr<ast::Object>> expressions) {
+        return std::make_shared<ast::Block>(std::move(expressions));
     };
-    auto alloc_if = [](std::shared_ptr<expression::Object> exit_condition, std::shared_ptr<expression::Block> body) {
-        return std::make_shared<expression::If>(std::move(exit_condition), std::move(body));
+    auto alloc_if = [](std::shared_ptr<ast::Object> exit_condition, std::shared_ptr<ast::Block> body) {
+        return std::make_shared<ast::If>(std::move(exit_condition), std::move(body));
     };
-    auto alloc_if_else = [](std::shared_ptr<expression::Object> exit_condition, std::shared_ptr<expression::Block> if_body, std::shared_ptr<expression::Block> else_body) {
-        return std::make_shared<expression::If>(std::move(exit_condition), std::move(if_body), std::move(else_body));
+    auto alloc_if_else = [](std::shared_ptr<ast::Object> exit_condition, std::shared_ptr<ast::Block> if_body, std::shared_ptr<ast::Block> else_body) {
+        return std::make_shared<ast::If>(std::move(exit_condition), std::move(if_body), std::move(else_body));
     };
-    auto alloc_while = [](std::shared_ptr<expression::Object> exit_condition, std::shared_ptr<expression::Block> body) {
-        return std::make_shared<expression::While>(std::move(exit_condition), std::move(body));
+    auto alloc_while = [](std::shared_ptr<ast::Object> exit_condition, std::shared_ptr<ast::Block> body) {
+        return std::make_shared<ast::While>(std::move(exit_condition), std::move(body));
     };
 
     parser_detail::run_test("1;", {{
@@ -348,25 +348,25 @@ void run_parser_tests()
         "       \"Block\";"
         "   }"
         "}",
-        {
-            alloc_if(
+    {
+        alloc_if(
+            alloc_binary(
+                lexeme_t::equal,
+                alloc_num("1"),
+                alloc_num("2")
+            ),
+            alloc_block({
                 alloc_binary(
-                    lexeme_t::equal,
-                    alloc_num("1"),
-                    alloc_num("2")
+                    lexeme_t::plus,
+                    alloc_num("3"),
+                    alloc_num("4")
                 ),
                 alloc_block({
-                    alloc_binary(
-                        lexeme_t::plus,
-                        alloc_num("3"),
-                        alloc_num("4")
-                    ),
-                    alloc_block({
-                        alloc_string("Block")
-                    })
+                    alloc_string("Block")
                 })
-            )
-        });
+            })
+        )
+    });
 
     parser_detail::run_test(
         "if (1 == 2)"
