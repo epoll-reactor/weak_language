@@ -35,7 +35,7 @@ public:
                 if (!is_block_statement(expression))
                     require({lexeme_t::semicolon});
 
-                root->add(expression);
+                root->add(std::move(expression));
             }
         }
 
@@ -43,11 +43,11 @@ public:
     }
 
 private:
-
     const Lexeme& current() const
     {
         return m_input.at(m_current_index);
     }
+
     const Lexeme& previous() const
     {
         return m_input.at(m_current_index - 1);
@@ -58,6 +58,11 @@ private:
         return m_input.at(m_current_index++);
     }
 
+    bool end_of_expression()
+    {
+        return current().type == lexeme_t::semicolon || current().type == lexeme_t::right_paren || !has_next();
+    }
+
     bool has_next() const noexcept
     {
         return m_current_index < m_input.size() && m_input[m_current_index].type != lexeme_t::end_of_data;
@@ -65,12 +70,13 @@ private:
 
     static bool is_block(std::shared_ptr<expression::Object> statement)
     {
-        return static_cast<bool>(std::dynamic_pointer_cast<expression::Block>(statement));
+        return std::dynamic_pointer_cast<expression::Block>(statement).operator bool();
     }
 
     static bool is_block_statement(std::shared_ptr<expression::Object> statement)
     {
-        return static_cast<bool>(std::dynamic_pointer_cast<expression::If>(statement));
+        return std::dynamic_pointer_cast<expression::If>(statement).operator bool()
+            || std::dynamic_pointer_cast<expression::While>(statement).operator bool();
     }
 
     std::optional<Lexeme> match(const std::vector<lexeme_t>& expected_types)
@@ -82,6 +88,7 @@ private:
             if (std::find(expected_types.begin(), expected_types.end(), token.type) != expected_types.end())
             {
                 peek();
+
                 return token;
             }
         }
@@ -150,7 +157,7 @@ private:
 
     std::shared_ptr<expression::Object> binary(std::shared_ptr<expression::Object> ptr)
     {
-        if (current().type == lexeme_t::semicolon || current().type == lexeme_t::right_paren || !has_next())
+        if (end_of_expression())
         {
             return ptr;
         }
@@ -162,7 +169,7 @@ private:
         return std::make_shared<expression::Binary>(op, ptr, additive(ptr));
     }
 
-    std::shared_ptr<expression::Object> block()
+    std::shared_ptr<expression::Block> block()
     {
         std::vector<std::shared_ptr<expression::Object>> stmts;
 
@@ -195,11 +202,41 @@ private:
 
         require({lexeme_t::left_brace});
 
-        std::shared_ptr<expression::Block> if_body = std::dynamic_pointer_cast<expression::Block>(block());
+        auto if_body = block();
 
         require({lexeme_t::right_brace});
 
-        return std::make_shared<expression::If>(std::move(if_condition), std::move(if_body));
+        if (match({lexeme_t::kw_else}))
+        {
+            require({lexeme_t::left_brace});
+
+            auto else_body = block();
+
+            require({lexeme_t::right_brace});
+
+            return std::make_shared<expression::If>(std::move(if_condition), std::move(if_body), std::move(else_body));
+        }
+        else {
+
+            return std::make_shared<expression::If>(std::move(if_condition), std::move(if_body));
+        }
+    }
+
+    std::shared_ptr<expression::Object> while_statement()
+    {
+        require({lexeme_t::left_paren});
+
+        auto while_condition = primary();
+
+        require({lexeme_t::right_paren});
+
+        require({lexeme_t::left_brace});
+
+        auto while_body = block();
+
+        require({lexeme_t::right_brace});
+
+        return std::make_shared<expression::While>(std::move(while_condition), std::move(while_body));
     }
 
     std::shared_ptr<expression::Object> primary()
@@ -210,6 +247,9 @@ private:
         {
             case lexeme_t::kw_if:
                 return if_statement();
+
+            case lexeme_t::kw_while:
+                return while_statement();
 
             case lexeme_t::left_brace:
                 return block();

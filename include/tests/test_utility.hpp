@@ -35,6 +35,11 @@ void tree_print(std::shared_ptr<expression::Object> ptr)
         tree_print(if_statement->condition());
         std::cout << ") ";
         tree_print(if_statement->body());
+        if (if_statement->else_body())
+        {
+            std::cout << " else ";
+            tree_print(if_statement->else_body());
+        }
         std::cout << " ";
     }
     else if (const auto numeric = std::dynamic_pointer_cast<expression::Number>(ptr)) {
@@ -49,9 +54,8 @@ void tree_print(std::shared_ptr<expression::Object> ptr)
     else if (const auto while_object = std::dynamic_pointer_cast<expression::While>(ptr)) {
         std::cout << "While (";
         tree_print(while_object->exit_condition());
-        std::cout << ")\n";
+        std::cout << ") ";
         tree_print(while_object->body());
-        std::cout << "\n";
     }
 }
 

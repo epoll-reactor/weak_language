@@ -55,6 +55,30 @@ void run_block_test(std::string_view data, std::shared_ptr<expression::Block> as
     }
 }
 
+void assert_correct(std::string_view data)
+{
+    Lexer lexer = LexerBuilder{}
+        .operators(test_operators)
+        .keywords(test_keywords)
+        .input(std::istringstream{data.data()})
+        .build();
+
+    try
+    {
+        Parser parser(lexer.tokenize());
+        parser.parse();
+
+    } catch (LexicalError& lex_error) {
+
+        std::cout << "While analyzing:\n\t" << data << "\nLexical error processed:\n\t" << lex_error.what() << "\n\n";
+
+    } catch (ParseError& parse_error) {
+
+        std::cout << "While analyzing:\n\t" << data << "\nParse error processed:\n\t" << parse_error.what() << "\n\n";
+    }
+
+}
+
 } // namespace parser_detail
 
 void run_parser_tests()
@@ -78,6 +102,12 @@ void run_parser_tests()
     };
     auto alloc_if = [](std::shared_ptr<expression::Object> exit_condition, std::shared_ptr<expression::Block> body) {
         return std::make_shared<expression::If>(std::move(exit_condition), std::move(body));
+    };
+    auto alloc_if_else = [](std::shared_ptr<expression::Object> exit_condition, std::shared_ptr<expression::Block> if_body, std::shared_ptr<expression::Block> else_body) {
+        return std::make_shared<expression::If>(std::move(exit_condition), std::move(if_body), std::move(else_body));
+    };
+    auto alloc_while = [](std::shared_ptr<expression::Object> exit_condition, std::shared_ptr<expression::Block> body) {
+        return std::make_shared<expression::While>(std::move(exit_condition), std::move(body));
     };
 
     parser_detail::run_test("1;", {{
@@ -379,6 +409,83 @@ void run_parser_tests()
             })
         )
     });
+
+    parser_detail::run_test(
+        "if (1 == 1)"
+        "{"
+        "   1;"
+        "}"
+        "else {"
+        "   2;"
+        "}",
+    {
+        alloc_if_else(
+            alloc_binary(
+                lexeme_t::equal,
+                alloc_num("1"),
+                alloc_num("1")
+            ),
+            /// If body
+            alloc_block({
+                alloc_num("1")
+            }),
+            /// Else body
+            alloc_block({
+                alloc_num("2")
+            })
+        )
+    });
+
+    parser_detail::run_test(
+        "while (1)"
+        "{"
+        "   if (0)"
+        "   {"
+        "       \"Inside while\";"
+        "   }"
+        "}",
+    {
+        alloc_while(
+            alloc_num("1"),
+            alloc_block({
+                alloc_if(
+                    alloc_num("0"),
+                    alloc_block({
+                        alloc_string("Inside while")
+                    })
+                )
+            })
+        )
+    });
+
+    parser_detail::assert_correct("");
+    parser_detail::assert_correct("{}");
+    parser_detail::assert_correct("{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}");
+    parser_detail::assert_correct("if (1) {} else {}");
+    parser_detail::assert_correct("if (1) {} else { if (2) {} else { if (3) {} else {} } }");
+    parser_detail::assert_correct(R"__(
+        if (external_symbol) {
+            {
+               string_template = "Lorem ipsum";
+               number_template = 000000000000000;
+            }
+            if (0)
+            {
+                complex_template = 1 - 1 - 1 - 1 - 1 - 1 - 1 - 1 - 1;
+            }
+            else
+            {
+                {
+                    while ("1")
+                    {
+                        {
+                            inside_block = "0";
+                        }
+                    }
+                }
+            }
+        })__"
+    );
 
     std::cout << "Parser tests passed successfully\n";
 }
