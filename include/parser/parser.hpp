@@ -265,7 +265,7 @@ private:
                 return binary(std::make_shared<ast::Symbol>(previous().data));
 
             default:
-                throw ParseError("Unknown ast: " + dispatch_lexeme(previous().type));
+                throw ParseError("Unknown expression: " + dispatch_lexeme(previous().type));
         }
     }
 

@@ -11,7 +11,7 @@
 
 namespace parser_detail {
 
-void run_test(std::string_view data, std::vector<std::shared_ptr<ast::Object>> assertion_trees)
+std::shared_ptr<ast::RootObject> create_parse_tree_impl(std::string_view data)
 {
     Lexer lexer = LexerBuilder{}
         .operators(test_operators)
@@ -21,7 +21,12 @@ void run_test(std::string_view data, std::vector<std::shared_ptr<ast::Object>> a
 
     Parser parser(lexer.tokenize());
 
-    const std::shared_ptr<ast::RootObject> parsed_trees = parser.parse();
+    return parser.parse();
+}
+
+void run_test(std::string_view data, std::vector<std::shared_ptr<ast::Object>> assertion_trees)
+{
+    const std::shared_ptr<ast::RootObject> parsed_trees = create_parse_tree_impl(data);
 
     for (std::size_t i = 0; i < parsed_trees->get().size(); i++)
     {
@@ -33,15 +38,9 @@ void run_test(std::string_view data, std::vector<std::shared_ptr<ast::Object>> a
 
 void run_block_test(std::string_view data, std::shared_ptr<ast::Block> assertion_block)
 {
-    Lexer lexer = LexerBuilder{}
-        .operators(test_operators)
-        .keywords(test_keywords)
-        .input(std::istringstream{data.data()})
-        .build();
+    const std::shared_ptr<ast::RootObject> parsed_trees = create_parse_tree_impl(data);
 
-    Parser parser(lexer.tokenize());
-
-    for (const auto& object : parser.parse()->get())
+    for (const auto& object : parsed_trees->get())
     {
         auto block = std::dynamic_pointer_cast<ast::Block>(object);
         const auto& block_statements = block->statements();
@@ -55,7 +54,7 @@ void run_block_test(std::string_view data, std::shared_ptr<ast::Block> assertion
     }
 }
 
-void assert_correct(std::string_view data)
+void assert_correct(std::string_view data) noexcept
 {
     Lexer lexer = LexerBuilder{}
         .operators(test_operators)
@@ -75,8 +74,11 @@ void assert_correct(std::string_view data)
     } catch (ParseError& parse_error) {
 
         std::cout << "While analyzing:\n\t" << data << "\nParse error processed:\n\t" << parse_error.what() << "\n\n";
-    }
 
+    } catch (...) {
+
+        std::cout << "While analyzing:\n\t" << data << "\nUnknown error processed:\n\t\n\n";
+    }
 }
 
 } // namespace parser_detail
@@ -95,7 +97,7 @@ void run_parser_tests()
         return std::make_shared<ast::String>(data.data());
     };
     auto alloc_binary = [](lexeme_t type, auto lhs, auto rhs) {
-        return std::make_shared<ast::Binary>(type, lhs, rhs);
+        return std::make_shared<ast::Binary>(type, std::move(lhs), std::move(rhs));
     };
     auto alloc_block = [](std::vector<std::shared_ptr<ast::Object>> expressions) {
         return std::make_shared<ast::Block>(std::move(expressions));
@@ -486,6 +488,7 @@ void run_parser_tests()
             }
         })__"
     );
+    parser_detail::assert_correct("if (while (1) {}) { \"Syntaxically correct, but that's actual semantic analyzer job\"; }");
 
     std::cout << "Parser tests passed successfully\n";
 }
