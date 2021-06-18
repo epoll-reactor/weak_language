@@ -53,6 +53,8 @@ void assert_correct(std::string_view data)
 
 void run_semantic_analyzer_tests()
 {
+    std::cout << "Running semantic analyzer tests...\n====\n";
+
     semantic_detail::expect_error("if (1) {} else { if (2) {} else { if (\"Non-bool\") {} else {} } }");
     semantic_detail::expect_error("1 ++ 2;");
     semantic_detail::expect_error("if (while (1) {}) {}");
@@ -81,6 +83,8 @@ void run_semantic_analyzer_tests()
     semantic_detail::expect_error("fun compound(1, 2, 3) {}");
     semantic_detail::expect_error("compound(fun inner() {});");
     semantic_detail::expect_error("compound(if (1) {} else {});");
+
+    std::cout << "Semantic analyzer tests passed successfully\n";
 }
 
 #endif // SEMANTIC_ANALYZER_TESTS_HPP
