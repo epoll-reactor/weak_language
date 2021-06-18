@@ -57,6 +57,25 @@ void tree_print(std::shared_ptr<ast::Object> ptr)
         std::cout << ") ";
         tree_print(while_object->body());
     }
+    else if (const auto function_call = std::dynamic_pointer_cast<ast::FunctionCall>(ptr)) {
+        std::cout << function_call->name() << "(";
+        for (const auto& arg : function_call->arguments())
+        {
+            tree_print(arg);
+            std::cout << " ";
+        }
+        std::cout << ")";
+    }
+    else if (const auto function = std::dynamic_pointer_cast<ast::Function>(ptr)) {
+        std::cout << function->name() << "(";
+        for (const auto& arg : function->arguments())
+        {
+            tree_print(arg);
+            std::cout << " ";
+        }
+        std::cout << ") ";
+        tree_print(function->body());
+    }
 }
 
 double tree_sum(std::shared_ptr<ast::Object> ptr)

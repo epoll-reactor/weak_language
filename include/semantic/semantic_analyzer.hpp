@@ -23,15 +23,23 @@ public:
 private:
     void analyze_statement(std::shared_ptr<ast::Object> statement)
     {
-        if (auto if_statement = std::dynamic_pointer_cast<ast::If>(statement))
+        if (const auto if_statement = std::dynamic_pointer_cast<ast::If>(statement))
         {
-            analyze_if_statement(if_statement);
+            analyze_if_statement(std::move(if_statement));
         }
-        else if (auto while_statement = std::dynamic_pointer_cast<ast::While>(statement)) {
+        else if (const auto while_statement = std::dynamic_pointer_cast<ast::While>(statement)) {
 
-            analyze_while_statement(while_statement);
+            analyze_while_statement(std::move(while_statement));
         }
-        else if (auto binary_statement = std::dynamic_pointer_cast<ast::Binary>(statement)) {
+        else if (const auto function_statement = std::dynamic_pointer_cast<ast::Function>(statement)) {
+
+            analyze_function_statement(std::move(function_statement));
+        }
+        else if (const auto function_call_statement = std::dynamic_pointer_cast<ast::FunctionCall>(statement)) {
+
+            analyze_function_call_statement(std::move(function_call_statement));
+        }
+        else if (const auto binary_statement = std::dynamic_pointer_cast<ast::Binary>(statement)) {
 
             if (binary_statement->type() == lexeme_t::assign
             ||  binary_statement->type() == lexeme_t::plus_assign
@@ -39,10 +47,10 @@ private:
             ||  binary_statement->type() == lexeme_t::star_assign
             ||  binary_statement->type() == lexeme_t::slash_assign)
             {
-                analyze_assign_statement(binary_statement);
+                analyze_assign_statement(std::move(binary_statement));
             }
             else {
-                analyze_binary_statement(binary_statement);
+                analyze_binary_statement(std::move(binary_statement));
             }
         }
     }
@@ -130,6 +138,28 @@ private:
         for (const auto& while_instruction : body->statements())
         {
             analyze_statement(while_instruction);
+        }
+    }
+
+    void analyze_function_call_statement(std::shared_ptr<ast::FunctionCall> function_statement)
+    {
+        for (const auto& argument : function_statement->arguments())
+        {
+            if (!std::dynamic_pointer_cast<ast::Number>(argument)
+            ||  !std::dynamic_pointer_cast<ast::String>(argument)
+            ||  !std::dynamic_pointer_cast<ast::Symbol>(argument)
+            ||  !std::dynamic_pointer_cast<ast::Binary>(argument))
+            {
+                throw SemanticError("Wrong function call argument");
+            }
+        }
+    }
+
+    void analyze_function_statement(std::shared_ptr<ast::Function> function_statement)
+    {
+        for (const auto& argument : function_statement->body()->statements())
+        {
+            analyze_statement(argument);
         }
     }
 

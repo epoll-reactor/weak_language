@@ -111,6 +111,12 @@ void run_parser_tests()
     auto alloc_while = [](std::shared_ptr<ast::Object> exit_condition, std::shared_ptr<ast::Block> body) {
         return std::make_shared<ast::While>(std::move(exit_condition), std::move(body));
     };
+    auto alloc_function = [](std::string name, std::vector<std::shared_ptr<ast::Object>> arguments, std::shared_ptr<ast::Block> body) {
+        return std::make_shared<ast::Function>(std::move(name), std::move(arguments), std::move(body));
+    };
+    auto alloc_function_call = [](std::string name, std::vector<std::shared_ptr<ast::Object>> arguments) {
+        return std::make_shared<ast::FunctionCall>(std::move(name), std::move(arguments));
+    };
 
     parser_detail::run_test("1;", {{
         alloc_num("1")
@@ -459,6 +465,93 @@ void run_parser_tests()
             })
         )
     });
+
+    parser_detail::run_test("compound();",
+        {
+            alloc_function_call(
+                "compound", {}
+            )
+        }
+    );
+
+    parser_detail::run_test("compound(a);",
+        {
+            alloc_function_call(
+                "compound",
+
+                std::vector<std::shared_ptr<ast::Object>>
+                {
+                    alloc_symbol("a")
+                }
+            )
+        }
+    );
+
+    parser_detail::run_test("compound(a, b, c);",
+        {
+            alloc_function_call(
+                "compound",
+
+                std::vector<std::shared_ptr<ast::Object>>
+                {
+                    alloc_symbol("a"),
+                    alloc_symbol("b"),
+                    alloc_symbol("c")
+                }
+        )}
+    );
+
+    parser_detail::run_test("compound(1 + 1, 2);",
+        {
+            alloc_function_call(
+                "compound",
+
+                std::vector<std::shared_ptr<ast::Object>>
+                {
+                    alloc_binary(
+                        lexeme_t::plus,
+                        alloc_num("1"),
+                        alloc_num("1")
+                    ),
+                    alloc_num("2")
+                }
+            )
+        }
+    );
+
+    parser_detail::run_test(
+        "fun simple() {}",
+    {
+        alloc_function(
+            "simple", {}, alloc_block({})
+        )
+    });
+
+    parser_detail::run_test(
+        "fun compound(a, b, c) {"
+        "   string_template = \"Lorem ipsum\";"
+        "}",
+    {
+        alloc_function(
+            "compound",
+            std::vector<std::shared_ptr<ast::Object>>
+            {
+                alloc_symbol("a"),
+                alloc_symbol("b"),
+                alloc_symbol("c")
+            },
+            alloc_block({
+                alloc_binary(
+                    lexeme_t::assign,
+                    alloc_symbol("string_template"),
+                    alloc_string("Lorem ipsum")
+                )
+            })
+        )
+    });
+
+    parser_detail::assert_correct("compound(1, 2;");
+    parser_detail::assert_correct("fun compound(correct, 123) {}");
 
     parser_detail::assert_correct("");
     parser_detail::assert_correct("{}");

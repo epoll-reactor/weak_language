@@ -8,12 +8,12 @@ namespace semantic_detail {
 
 void expect_error(std::string_view data)
 {
-    const std::shared_ptr<ast::RootObject> parsed_trees = parser_detail::create_parse_tree_impl(data);
-
-    SemanticAnalyzer analyzer(parsed_trees);
-
     try
     {
+        const std::shared_ptr<ast::RootObject> parsed_trees = parser_detail::create_parse_tree_impl(data);
+
+        SemanticAnalyzer analyzer(parsed_trees);
+
         analyzer.analyze();
 
     } catch (LexicalError& lex_error) {
@@ -74,6 +74,13 @@ void run_semantic_analyzer_tests()
     semantic_detail::assert_correct("Symbol /= 2;");
     semantic_detail::assert_correct("Symbol /= 1 * 2 / 3 * 4 / 5 * 6 / 7 * 8 / 9;");
     semantic_detail::expect_error("Symbol = 1 * 2 *= 3;");
+
+    semantic_detail::assert_correct("fun compound(a, b, c) { while (1) { if (1) {} else { while (1 == 1) {} } } }");
+    semantic_detail::expect_error("fun compound(a, b, c) { if (1) {} else { if (2) {} else { if (\"Non-bool\") {} else {} } } }");
+
+    semantic_detail::expect_error("fun compound(1, 2, 3) {}");
+    semantic_detail::expect_error("compound(fun inner() {});");
+    semantic_detail::expect_error("compound(if (1) {} else {});");
 }
 
 #endif // SEMANTIC_ANALYZER_TESTS_HPP

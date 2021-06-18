@@ -7,6 +7,8 @@
 
 enum class symbol_context_t
 {
+    function,
+    function_call,
 
 };
 

@@ -10,7 +10,8 @@ static inline const std::unordered_map<std::string, lexeme_t> test_keywords {
     {"while", lexeme_t::kw_while},
     {"if", lexeme_t::kw_if},
     {"else", lexeme_t::kw_else},
-    {"return", lexeme_t::kw_return}
+    {"return", lexeme_t::kw_return},
+    {"fun", lexeme_t::kw_function_decl}
 };
 
 static inline const std::unordered_map<std::string, lexeme_t> test_operators {

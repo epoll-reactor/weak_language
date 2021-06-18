@@ -61,7 +61,10 @@ private:
 
     bool end_of_expression()
     {
-        return current().type == lexeme_t::semicolon || current().type == lexeme_t::right_paren || !has_next();
+        return current().type == lexeme_t::semicolon
+            || current().type == lexeme_t::right_paren
+            || current().type == lexeme_t::comma
+            || !has_next();
     }
 
     bool has_next() const noexcept
@@ -77,7 +80,8 @@ private:
     static bool is_block_statement(std::shared_ptr<ast::Object> statement)
     {
         return std::dynamic_pointer_cast<ast::If>(statement).operator bool()
-            || std::dynamic_pointer_cast<ast::While>(statement).operator bool();
+            || std::dynamic_pointer_cast<ast::While>(statement).operator bool()
+            || std::dynamic_pointer_cast<ast::Function>(statement).operator bool();
     }
 
     std::optional<Lexeme> match(const std::vector<lexeme_t>& expected_types)
@@ -240,6 +244,91 @@ private:
         return std::make_shared<ast::While>(std::move(while_condition), std::move(while_body));
     }
 
+    std::shared_ptr<ast::Object> function_declare_statement()
+    {
+        const Lexeme symbol = require({lexeme_t::symbol});
+
+        const std::string function_name = symbol.data;
+
+        require({lexeme_t::left_paren});
+
+        std::vector<std::shared_ptr<ast::Object>> arguments;
+
+        if (!match({lexeme_t::right_paren}))
+        {
+            while (true)
+            {
+                if (current().type != lexeme_t::symbol)
+                {
+                    throw ParseError("Symbol as function parameter expected");
+                }
+                else {
+                    arguments.push_back(std::make_shared<ast::Symbol>(current().data));
+                }
+
+                peek();
+
+                auto term = require({lexeme_t::right_paren, lexeme_t::comma});
+
+                if (term.type == lexeme_t::comma)
+                {
+                    continue;
+                }
+                else if (term.type == lexeme_t::right_paren) {
+
+                    break;
+                }
+            }
+        }
+
+        require({lexeme_t::left_brace});
+
+        auto function_body = block();
+
+        require({lexeme_t::right_brace});
+
+        return std::make_shared<ast::Function>(std::move(function_name), std::move(arguments), std::move(function_body));
+    }
+
+    std::vector<std::shared_ptr<ast::Object>> resolve_function_arguments()
+    {
+        require({lexeme_t::left_paren});
+
+        if (match({lexeme_t::right_paren}))
+            return {};
+
+        std::vector<std::shared_ptr<ast::Object>> arguments;
+
+        while (true)
+        {
+            arguments.push_back(primary());
+
+            auto term = require({lexeme_t::right_paren, lexeme_t::comma});
+
+            if (term.type == lexeme_t::comma)
+            {
+                continue;
+            }
+            else if (term.type == lexeme_t::right_paren) {
+
+                break;
+            }
+        };
+
+        return arguments;
+    }
+
+    std::shared_ptr<ast::Object> resolve_symbol()
+    {
+        if (current().type == lexeme_t::left_paren)
+        {
+            return std::make_shared<ast::FunctionCall>(previous().data, resolve_function_arguments());
+        }
+        else {
+            return binary(std::make_shared<ast::Symbol>(previous().data));
+        }
+    }
+
     std::shared_ptr<ast::Object> primary()
     {
         peek();
@@ -252,6 +341,9 @@ private:
             case lexeme_t::kw_while:
                 return while_statement();
 
+            case lexeme_t::kw_function_decl:
+                return function_declare_statement();
+
             case lexeme_t::left_brace:
                 return block();
 
@@ -262,7 +354,7 @@ private:
                 return std::make_shared<ast::String>(previous().data);
 
             case lexeme_t::symbol:
-                return binary(std::make_shared<ast::Symbol>(previous().data));
+                return resolve_symbol();
 
             default:
                 throw ParseError("Unknown expression: " + dispatch_lexeme(previous().type));

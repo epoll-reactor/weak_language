@@ -35,7 +35,7 @@ private:
 class Number : public Object
 {
 public:
-    explicit Number(std::string data)
+    Number(std::string data)
     {
         try
         {
@@ -69,7 +69,7 @@ private:
 class String : public Object
 {
 public:
-    explicit String(std::string data)
+    String(std::string data)
         : m_data(std::move(data))
     { }
 
@@ -384,8 +384,8 @@ class FunctionCall : public Object
 {
 public:
     FunctionCall(std::string name, std::vector<std::shared_ptr<Object>> arguments)
-    : m_name(std::move(name))
-    , m_arguments(std::move(arguments))
+        : m_name(std::move(name))
+        , m_arguments(std::move(arguments))
     { }
 
     std::string name() const noexcept

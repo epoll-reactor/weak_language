@@ -36,6 +36,7 @@ enum struct lexeme_t
     kw_if,
     kw_else,
     kw_return,
+    kw_function_decl,
 
     num,
     symbol,
@@ -74,6 +75,7 @@ std::string dispatch_lexeme(lexeme_t o)
         case lexeme_t::none:            return "<none>";
         case lexeme_t::equal:           return "==";
         case lexeme_t::end_of_data:     return "<EOF>";
+        case lexeme_t::kw_function_decl:return "<function_decl>";
         default:                        return "<unknown>";
     }
 }
