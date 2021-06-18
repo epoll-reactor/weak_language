@@ -466,10 +466,10 @@ void run_parser_tests()
         )
     });
 
-    parser_detail::run_test("compound();",
+    parser_detail::run_test("simple_call();",
         {
             alloc_function_call(
-                "compound", {}
+                "simple_call", {}
             )
         }
     );
