@@ -55,6 +55,7 @@ void run_semantic_analyzer_tests()
 {
     semantic_detail::expect_error("if (1) {} else { if (2) {} else { if (\"Non-bool\") {} else {} } }");
     semantic_detail::expect_error("1 ++ 2;");
+    semantic_detail::expect_error("if (while (1) {}) {}");
 
     semantic_detail::assert_correct("while (1) { if (1) {} else { while (1 == 1) {} } }");
 
@@ -67,6 +68,8 @@ void run_semantic_analyzer_tests()
     semantic_detail::expect_error("while (1 = 1) {}");
     semantic_detail::assert_correct("if (1 + 2 + 3) {}");
     semantic_detail::expect_error("if (1 + 2 = 3) {}");
+
+    semantic_detail::expect_error("1 + 2 = 3;");
 
     semantic_detail::assert_correct("Symbol /= 2;");
     semantic_detail::assert_correct("Symbol /= 1 * 2 / 3 * 4 / 5 * 6 / 7 * 8 / 9;");

@@ -212,16 +212,12 @@ public:
         if (auto derived = std::dynamic_pointer_cast<Block>(other))
         {
             if (m_statements.size() != derived->m_statements.size())
-            {
                 return false;
-            }
 
             for (std::size_t i = 0; i < m_statements.size(); i++)
             {
                 if (!m_statements[i]->same_with(derived->m_statements[i]))
-                {
                     return false;
-                }
             }
 
             return true;
@@ -299,33 +295,135 @@ public:
     }
 
     bool same_with(std::shared_ptr<Object> other) const noexcept override
+    {
+        if (auto derived = std::dynamic_pointer_cast<If>(other))
         {
-            if (auto derived = std::dynamic_pointer_cast<If>(other))
+            if (!m_else_body && !derived->m_else_body)
             {
-                if (!m_else_body && !derived->m_else_body)
-                {
-                    return m_exit_condition->same_with(derived->m_exit_condition)
-                        && m_body->same_with(derived->m_body);
-                }
-                else if (m_else_body && derived->m_else_body) {
+                return m_exit_condition->same_with(derived->m_exit_condition)
+                    && m_body->same_with(derived->m_body);
+            }
+            else if (m_else_body && derived->m_else_body) {
 
-                    return m_exit_condition->same_with(derived->m_exit_condition)
-                        && m_body->same_with(derived->m_body)
-                        && m_else_body->same_with(derived->m_else_body);
-                }
-                else {
-                    return false;
-                }
+                return m_exit_condition->same_with(derived->m_exit_condition)
+                    && m_body->same_with(derived->m_body)
+                    && m_else_body->same_with(derived->m_else_body);
             }
             else {
                 return false;
             }
         }
+        else {
+            return false;
+        }
+    }
 
 private:
     std::shared_ptr<Object> m_exit_condition;
     std::shared_ptr<Block> m_body;
     std::shared_ptr<Block> m_else_body;
+};
+
+class Function : public Object
+{
+public:
+    Function(std::string name, std::vector<std::shared_ptr<Object>> arguments, std::shared_ptr<Block> body)
+        : m_name(std::move(name))
+        , m_arguments(std::move(arguments))
+        , m_body(std::move(body))
+    { }
+
+    std::string name() const noexcept
+    {
+        return m_name;
+    }
+
+    std::vector<std::shared_ptr<Object>> arguments() const noexcept
+    {
+        return m_arguments;
+    }
+
+    std::shared_ptr<Block> body() const noexcept
+    {
+        return m_body;
+    }
+
+    bool same_with(std::shared_ptr<Object> other) const noexcept override
+    {
+        if (auto other_function = std::dynamic_pointer_cast<Function>(other))
+        {
+            if (m_name != other_function->m_name)
+                return false;
+
+            if (m_arguments.size() != other_function->m_arguments.size())
+                return false;
+
+            if (!m_body->same_with(other_function->m_body))
+                return false;
+
+            for (std::size_t i = 0; i < m_arguments.size(); i++)
+            {
+                if (!m_arguments[i]->same_with(other_function->m_arguments[i]))
+                    return false;
+            }
+
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+private:
+    std::string m_name;
+    std::vector<std::shared_ptr<Object>> m_arguments;
+    std::shared_ptr<Block> m_body;
+};
+
+class FunctionCall : public Object
+{
+public:
+    FunctionCall(std::string name, std::vector<std::shared_ptr<Object>> arguments)
+    : m_name(std::move(name))
+    , m_arguments(std::move(arguments))
+    { }
+
+    std::string name() const noexcept
+    {
+        return m_name;
+    }
+
+    std::vector<std::shared_ptr<Object>> arguments() const noexcept
+    {
+        return m_arguments;
+    }
+
+    bool same_with(std::shared_ptr<Object> other) const noexcept override
+    {
+        if (auto function_call = std::dynamic_pointer_cast<FunctionCall>(other))
+        {
+            if (m_name != function_call->m_name)
+                return false;
+
+            if (m_arguments.size() != function_call->m_arguments.size())
+                return false;
+
+            for (std::size_t i = 0; i < m_arguments.size(); i++)
+            {
+                if (!m_arguments[i]->same_with(function_call->m_arguments[i]))
+                    return false;
+            }
+
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+private:
+    std::string m_name;
+    std::vector<std::shared_ptr<Object>> m_arguments;
 };
 
 } // namespace ast

@@ -9,7 +9,7 @@ class SemanticAnalyzer
 {
 public:
     SemanticAnalyzer(std::shared_ptr<ast::RootObject> input)
-        : m_input(std::move(input->get()))
+        : m_input(input->get())
     { }
 
     void analyze()
@@ -101,6 +101,7 @@ private:
         }
 
         auto if_body = std::dynamic_pointer_cast<ast::Block>(if_statement->body());
+
         auto else_body = std::dynamic_pointer_cast<ast::Block>(if_statement->else_body());
 
         for (const auto& if_instruction : if_body->statements())
@@ -126,13 +127,13 @@ private:
 
         auto body = std::dynamic_pointer_cast<ast::Block>(while_statement->body());
 
-        for (const auto& statement : body->statements())
+        for (const auto& while_instruction : body->statements())
         {
-            analyze_statement(statement);
+            analyze_statement(while_instruction);
         }
     }
 
-    bool to_bool_convertible(std::shared_ptr<ast::Object> statement)
+    bool to_bool_convertible(std::shared_ptr<ast::Object> statement) noexcept
     {
         if (std::dynamic_pointer_cast<ast::Number>(statement))
         {

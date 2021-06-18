@@ -222,6 +222,56 @@ void parse_object_if_else_tests()
     assert(if_block->else_body());
 }
 
+void parse_object_function_test()
+{
+    std::vector<std::shared_ptr<ast::Object>> arguments = {
+        std::make_shared<ast::Number>("1"),
+        std::make_shared<ast::Symbol>("Symbol")
+    };
+
+    std::vector<std::shared_ptr<ast::Object>> block_body = {
+        std::make_shared<ast::Binary>(
+            lexeme_t::plus,
+            std::make_shared<ast::Number>("1"),
+            std::make_shared<ast::Number>("1")
+        )
+    };
+
+    auto function_object = std::make_shared<ast::Function>(
+        "Name",
+        arguments,
+        std::make_shared<ast::Block>(std::move(block_body))
+    );
+
+    assert(function_object->name() == "Name");
+    assert(function_object->arguments().size() == 2);
+    assert(function_object->body()->same_with(
+        std::make_shared<ast::Block>(
+            std::vector<std::shared_ptr<ast::Object>>{
+            std::make_shared<ast::Binary>(
+                lexeme_t::plus,
+                std::make_shared<ast::Number>("1"),
+                std::make_shared<ast::Number>("1")
+            )
+        })
+    ));
+}
+
+void parse_object_function_call_test()
+{
+    std::vector<std::shared_ptr<ast::Object>> arguments = {
+        std::make_shared<ast::Number>("1"),
+        std::make_shared<ast::Symbol>("Symbol")
+    };
+
+    auto function_call_object = std::make_shared<ast::FunctionCall>("Name", arguments);
+
+    assert(function_call_object->name() == "Name");
+    assert(function_call_object->arguments().size() == 2);
+    assert(std::dynamic_pointer_cast<ast::Number>(function_call_object->arguments()[0])->value() == 1);
+    assert(std::dynamic_pointer_cast<ast::Symbol>(function_call_object->arguments()[1])->name() == "Symbol");
+}
+
 void run_expression_tests()
 {
     std::cout << "Running parse tree tests...\n====\n";
@@ -235,6 +285,8 @@ void run_expression_tests()
     parse_object_while_tests();
     parse_object_if_tests();
     parse_object_if_else_tests();
+    parse_object_function_test();
+    parse_object_function_call_test();
     parse_object_deep_nested_expression_test(10);
     parse_object_deep_nested_expression_test(100);
     parse_object_deep_nested_expression_test(1000);
