@@ -6,9 +6,7 @@
 #include "../lexer/lexeme.hpp"
 #include "../parser/ast.hpp"
 #include "../parser/parse_error.hpp"
-#include "../tests/test_utility.hpp"
 
-/// LL Syntax analyzer.
 class Parser
 {
 public:

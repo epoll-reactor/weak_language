@@ -1,49 +1,67 @@
 #ifndef SYMBOL_TABLE_TESTS_HPP
 #define SYMBOL_TABLE_TESTS_HPP
 
-#include "../semantic/symbol_table.hpp"
+#include "../semantic/environment.hpp"
 
 void symbol_table_flat_test()
 {
-    SymbolTable table;
+    Environment env;
 
-    table.insert("variable1", symbol_context_t::variable);
+    env.push("var1", "1");
+    env.push("var2", "2");
 
-    assert(table.lookup("variable1").name == "variable1");
-    assert(table.lookup("variable1").depth == 1);
+    env.scope_begin();
+
+    env.push("var3", "3");
+
+    assert(env.lookup("var1"));
+    assert(env.lookup("var2"));
+    assert(env.lookup("var3"));
+
+    env.scope_end();
+
+    assert(env.lookup("var1"));
+    assert(env.lookup("var2"));
+    assert(!env.lookup("var3"));
 }
 
 void symbol_table_nested_test()
 {
-    SymbolTable table;
-    SymbolTable inner_table;
+    Environment env;
 
-    inner_table.insert("variable1", symbol_context_t::variable);
-    table.insert(inner_table);
+    env.push("var1", "1");
 
-    assert(table.lookup("variable1").name == "variable1");
-    assert(table.lookup("variable1").depth == 2);
+    env.scope_begin();
+
+        env.push("var2", "2");
+
+        assert(env.lookup("var1"));
+        assert(env.lookup("var2"));
+
+        env.scope_begin();
+
+            env.push("var3", "3");
+
+            assert(env.lookup("var1"));
+            assert(env.lookup("var2"));
+            assert(env.lookup("var3"));
+
+        env.scope_end();
+
+        assert( env.lookup("var1"));
+        assert( env.lookup("var2"));
+        assert(!env.lookup("var3"));
+
+    env.scope_end();
+
+    assert( env.lookup("var1"));
+    assert(!env.lookup("var2"));
+    assert(!env.lookup("var3"));
 }
 
 void symbol_table_test_inner_not_found()
 {
-    SymbolTable table;
-    SymbolTable inner_table;
 
-    table.insert("variable1", symbol_context_t::variable);
-    table.insert(inner_table);
-
-    try
-    {
-        inner_table.lookup("variable1");
-
-    } catch (SemanticError&) {
-        return;
-    }
-
-    const bool error_expected = false;
-
-    assert(error_expected);
 }
 
 void run_symbol_table_tests()

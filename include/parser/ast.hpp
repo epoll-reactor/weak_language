@@ -6,6 +6,7 @@
 
 #include "../parser/parse_error.hpp"
 
+
 namespace ast {
 
 class Object
@@ -42,6 +43,7 @@ public:
             m_data = std::stod(data);
         }
         catch (std::exception& convert_error) {
+
             throw ParseError("Correct number or floating point literal expected");
         }
     }

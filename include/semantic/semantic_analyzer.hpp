@@ -3,7 +3,7 @@
 
 #include "../parser/ast.hpp"
 #include "../semantic/semantic_error.hpp"
-
+#include "../semantic/environment.hpp"
 
 class SemanticAnalyzer
 {
@@ -20,11 +20,20 @@ public:
         }
     }
 
+//    SymbolTable::SymbolInfo find_variable(std::string_view name)
+//    {
+//        return m_symbol_table.lookup(name);
+//    }
+
 private:
     void analyze_statement(std::shared_ptr<ast::Object> statement)
     {
-        if (const auto if_statement = std::dynamic_pointer_cast<ast::If>(statement))
-        {
+        if (const auto block_statement = std::dynamic_pointer_cast<ast::Block>(statement)) {
+
+            analyze_block_statement(std::move(block_statement));
+        }
+        else if (const auto if_statement = std::dynamic_pointer_cast<ast::If>(statement)) {
+
             analyze_if_statement(std::move(if_statement));
         }
         else if (const auto while_statement = std::dynamic_pointer_cast<ast::While>(statement)) {
@@ -41,6 +50,8 @@ private:
         }
         else if (const auto binary_statement = std::dynamic_pointer_cast<ast::Binary>(statement)) {
 
+//            analyze_variable_definition(binary_statement);
+
             if (binary_statement->type() == lexeme_t::assign
             ||  binary_statement->type() == lexeme_t::plus_assign
             ||  binary_statement->type() == lexeme_t::minus_assign
@@ -53,7 +64,18 @@ private:
                 analyze_binary_statement(std::move(binary_statement));
             }
         }
+        else {
+            throw SemanticError("Unexpected statement");
+        }
     }
+
+//    void analyze_variable_definition(std::shared_ptr<ast::Binary> statement)
+//    {
+//        if (const auto symbol_statement = std::dynamic_pointer_cast<ast::Symbol>(statement->lhs()))
+//        {
+//            m_symbol_table.insert(symbol_statement->name(), symbol_context_t::variable);
+//        }
+//    }
 
     void analyze_assign_statement(std::shared_ptr<ast::Binary> statement)
     {
@@ -157,13 +179,24 @@ private:
 
     void analyze_function_statement(std::shared_ptr<ast::Function> function_statement)
     {
-        for (const auto& argument : function_statement->body()->statements())
+        /// Function arguments are easily checked in parser.
+        analyze_block_statement(function_statement->body());
+    }
+
+    void analyze_block_statement(std::shared_ptr<ast::Block> block_statement)
+    {
+        for (const auto& statement : block_statement->statements())
         {
-            analyze_statement(argument);
+//            if (const auto binary = std::dynamic_pointer_cast<ast::Binary>(statement))
+//            {
+//                analyze_variable_definition(binary);
+//            }
+
+            analyze_statement(statement);
         }
     }
 
-    bool to_bool_convertible(std::shared_ptr<ast::Object> statement) noexcept
+    bool to_bool_convertible(std::shared_ptr<ast::Object> statement)
     {
         if (std::dynamic_pointer_cast<ast::Number>(statement))
         {
@@ -191,6 +224,7 @@ private:
         }
     }
 
+//    SymbolTable m_symbol_table;
     std::vector<std::shared_ptr<ast::Object>> m_input;
 };
 

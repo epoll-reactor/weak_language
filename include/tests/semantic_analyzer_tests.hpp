@@ -49,15 +49,29 @@ void assert_correct(std::string_view data)
     SemanticAnalyzer analyzer(parsed_trees);
     analyzer.analyze();
 }
+
+void analyze_variables(std::string_view data, std::size_t scope_depth, std::string_view variable_name, std::string_view expected_value)
+{
+    const std::shared_ptr<ast::RootObject> parsed_trees = parser_detail::create_parse_tree_impl(data);
+
+    SemanticAnalyzer analyzer(parsed_trees);
+    analyzer.analyze();
+
+//    SymbolTable::SymbolInfo info = analyzer.find_variable(variable_name);
+
+//    assert(info.name == expected_value);
+
+//    std::cout << "Found: " << info.name << ", depth = " << info.depth << '\n';
+}
+
 } // namespace semantic_detail
 
-void run_semantic_analyzer_tests()
+void semantic_analyzer_test_syntax()
 {
-    std::cout << "Running semantic analyzer tests...\n====\n";
-
     semantic_detail::expect_error("if (1) {} else { if (2) {} else { if (\"Non-bool\") {} else {} } }");
     semantic_detail::expect_error("1 ++ 2;");
     semantic_detail::expect_error("if (while (1) {}) {}");
+    semantic_detail::expect_error("{ { { if (while (1) {}) {} } } }");
 
     semantic_detail::assert_correct("while (1) { if (1) {} else { while (1 == 1) {} } }");
 
@@ -80,9 +94,33 @@ void run_semantic_analyzer_tests()
     semantic_detail::assert_correct("fun compound(a, b, c) { while (1) { if (1) {} else { while (1 == 1) {} } } }");
     semantic_detail::expect_error("fun compound(a, b, c) { if (1) {} else { if (2) {} else { if (\"Non-bool\") {} else {} } } }");
 
-    semantic_detail::expect_error("fun compound(1, 2, 3) {}");
-    semantic_detail::expect_error("compound(fun inner() {});");
-    semantic_detail::expect_error("compound(if (1) {} else {});");
+    semantic_detail::assert_correct("fun simple(a, b, c) {}");
+    semantic_detail::expect_error("fun simple(1, 2, 3) {}");
+    semantic_detail::expect_error("simple(fun inner() {});");
+    semantic_detail::expect_error("simple(if (1) {} else {});");
+}
+
+void semantic_analyzer_test_variables()
+{
+    semantic_detail::analyze_variables(
+        /* Expression     */ "Symbol = 222;",
+        /* Depth          */ 1,
+        /* Variable name  */ "Symbol",
+        /* Expected value */ "222");
+
+    semantic_detail::analyze_variables(
+        "{ Symbol2 = 222; }",
+        2,
+        "Symbol2",
+        "222");
+}
+
+void run_semantic_analyzer_tests()
+{
+    std::cout << "Running semantic analyzer tests...\n====\n";
+
+    semantic_analyzer_test_syntax();
+    semantic_analyzer_test_variables();
 
     std::cout << "Semantic analyzer tests passed successfully\n";
 }
