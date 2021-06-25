@@ -359,7 +359,7 @@ void run_parser_tests()
     {
         alloc_if(
             alloc_binary(
-                lexeme_t::equal,
+                lexeme_t::eq,
                 alloc_num("1"),
                 alloc_num("2")
             ),
@@ -390,14 +390,14 @@ void run_parser_tests()
     {
         alloc_if(
             alloc_binary(
-                lexeme_t::equal,
+                lexeme_t::eq,
                 alloc_num("1"),
                 alloc_num("2")
             ),
             alloc_block({
                 alloc_if(
                     alloc_binary(
-                        lexeme_t::equal,
+                        lexeme_t::eq,
                         alloc_num("0"),
                         alloc_num("0")
                     ),
@@ -429,7 +429,7 @@ void run_parser_tests()
     {
         alloc_if_else(
             alloc_binary(
-                lexeme_t::equal,
+                lexeme_t::eq,
                 alloc_num("1"),
                 alloc_num("1")
             ),

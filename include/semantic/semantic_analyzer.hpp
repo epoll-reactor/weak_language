@@ -3,7 +3,7 @@
 
 #include "../parser/ast.hpp"
 #include "../semantic/semantic_error.hpp"
-#include "../semantic/environment.hpp"
+#include "../semantic/storage.hpp"
 
 class SemanticAnalyzer
 {
@@ -20,15 +20,22 @@ public:
         }
     }
 
-//    SymbolTable::SymbolInfo find_variable(std::string_view name)
-//    {
-//        return m_symbol_table.lookup(name);
-//    }
-
 private:
     void analyze_statement(std::shared_ptr<ast::Object> statement)
     {
-        if (const auto block_statement = std::dynamic_pointer_cast<ast::Block>(statement)) {
+        if (const auto symbol_statement = std::dynamic_pointer_cast<ast::Symbol>(statement))
+        {
+            // ...
+        }
+        else if (const auto number_statement = std::dynamic_pointer_cast<ast::Number>(statement)) {
+
+            // ...
+        }
+        else if (const auto string_statement = std::dynamic_pointer_cast<ast::String>(statement)) {
+
+            // ...
+        }
+        else if (const auto block_statement = std::dynamic_pointer_cast<ast::Block>(statement)) {
 
             analyze_block_statement(std::move(block_statement));
         }
@@ -50,8 +57,6 @@ private:
         }
         else if (const auto binary_statement = std::dynamic_pointer_cast<ast::Binary>(statement)) {
 
-//            analyze_variable_definition(binary_statement);
-
             if (binary_statement->type() == lexeme_t::assign
             ||  binary_statement->type() == lexeme_t::plus_assign
             ||  binary_statement->type() == lexeme_t::minus_assign
@@ -69,14 +74,6 @@ private:
         }
     }
 
-//    void analyze_variable_definition(std::shared_ptr<ast::Binary> statement)
-//    {
-//        if (const auto symbol_statement = std::dynamic_pointer_cast<ast::Symbol>(statement->lhs()))
-//        {
-//            m_symbol_table.insert(symbol_statement->name(), symbol_context_t::variable);
-//        }
-//    }
-
     void analyze_assign_statement(std::shared_ptr<ast::Binary> statement)
     {
         if (!std::dynamic_pointer_cast<ast::Symbol>(statement->lhs()))
@@ -87,7 +84,8 @@ private:
         if (!std::dynamic_pointer_cast<ast::Symbol>(statement->rhs()) &&
             !std::dynamic_pointer_cast<ast::Number>(statement->rhs()) &&
             !std::dynamic_pointer_cast<ast::String>(statement->rhs()) &&
-            !std::dynamic_pointer_cast<ast::Binary>(statement->rhs()))
+            !std::dynamic_pointer_cast<ast::Binary>(statement->rhs()) &&
+            !std::dynamic_pointer_cast<ast::FunctionCall>(statement->rhs()))
         {
             throw SemanticError("Expression is not assignable");
         }
@@ -106,7 +104,13 @@ private:
             case lexeme_t::minus:
             case lexeme_t::star:
             case lexeme_t::slash:
-            case lexeme_t::equal:
+            case lexeme_t::remainder:
+            case lexeme_t::eq:
+            case lexeme_t::neq:
+            case lexeme_t::gt:
+            case lexeme_t::ge:
+            case lexeme_t::lt:
+            case lexeme_t::le:
                 break;
 
             default:
@@ -168,9 +172,10 @@ private:
         for (const auto& argument : function_statement->arguments())
         {
             if (!std::dynamic_pointer_cast<ast::Number>(argument)
-            ||  !std::dynamic_pointer_cast<ast::String>(argument)
-            ||  !std::dynamic_pointer_cast<ast::Symbol>(argument)
-            ||  !std::dynamic_pointer_cast<ast::Binary>(argument))
+            &&  !std::dynamic_pointer_cast<ast::String>(argument)
+            &&  !std::dynamic_pointer_cast<ast::Symbol>(argument)
+            &&  !std::dynamic_pointer_cast<ast::Binary>(argument)
+            &&  !std::dynamic_pointer_cast<ast::FunctionCall>(argument))
             {
                 throw SemanticError("Wrong function call argument");
             }
@@ -187,11 +192,6 @@ private:
     {
         for (const auto& statement : block_statement->statements())
         {
-//            if (const auto binary = std::dynamic_pointer_cast<ast::Binary>(statement))
-//            {
-//                analyze_variable_definition(binary);
-//            }
-
             analyze_statement(statement);
         }
     }

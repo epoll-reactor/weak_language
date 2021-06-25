@@ -9,4 +9,4 @@ set(LEAK_DETECTOR_FLAGS "-fsanitize=leak -fstack-protector")
 
 set(CMAKE_CXX_FLAGS "${OPTIMISE_FLAGS} ${EXTRA_WARN_FLAGS} ${LEAK_DETECTOR_FLAGS}")
 file(GLOB_RECURSE SRC include/*.hpp src/*.cpp)
-add_executable(WeakLanguage ${SRC} include/parser/parser.hpp include/tests/parser_tests.hpp include/parser/ast.hpp include/parser/parse_error.hpp include/tests/test_utility.hpp include/lexer/lexer_builder.hpp include/tests/grammar.hpp include/semantic/semantic_analyzer.hpp include/semantic/semantic_error.hpp include/semantic/environment.hpp include/tests/symbol_table_tests.hpp include/expressions/eval.hpp include/tests/eval_tests.hpp)
+add_executable(WeakLanguage ${SRC} include/parser/parser.hpp include/tests/parser_tests.hpp include/parser/ast.hpp include/parser/parse_error.hpp include/tests/test_utility.hpp include/lexer/lexer_builder.hpp include/tests/grammar.hpp include/semantic/semantic_analyzer.hpp include/semantic/semantic_error.hpp include/semantic/storage.hpp include/tests/storage_tests.hpp include/expressions/eval.hpp include/tests/eval_tests.hpp include/expressions/builtins.hpp include/expressions/eval_error.hpp)

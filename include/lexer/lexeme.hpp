@@ -8,7 +8,17 @@ enum struct lexeme_t
 {
     dot,            // .
     comma,          // ,
+    negation,       // !
 
+    gt,             // >
+    ge,             // >=
+    lt,             // <
+
+    le,             // <=
+    eq,             // ==
+    neq,            // !=
+
+    remainder,      // %
     plus,           // +
     minus,          // -
     inc,            // ++
@@ -17,7 +27,6 @@ enum struct lexeme_t
     slash,          // /
     assign,         // =
 
-    equal,          // ==
     plus_assign,    // +=
     minus_assign,   // -=
     star_assign,    // *=
@@ -63,6 +72,7 @@ std::string dispatch_lexeme(lexeme_t o)
         case lexeme_t::minus_assign:    return "-=";
         case lexeme_t::star_assign:     return "*=";
         case lexeme_t::slash_assign:    return "/=";
+        case lexeme_t::remainder:       return "%";
         case lexeme_t::left_paren:      return "(";
         case lexeme_t::right_paren:     return ")";
         case lexeme_t::left_brace:      return "{";
@@ -73,7 +83,13 @@ std::string dispatch_lexeme(lexeme_t o)
         case lexeme_t::symbol:          return "<symbol>";
         case lexeme_t::string_literal:  return "<string literal>";
         case lexeme_t::none:            return "<none>";
-        case lexeme_t::equal:           return "==";
+        case lexeme_t::eq:              return "==";
+        case lexeme_t::gt:              return ">";
+        case lexeme_t::ge:              return ">=";
+        case lexeme_t::lt:              return "<";
+        case lexeme_t::le:              return "<=";
+        case lexeme_t::negation:        return "!";
+        case lexeme_t::neq:             return "!=";
         case lexeme_t::end_of_data:     return "<EOF>";
         case lexeme_t::kw_function_decl:return "<function_decl>";
         default:                        return "<unknown>";

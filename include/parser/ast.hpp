@@ -48,6 +48,10 @@ public:
         }
     }
 
+    Number(double data)
+        : m_data(data)
+    { }
+
     double value() const noexcept
     {
         return m_data;

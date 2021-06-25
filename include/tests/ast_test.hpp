@@ -150,7 +150,7 @@ void parse_object_deep_nested_expression_test(std::size_t tree_depth)
 void parse_object_while_tests()
 {
     auto exit_condition = std::make_shared<ast::Binary>(
-        lexeme_t::equal,
+        lexeme_t::eq,
         std::make_shared<ast::Number>("1"),
         std::make_shared<ast::Number>("1")
     );
@@ -188,7 +188,7 @@ void parse_object_if_tests()
 {
     auto if_block = std::make_shared<ast::If>(
         std::make_shared<ast::Binary>(
-            lexeme_t::equal,
+            lexeme_t::eq,
             std::make_shared<ast::String>("1"),
             std::make_shared<ast::String>("1")
         ),
@@ -205,7 +205,7 @@ void parse_object_if_else_tests()
 {
     auto if_block = std::make_shared<ast::If>(
         std::make_shared<ast::Binary>(
-            lexeme_t::equal,
+            lexeme_t::eq,
             std::make_shared<ast::String>("1"),
             std::make_shared<ast::String>("1")
         ),

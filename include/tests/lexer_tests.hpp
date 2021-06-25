@@ -177,6 +177,15 @@ void lexer_operator_tests()
     std::string decrements(200, '-');
     lexer_detail::run_test(decrements, std::vector<Lexeme>(100, Lexeme{"", lexeme_t::dec}));
 
+    lexer_detail::run_test("!", {
+        Lexeme{"", lexeme_t::negation},
+    });
+    lexer_detail::run_test("==", {
+        Lexeme{"", lexeme_t::eq},
+    });
+    lexer_detail::run_test("!=", {
+        Lexeme{"", lexeme_t::neq},
+    });
     lexer_detail::run_test("+", {
         Lexeme{"", lexeme_t::plus},
     });
@@ -247,7 +256,6 @@ void lexer_operator_tests()
     });
 
     // Unknown operators
-    lexer_detail::assert_exception("<");
     lexer_detail::assert_exception("+++^+++");
     lexer_detail::assert_exception("@@@@@@@");
 }

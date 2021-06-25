@@ -152,6 +152,12 @@ private:
                 continue;
             }
 
+            if (previous().type == lexeme_t::remainder)
+            {
+                expr = std::make_shared<ast::Binary>(lexeme_t::remainder, ptr, multiplicative(ptr));
+                continue;
+            }
+
             break;
         }
 

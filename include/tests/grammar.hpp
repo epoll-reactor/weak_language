@@ -15,7 +15,10 @@ static inline const std::unordered_map<std::string, lexeme_t> test_keywords {
 };
 
 static inline const std::unordered_map<std::string, lexeme_t> test_operators {
-    {"==", lexeme_t::equal},
+    {"%", lexeme_t::remainder},
+    {"!", lexeme_t::negation},
+    {"==", lexeme_t::eq},
+    {"!=", lexeme_t::neq},
     {"++", lexeme_t::inc},
     {"--", lexeme_t::dec},
     {"+", lexeme_t::plus},
@@ -27,6 +30,10 @@ static inline const std::unordered_map<std::string, lexeme_t> test_operators {
     {"*=", lexeme_t::star_assign},
     {"-=", lexeme_t::minus_assign},
     {"/=", lexeme_t::slash_assign},
+    {"<", lexeme_t::lt},
+    {"<=", lexeme_t::le},
+    {">", lexeme_t::gt},
+    {">=", lexeme_t::ge},
 
     {".", lexeme_t::dot},
     {",", lexeme_t::comma},

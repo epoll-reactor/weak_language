@@ -56,12 +56,6 @@ void analyze_variables(std::string_view data, std::size_t scope_depth, std::stri
 
     SemanticAnalyzer analyzer(parsed_trees);
     analyzer.analyze();
-
-//    SymbolTable::SymbolInfo info = analyzer.find_variable(variable_name);
-
-//    assert(info.name == expected_value);
-
-//    std::cout << "Found: " << info.name << ", depth = " << info.depth << '\n';
 }
 
 } // namespace semantic_detail
@@ -96,8 +90,12 @@ void semantic_analyzer_test_syntax()
 
     semantic_detail::assert_correct("fun simple(a, b, c) {}");
     semantic_detail::expect_error("fun simple(1, 2, 3) {}");
+    semantic_detail::expect_error("fun simple(fun simple() {}) {}");
     semantic_detail::expect_error("simple(fun inner() {});");
     semantic_detail::expect_error("simple(if (1) {} else {});");
+    semantic_detail::assert_correct("simple(1);");
+    semantic_detail::assert_correct("simple(\"text\");");
+    semantic_detail::assert_correct("simple_1(simple_2());");
 }
 
 void semantic_analyzer_test_variables()
