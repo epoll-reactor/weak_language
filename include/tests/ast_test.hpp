@@ -222,6 +222,34 @@ void parse_object_if_else_tests()
     assert(if_block->else_body());
 }
 
+void parse_object_for_test()
+{
+    auto for_statement = std::make_shared<ast::For>();
+
+    for_statement->set_body(std::make_shared<ast::Block>(std::vector<std::shared_ptr<ast::Object>>{}));
+
+    for_statement->set_init(
+        std::make_shared<ast::Binary>(
+            lexeme_t::assign,
+            std::make_shared<ast::Symbol>("var"),
+            std::make_shared<ast::Number>(1)));
+
+    for_statement->set_exit_condition(
+        std::make_shared<ast::Binary>(
+            lexeme_t::eq,
+            std::make_shared<ast::Number>(1),
+            std::make_shared<ast::Number>(1)));
+
+    for_statement->set_increment(
+        std::make_shared<ast::Unary>(
+            lexeme_t::inc,
+            std::make_shared<ast::Symbol>("var")));
+
+    assert(std::dynamic_pointer_cast<ast::Binary>(for_statement->loop_init()));
+    assert(std::dynamic_pointer_cast<ast::Binary>(for_statement->exit_condition()));
+    assert(std::dynamic_pointer_cast<ast::Unary>(for_statement->increment()));
+}
+
 void parse_object_function_test()
 {
     std::vector<std::shared_ptr<ast::Object>> arguments = {
@@ -285,6 +313,7 @@ void run_expression_tests()
     parse_object_while_tests();
     parse_object_if_tests();
     parse_object_if_else_tests();
+    parse_object_for_test();
     parse_object_function_test();
     parse_object_function_call_test();
     parse_object_deep_nested_expression_test(10);

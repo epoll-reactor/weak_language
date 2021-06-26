@@ -20,6 +20,13 @@ public:
 
     void push(std::string_view name, std::shared_ptr<ast::Object> value)
     {
+        if (std::find_if(m_inner_scopes.begin(), m_inner_scopes.end(), [&name](const scope_t& scope) {
+            return scope.contains(name.data());
+        }) != m_inner_scopes.end())
+        {
+            throw SemanticError(std::string("redefinition of ") + name.data());
+        }
+
         if (m_inner_scopes.empty())
             throw std::runtime_error("At least one symbol table must be loaded before push");
 
@@ -81,88 +88,5 @@ public:
 private:
     std::vector<scope_t> m_inner_scopes;
 };
-
-//class Storage
-//{
-//    using scope_t = std::unordered_map<std::string, std::shared_ptr<ast::Object>>;
-//
-//public:
-//    Storage()
-//    {
-//        m_inner_scopes.push(scope_t{});
-//    }
-//
-//    void push(std::string_view name, std::shared_ptr<ast::Object> value)
-//    {
-//        if (m_inner_scopes.empty())
-//            throw std::runtime_error("At least one symbol table must be loaded before push");
-//
-//        m_inner_scopes.top()[name.data()] = std::move(value);
-//    }
-//
-//    bool has(std::string_view name)
-//    {
-//        auto scopes_copy = m_inner_scopes;
-//
-//        while (!scopes_copy.empty())
-//        {
-//            if (scopes_copy.top().contains(name.data()))
-//                return true;
-//
-//            scopes_copy.pop();
-//        }
-//
-//        return false;
-//    }
-//
-//    void overwrite(std::string_view name, std::shared_ptr<ast::Object> value)
-//    {
-//        if (!has(name))
-//        {
-//            push(name, std::move(value));
-//        }
-//        else {
-//            auto scopes_copy = m_inner_scopes;
-//
-//            while (!m_inner_scopes.empty())
-//            {
-//                if (m_inner_scopes.top().contains(name.data()))
-//                    m_inner_scopes.top()[name.data()] = std::move(value);
-//
-//                m_inner_scopes.pop();
-//            }
-//
-//            m_inner_scopes = scopes_copy;
-//        }
-//    }
-//
-//    std::shared_ptr<ast::Object> lookup(std::string_view name) const
-//    {
-//        auto scopes_copy = m_inner_scopes;
-//
-//        while (!scopes_copy.empty())
-//        {
-//            if (scopes_copy.top().contains(name.data()))
-//                return scopes_copy.top()[name.data()];
-//
-//            scopes_copy.pop();
-//        }
-//
-//        throw SemanticError(std::string("Variable not found: ") + name.data());
-//    }
-//
-//    void scope_begin()
-//    {
-//        m_inner_scopes.push(scope_t{});
-//    }
-//
-//    void scope_end()
-//    {
-//        m_inner_scopes.pop();
-//    }
-//
-//private:
-//    std::stack<scope_t> m_inner_scopes;
-//};
 
 #endif // SYMBOL_TABLE_HPP

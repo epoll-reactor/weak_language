@@ -583,6 +583,50 @@ void run_parser_tests()
     );
     parser_detail::assert_correct("if (while (1) {}) { \"Syntaxically correct, but that's actual semantic analyzer job\"; }");
 
+    auto for_statement = std::make_shared<ast::For>();
+
+    parser_detail::run_test("for (;;) {}", { for_statement });
+
+    for_statement->set_init(
+        alloc_binary(
+            lexeme_t::assign,
+            alloc_symbol("i"),
+            alloc_num("0")
+        ));
+
+    for_statement->set_exit_condition(
+        alloc_binary(
+            lexeme_t::lt,
+            alloc_symbol("i"),
+            alloc_num("10")
+        ));
+
+    for_statement->set_increment(
+        alloc_binary(
+            lexeme_t::assign,
+            alloc_symbol("i"),
+            alloc_binary(
+                lexeme_t::plus,
+                alloc_symbol("i"),
+                alloc_num("1")
+            )
+        ));
+
+    for_statement->set_body(alloc_block({}));
+
+    parser_detail::run_test("for (i = 0; i < 10; i = i + 1) {}", { for_statement });
+
+    auto partial_for = std::make_shared<ast::For>();
+
+    partial_for->set_init(
+        alloc_binary(
+            lexeme_t::assign,
+            alloc_symbol("i"),
+            alloc_num("0")
+        ));
+
+    parser_detail::run_test("for (i = 0;;) {}", { partial_for });
+
     std::cout << "Parser tests passed successfully\n";
 }
 

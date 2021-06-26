@@ -1,10 +1,10 @@
 #ifndef PARSE_OBJECT_HPP
 #define PARSE_OBJECT_HPP
 
-#include <string>
 #include <memory>
+#include <vector>
 
-#include "../parser/parse_error.hpp"
+#include "../lexer/lexeme.hpp"
 
 
 namespace ast {
@@ -19,15 +19,9 @@ public:
 class RootObject
 {
 public:
-    auto get()
-    {
-        return m_expressions;
-    }
+    std::vector<std::shared_ptr<Object>> get();
 
-    void add(std::shared_ptr<Object> expression)
-    {
-        m_expressions.push_back(std::move(expression));
-    }
+    void add(std::shared_ptr<Object> expression);
 
 private:
     std::vector<std::shared_ptr<Object>> m_expressions;
@@ -36,37 +30,13 @@ private:
 class Number : public Object
 {
 public:
-    Number(std::string data)
-    {
-        try
-        {
-            m_data = std::stod(data);
-        }
-        catch (std::exception& convert_error) {
+    Number(std::string_view data);
 
-            throw ParseError("Correct number or floating point literal expected");
-        }
-    }
+    Number(double data);
 
-    Number(double data)
-        : m_data(data)
-    { }
+    double value() const noexcept;
 
-    double value() const noexcept
-    {
-        return m_data;
-    }
-
-    bool same_with(std::shared_ptr<Object> other) const noexcept override
-    {
-        if (auto derived = std::dynamic_pointer_cast<Number>(other))
-        {
-            return m_data == derived->m_data;
-        }
-        else {
-            return false;
-        }
-    }
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
 
 private:
     double m_data;
@@ -75,25 +45,11 @@ private:
 class String : public Object
 {
 public:
-    String(std::string data)
-        : m_data(std::move(data))
-    { }
+    String(std::string data);
 
-    std::string value() const noexcept
-    {
-        return m_data;
-    }
+    std::string value() const noexcept;
 
-    bool same_with(std::shared_ptr<Object> other) const noexcept override
-    {
-        if (auto derived = std::dynamic_pointer_cast<String>(other))
-        {
-            return m_data == derived->m_data;
-        }
-        else {
-            return false;
-        }
-    }
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
 
 private:
     std::string m_data;
@@ -102,25 +58,11 @@ private:
 class Symbol : public Object
 {
 public:
-    Symbol(std::string_view name)
-        : m_name(name)
-    { }
+    Symbol(std::string_view name);
 
-    std::string name() const noexcept
-    {
-        return m_name;
-    }
+    std::string name() const noexcept;
 
-    bool same_with(std::shared_ptr<Object> other) const noexcept override
-    {
-        if (auto derived = std::dynamic_pointer_cast<Symbol>(other))
-        {
-            return m_name == derived->m_name;
-        }
-        else {
-            return false;
-        }
-    }
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
 
 private:
     std::string m_name;
@@ -129,31 +71,13 @@ private:
 class Unary : public Object
 {
 public:
-    Unary(lexeme_t type, std::shared_ptr<Object> operation)
-        : m_type(type)
-        , m_operation(operation)
-    { }
+    Unary(lexeme_t type, std::shared_ptr<Object> operation);
 
-    std::shared_ptr<Object> operand() const noexcept
-    {
-        return m_operation;
-    }
+    std::shared_ptr<Object> operand() const noexcept;
 
-    lexeme_t type() const noexcept
-    {
-        return m_type;
-    }
+    lexeme_t type() const noexcept;
 
-    bool same_with(std::shared_ptr<Object> other) const noexcept override
-    {
-        if (auto derived = std::dynamic_pointer_cast<Unary>(other))
-        {
-            return m_type == derived->m_type && m_operation->same_with(derived->m_operation);
-        }
-        else {
-            return false;
-        }
-    }
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
 
 private:
     lexeme_t m_type;
@@ -163,37 +87,15 @@ private:
 class Binary : public Object
 {
 public:
-    Binary(lexeme_t type, std::shared_ptr<Object> lhs, std::shared_ptr<Object> rhs)
-        : m_type(type)
-        , m_lhs(std::move(lhs))
-        , m_rhs(std::move(rhs))
-    { }
+    Binary(lexeme_t type, std::shared_ptr<Object> lhs, std::shared_ptr<Object> rhs);
 
-    std::shared_ptr<Object> lhs() const noexcept
-    {
-        return m_lhs;
-    }
+    std::shared_ptr<Object> lhs() const noexcept;
 
-    std::shared_ptr<Object> rhs() const noexcept
-    {
-        return m_rhs;
-    }
+    std::shared_ptr<Object> rhs() const noexcept;
 
-    lexeme_t type() const noexcept
-    {
-        return m_type;
-    }
+    lexeme_t type() const noexcept;
 
-    bool same_with(std::shared_ptr<Object> other) const noexcept override
-    {
-        if (auto derived = std::dynamic_pointer_cast<Binary>(other))
-        {
-            return m_type == derived->m_type && m_lhs->same_with(derived->m_lhs) && m_rhs->same_with(derived->m_rhs);
-        }
-        else {
-            return false;
-        }
-    }
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
 
 private:
     lexeme_t m_type;
@@ -204,34 +106,11 @@ private:
 class Block : public Object
 {
 public:
-    Block(std::vector<std::shared_ptr<Object>> statements)
-        : m_statements(statements)
-    { }
+    Block(std::vector<std::shared_ptr<Object>> statements);
 
-    std::vector<std::shared_ptr<Object>> statements()
-    {
-        return m_statements;
-    }
+    std::vector<std::shared_ptr<Object>> statements();
 
-    bool same_with(std::shared_ptr<Object> other) const noexcept override
-    {
-        if (auto derived = std::dynamic_pointer_cast<Block>(other))
-        {
-            if (m_statements.size() != derived->m_statements.size())
-                return false;
-
-            for (std::size_t i = 0; i < m_statements.size(); i++)
-            {
-                if (!m_statements[i]->same_with(derived->m_statements[i]))
-                    return false;
-            }
-
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
 
 private:
     std::vector<std::shared_ptr<Object>> m_statements;
@@ -240,89 +119,63 @@ private:
 class While : public Object
 {
 public:
-    While(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> block)
-        : m_exit_condition(std::move(exit_condition))
-        , m_block(std::move(block))
-    { }
+    While(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> block);
 
-    std::shared_ptr<Object> exit_condition() const noexcept
-    {
-        return m_exit_condition;
-    }
+    std::shared_ptr<Object> exit_condition() const noexcept;
 
-    std::shared_ptr<Block> body() const noexcept
-    {
-        return m_block;
-    }
+    std::shared_ptr<Block> body() const noexcept;
 
-    bool same_with(std::shared_ptr<Object> other) const noexcept override
-    {
-        if (auto derived = std::dynamic_pointer_cast<While>(other))
-        {
-            return m_exit_condition->same_with(derived->m_exit_condition) && m_block->same_with(derived->m_block);
-        }
-        else {
-            return false;
-        }
-    }
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
 
 private:
     std::shared_ptr<Object> m_exit_condition;
     std::shared_ptr<Block> m_block;
 };
 
+class For : public Object
+{
+public:
+    For() = default;
+
+    void set_init(std::shared_ptr<Object> init);
+
+    void set_exit_condition(std::shared_ptr<Object> exit_condition);
+
+    void set_increment(std::shared_ptr<Object> increment);
+
+    void set_body(std::shared_ptr<Block> block);
+
+    std::shared_ptr<Object> loop_init() const noexcept;
+
+    std::shared_ptr<Object> exit_condition() const noexcept;
+
+    std::shared_ptr<Object> increment() const noexcept;
+
+    std::shared_ptr<Block> body() const noexcept;
+
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
+
+private:
+    std::shared_ptr<Object> m_for_init;
+    std::shared_ptr<Object> m_for_exit_condition;
+    std::shared_ptr<Object> m_for_increment;
+    std::shared_ptr<Block> m_block;
+};
+
 class If : public Object
 {
 public:
-    If(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> body)
-        : m_exit_condition(std::move(exit_condition))
-        , m_body(std::move(body))
-    { }
+    If(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> body);
 
-    If(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> body, std::shared_ptr<Block> else_body)
-        : m_exit_condition(std::move(exit_condition))
-        , m_body(std::move(body))
-        , m_else_body(std::move(else_body))
-    { }
+    If(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> body, std::shared_ptr<Block> else_body);
 
-    std::shared_ptr<Object> condition() const noexcept
-    {
-        return m_exit_condition;
-    }
+    std::shared_ptr<Object> condition() const noexcept;
 
-    std::shared_ptr<Object> body() const noexcept
-    {
-        return m_body;
-    }
+    std::shared_ptr<Object> body() const noexcept;
 
-    std::shared_ptr<Object> else_body() const noexcept
-    {
-        return m_else_body;
-    }
+    std::shared_ptr<Object> else_body() const noexcept;
 
-    bool same_with(std::shared_ptr<Object> other) const noexcept override
-    {
-        if (auto derived = std::dynamic_pointer_cast<If>(other))
-        {
-            if (!m_else_body && !derived->m_else_body)
-            {
-                return m_exit_condition->same_with(derived->m_exit_condition)
-                    && m_body->same_with(derived->m_body);
-            }
-            else if (m_else_body && derived->m_else_body) {
-
-                return m_exit_condition->same_with(derived->m_exit_condition)
-                    && m_body->same_with(derived->m_body)
-                    && m_else_body->same_with(derived->m_else_body);
-            }
-            else {
-                return false;
-            }
-        }
-        else {
-            return false;
-        }
-    }
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
 
 private:
     std::shared_ptr<Object> m_exit_condition;
@@ -333,52 +186,15 @@ private:
 class Function : public Object
 {
 public:
-    Function(std::string name, std::vector<std::shared_ptr<Object>> arguments, std::shared_ptr<Block> body)
-        : m_name(std::move(name))
-        , m_arguments(std::move(arguments))
-        , m_body(std::move(body))
-    { }
+    Function(std::string name, std::vector<std::shared_ptr<Object>> arguments, std::shared_ptr<Block> body);
 
-    std::string name() const noexcept
-    {
-        return m_name;
-    }
+    std::string name() const noexcept;
 
-    std::vector<std::shared_ptr<Object>> arguments() const noexcept
-    {
-        return m_arguments;
-    }
+    std::vector<std::shared_ptr<Object>> arguments() const noexcept;
 
-    std::shared_ptr<Block> body() const noexcept
-    {
-        return m_body;
-    }
+    std::shared_ptr<Block> body() const noexcept;
 
-    bool same_with(std::shared_ptr<Object> other) const noexcept override
-    {
-        if (auto other_function = std::dynamic_pointer_cast<Function>(other))
-        {
-            if (m_name != other_function->m_name)
-                return false;
-
-            if (m_arguments.size() != other_function->m_arguments.size())
-                return false;
-
-            if (!m_body->same_with(other_function->m_body))
-                return false;
-
-            for (std::size_t i = 0; i < m_arguments.size(); i++)
-            {
-                if (!m_arguments[i]->same_with(other_function->m_arguments[i]))
-                    return false;
-            }
-
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
 
 private:
     std::string m_name;
@@ -389,43 +205,13 @@ private:
 class FunctionCall : public Object
 {
 public:
-    FunctionCall(std::string name, std::vector<std::shared_ptr<Object>> arguments)
-        : m_name(std::move(name))
-        , m_arguments(std::move(arguments))
-    { }
+    FunctionCall(std::string name, std::vector<std::shared_ptr<Object>> arguments);
 
-    std::string name() const noexcept
-    {
-        return m_name;
-    }
+    std::string name() const noexcept;
 
-    std::vector<std::shared_ptr<Object>> arguments() const noexcept
-    {
-        return m_arguments;
-    }
+    std::vector<std::shared_ptr<Object>> arguments() const noexcept;
 
-    bool same_with(std::shared_ptr<Object> other) const noexcept override
-    {
-        if (auto function_call = std::dynamic_pointer_cast<FunctionCall>(other))
-        {
-            if (m_name != function_call->m_name)
-                return false;
-
-            if (m_arguments.size() != function_call->m_arguments.size())
-                return false;
-
-            for (std::size_t i = 0; i < m_arguments.size(); i++)
-            {
-                if (!m_arguments[i]->same_with(function_call->m_arguments[i]))
-                    return false;
-            }
-
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
 
 private:
     std::string m_name;

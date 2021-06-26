@@ -30,8 +30,11 @@ void run_test(std::string_view data, std::vector<Lexeme> assertion_lexemes)
 
     for (std::size_t i = 0; i < lexemes.size(); i++)
     {
-        assert(lexemes[i].type == assertion_lexemes[i].type);
-        assert(lexemes[i].data == assertion_lexemes[i].data);
+        if (lexemes[i].type != assertion_lexemes[i].type)
+            throw LexicalError(dispatch_lexeme(lexemes[i].type) + " got, but " + dispatch_lexeme(assertion_lexemes[i].type) + " required");
+
+        if (lexemes[i].data != assertion_lexemes[i].data)
+            throw LexicalError(lexemes[i].data + " got, but " + assertion_lexemes[i].data + " required");
     }
 }
 
@@ -160,6 +163,9 @@ void lexer_symbol_tests()
     lexer_detail::run_test("     a1b2c3d4      a000000a       ", {
         Lexeme{"a1b2c3d4", lexeme_t::symbol},
         Lexeme{"a000000a", lexeme_t::symbol}
+    });
+    lexer_detail::run_test("test?", {
+        Lexeme{"test?", lexeme_t::symbol}
     });
 
     lexer_detail::assert_exception("1A");

@@ -1,4 +1,4 @@
-    #ifndef LEXEME_HPP
+#ifndef LEXEME_HPP
 #define LEXEME_HPP
 
 #include <string>
@@ -46,6 +46,7 @@ enum struct lexeme_t
     kw_else,
     kw_return,
     kw_function_decl,
+    kw_load,
 
     num,
     symbol,
@@ -54,7 +55,7 @@ enum struct lexeme_t
     end_of_data
 };
 
-std::string dispatch_lexeme(lexeme_t o)
+inline std::string dispatch_lexeme(lexeme_t o)
 {
     switch (o)
     {
@@ -92,6 +93,10 @@ std::string dispatch_lexeme(lexeme_t o)
         case lexeme_t::neq:             return "!=";
         case lexeme_t::end_of_data:     return "<EOF>";
         case lexeme_t::kw_function_decl:return "<function_decl>";
+        case lexeme_t::kw_for:          return "<for>";
+        case lexeme_t::kw_while:        return "<while>";
+        case lexeme_t::kw_if:           return "<if>";
+        case lexeme_t::kw_load:         return "<load>";
         default:                        return "<unknown>";
     }
 }

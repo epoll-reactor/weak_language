@@ -49,15 +49,6 @@ void assert_correct(std::string_view data)
     SemanticAnalyzer analyzer(parsed_trees);
     analyzer.analyze();
 }
-
-void analyze_variables(std::string_view data, std::size_t scope_depth, std::string_view variable_name, std::string_view expected_value)
-{
-    const std::shared_ptr<ast::RootObject> parsed_trees = parser_detail::create_parse_tree_impl(data);
-
-    SemanticAnalyzer analyzer(parsed_trees);
-    analyzer.analyze();
-}
-
 } // namespace semantic_detail
 
 void semantic_analyzer_test_syntax()
@@ -79,6 +70,12 @@ void semantic_analyzer_test_syntax()
     semantic_detail::assert_correct("if (1 + 2 + 3) {}");
     semantic_detail::expect_error("if (1 + 2 = 3) {}");
 
+    semantic_detail::assert_correct("for (;;) {}");
+    semantic_detail::assert_correct("for (i = 0; i < 10; i = i + 1) {}");
+    semantic_detail::expect_error("for (i == 0; i < 10; i = i + 1) {}");
+    semantic_detail::expect_error("for (i = 0; while (1) {}; i = i + 1) {}");
+    semantic_detail::expect_error("for (i = 0; i < 10; \"What\") {}");
+
     semantic_detail::expect_error("1 + 2 = 3;");
 
     semantic_detail::assert_correct("Symbol /= 2;");
@@ -98,27 +95,11 @@ void semantic_analyzer_test_syntax()
     semantic_detail::assert_correct("simple_1(simple_2());");
 }
 
-void semantic_analyzer_test_variables()
-{
-    semantic_detail::analyze_variables(
-        /* Expression     */ "Symbol = 222;",
-        /* Depth          */ 1,
-        /* Variable name  */ "Symbol",
-        /* Expected value */ "222");
-
-    semantic_detail::analyze_variables(
-        "{ Symbol2 = 222; }",
-        2,
-        "Symbol2",
-        "222");
-}
-
 void run_semantic_analyzer_tests()
 {
     std::cout << "Running semantic analyzer tests...\n====\n";
 
     semantic_analyzer_test_syntax();
-    semantic_analyzer_test_variables();
 
     std::cout << "Semantic analyzer tests passed successfully\n";
 }
