@@ -66,13 +66,6 @@ private:
     /// @return the longest parsed operator
     Lexeme process_operator();
 
-    /// @brief  recursive scan and tokenize source code
-    /// @pre    program contains `load "file"` expression
-    /// @post   None
-    /// @throw  LexicalError if file was not found
-    /// @return processed into lexemes file
-    std::vector<Lexeme> try_scan_file(std::vector<Lexeme>& lexemes);
-
     const std::unordered_map<std::string, lexeme_t> m_keywords;
     const std::unordered_map<std::string, lexeme_t> m_operators;
 

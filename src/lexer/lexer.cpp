@@ -1,7 +1,3 @@
-#include <fstream>
-#include <iostream>
-#include <filesystem>
-
 #include "../../include/lexer/lexer_builder.hpp"
 #include "../../include/lexer/lexer.hpp"
 
@@ -93,56 +89,9 @@ std::vector<Lexeme> Lexer::tokenize()
     }
 #pragma GCC diagnostic pop
 
-    std::vector<Lexeme> intermediate_lexemes = try_scan_file(lexemes);
-
-    if (!intermediate_lexemes.empty())
-        lexemes.insert(lexemes.begin(), intermediate_lexemes.begin(), intermediate_lexemes.end());
-
     lexemes.emplace_back(Lexeme{"", lexeme_t::end_of_data});
 
     return lexemes;
-}
-
-std::vector<Lexeme> Lexer::try_scan_file(std::vector<Lexeme>& lexemes)
-{
-    std::vector<Lexeme> processed_file;
-
-    for (std::size_t i = 0; i < lexemes.size(); i++)
-    {
-        if (lexemes.at(i).type == lexeme_t::kw_load)
-        {
-            if (i >= lexemes.size() || lexemes.at(i + 1).type != lexeme_t::string_literal)
-                throw LexicalError("String literal as file name required");
-
-            if (i > lexemes.size() || lexemes.at(i + 2).type != lexeme_t::semicolon)
-                throw LexicalError("`;` after load statement required");
-
-            std::string path = std::filesystem::current_path().string() + "/" + lexemes.at(i + 1).data;
-
-            lexemes.erase(lexemes.begin() + i); /// Remove load keyword
-            lexemes.erase(lexemes.begin() + i); /// Remove path
-            lexemes.erase(lexemes.begin() + i); /// Remove semicolon
-            i--;
-
-            std::ifstream file(path);
-
-            if (file.fail())
-                throw LexicalError("Cannot open file: " + path);
-
-            Lexer inner_lexer = LexerBuilder{}
-                .keywords(m_keywords)
-                .operators(m_operators)
-                .input(std::istringstream{std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>())})
-                .build();
-
-            auto inner_lexemes = inner_lexer.tokenize();
-
-            processed_file.insert(processed_file.end(), inner_lexemes.begin(), inner_lexemes.end());
-            processed_file.pop_back(); /// Remove EOF
-        }
-    }
-
-    return processed_file;
 }
 
 Lexeme Lexer::process_digit()

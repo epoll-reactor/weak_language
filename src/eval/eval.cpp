@@ -54,6 +54,36 @@ std::shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, std
     }
 }
 
+std::shared_ptr<ast::Object> Evaluator::eval_function_call(std::shared_ptr<ast::FunctionCall> function_call)
+{
+    std::vector<std::shared_ptr<ast::Object>> evaluated_arguments;
+
+    for (const auto& arg : function_call->arguments())
+    {
+        if (auto var = std::dynamic_pointer_cast<ast::Symbol>(arg))
+        {
+            evaluated_arguments.emplace_back(m_storage.lookup(var->name()));
+            continue;
+        }
+
+        evaluated_arguments.emplace_back(eval_expression(arg));
+    }
+
+    if (builtins.contains(function_call->name()))
+    {
+        if (auto return_value = builtins[function_call->name()](evaluated_arguments))
+        {
+            return return_value.value();
+        }
+        else {
+            return {};
+        }
+    }
+    else {
+        return call_function(function_call->name(), evaluated_arguments);
+    }
+}
+
 std::shared_ptr<ast::Object> Evaluator::eval_binary(std::shared_ptr<ast::Binary> binary)
 {
     auto binary_impl = [&](lexeme_t op_type, std::shared_ptr<ast::Object> lhs, std::shared_ptr<ast::Object> rhs) {
@@ -171,52 +201,27 @@ void Evaluator::eval_for(std::shared_ptr<ast::For> for_stmt)
 
 std::shared_ptr<ast::Object> Evaluator::eval_expression(std::shared_ptr<ast::Object> expression)
 {
-    if (const auto function_call = std::dynamic_pointer_cast<ast::FunctionCall>(expression))
-    {
-        std::vector<std::shared_ptr<ast::Object>> evaluated_arguments;
+    if (auto number = std::dynamic_pointer_cast<ast::Number>(expression)) {
 
-        for (const auto& arg : function_call->arguments())
-        {
-            if (auto var = std::dynamic_pointer_cast<ast::Symbol>(arg))
-            {
-                evaluated_arguments.emplace_back(m_storage.lookup(var->name()));
-                continue;
-            }
-
-            evaluated_arguments.emplace_back(eval_expression(arg));
-        }
-
-        if (builtins.contains(function_call->name()))
-        {
-            if (auto return_value = builtins[function_call->name()](evaluated_arguments))
-            {
-                return return_value.value();
-            }
-            else {
-                return {};
-            }
-        }
-        else {
-            return call_function(function_call->name(), evaluated_arguments);
-        }
-    }
-    else if (const auto number = std::dynamic_pointer_cast<ast::Number>(expression))
-    {
         return number;
     }
-    else if (const auto string = std::dynamic_pointer_cast<ast::String>(expression)) {
+    else if (auto string = std::dynamic_pointer_cast<ast::String>(expression)) {
 
         return string;
     }
-    else if (const auto symbol = std::dynamic_pointer_cast<ast::Symbol>(expression)) {
+    else if (auto symbol = std::dynamic_pointer_cast<ast::Symbol>(expression)) {
 
         return m_storage.lookup(symbol->name());
     }
-    else if (const auto binary = std::dynamic_pointer_cast<ast::Binary>(expression)) {
+    else if (auto function_call = std::dynamic_pointer_cast<ast::FunctionCall>(expression)) {
 
-        return eval_binary(binary);
+        return eval_function_call(std::move(function_call));
     }
-    else if (const auto block = std::dynamic_pointer_cast<ast::Block>(expression)) {
+    else if (auto binary = std::dynamic_pointer_cast<ast::Binary>(expression)) {
+
+        return eval_binary(std::move(binary));
+    }
+    else if (auto block = std::dynamic_pointer_cast<ast::Block>(expression)) {
 
         m_storage.scope_begin();
 

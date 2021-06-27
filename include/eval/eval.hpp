@@ -15,6 +15,8 @@ public:
 private:
     std::shared_ptr<ast::Object> call_function(std::string_view name, std::vector<std::shared_ptr<ast::Object>> evaluated_args);
 
+    std::shared_ptr<ast::Object> eval_function_call(std::shared_ptr<ast::FunctionCall> function_call);
+
     std::shared_ptr<ast::Object> eval_binary(std::shared_ptr<ast::Binary> binary);
 
     void eval_while(std::shared_ptr<ast::While> while_stmt);
