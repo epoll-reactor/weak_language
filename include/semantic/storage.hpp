@@ -27,9 +27,6 @@ public:
             throw SemanticError(std::string("redefinition of ") + name.data());
         }
 
-        if (m_inner_scopes.empty())
-            throw std::runtime_error("At least one symbol table must be loaded before push");
-
         m_inner_scopes.back()[name.data()] = std::move(value);
     }
 

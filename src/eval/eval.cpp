@@ -41,7 +41,7 @@ std::shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, std
         m_storage.scope_end();
 
         if (std::dynamic_pointer_cast<ast::Number>(last_statement)
-            ||  std::dynamic_pointer_cast<ast::String>(last_statement))
+        ||  std::dynamic_pointer_cast<ast::String>(last_statement))
         {
             return last_statement;
         }
@@ -63,10 +63,10 @@ std::shared_ptr<ast::Object> Evaluator::eval_function_call(std::shared_ptr<ast::
         if (auto var = std::dynamic_pointer_cast<ast::Symbol>(arg))
         {
             evaluated_arguments.emplace_back(m_storage.lookup(var->name()));
-            continue;
         }
-
-        evaluated_arguments.emplace_back(eval_expression(arg));
+        else {
+            evaluated_arguments.emplace_back(eval_expression(arg));
+        }
     }
 
     if (builtins.contains(function_call->name()))
@@ -106,7 +106,7 @@ std::shared_ptr<ast::Object> Evaluator::eval_binary(std::shared_ptr<ast::Binary>
                 case lexeme_t::slash:
                     return std::make_shared<ast::Number>(left_num->value() / right_num->value());
                     /// WTF
-                case lexeme_t::remainder:
+                case lexeme_t::mod:
                     return std::make_shared<ast::Number>((int)(left_num->value()) % (int)(right_num->value()));
 
                 case lexeme_t::eq:

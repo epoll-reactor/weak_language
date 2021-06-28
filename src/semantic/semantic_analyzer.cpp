@@ -14,54 +14,54 @@ void SemanticAnalyzer::analyze()
 
 void SemanticAnalyzer::analyze_statement(std::shared_ptr<ast::Object> statement)
 {
-    if (const auto symbol_statement = std::dynamic_pointer_cast<ast::Symbol>(statement))
+    auto string = std::dynamic_pointer_cast<ast::String>(statement);
+    auto number = std::dynamic_pointer_cast<ast::Number>(statement);
+    auto symbol = std::dynamic_pointer_cast<ast::Symbol>(statement);
+    auto array_subscript = std::dynamic_pointer_cast<ast::ArraySubscriptOperator>(statement);
+    auto block = std::dynamic_pointer_cast<ast::Block>(statement);
+    auto if_ = std::dynamic_pointer_cast<ast::If>(statement);
+    auto while_ = std::dynamic_pointer_cast<ast::While>(statement);
+    auto for_ = std::dynamic_pointer_cast<ast::For>(statement);
+    auto function = std::dynamic_pointer_cast<ast::Function>(statement);
+    auto function_call = std::dynamic_pointer_cast<ast::FunctionCall>(statement);
+    auto binary = std::dynamic_pointer_cast<ast::Binary>(statement);
+
+    if (string || number || symbol)
+        return;
+
+    else if (array_subscript)
+        analyze_array_subscript_statement(std::move(array_subscript));
+
+    else if (block)
+        analyze_block_statement(std::move(block));
+
+    else if (if_)
+        analyze_if_statement(std::move(if_));
+
+    else if (while_)
+        analyze_while_statement(std::move(while_));
+
+    else if (for_)
+        analyze_for_statement(std::move(for_));
+
+    else if (function)
+        analyze_function_statement(std::move(function));
+
+    else if (function_call)
+        analyze_function_call_statement(std::move(function_call));
+
+    else if (binary)
     {
-        // ...
-    }
-    else if (const auto number_statement = std::dynamic_pointer_cast<ast::Number>(statement)) {
-
-        // ...
-    }
-    else if (const auto string_statement = std::dynamic_pointer_cast<ast::String>(statement)) {
-
-        // ...
-    }
-    else if (auto block_statement = std::dynamic_pointer_cast<ast::Block>(statement)) {
-
-        analyze_block_statement(std::move(block_statement));
-    }
-    else if (auto if_statement = std::dynamic_pointer_cast<ast::If>(statement)) {
-
-        analyze_if_statement(std::move(if_statement));
-    }
-    else if (auto while_statement = std::dynamic_pointer_cast<ast::While>(statement)) {
-
-        analyze_while_statement(std::move(while_statement));
-    }
-    else if (auto for_statement = std::dynamic_pointer_cast<ast::For>(statement)) {
-
-        analyze_for_statement(std::move(for_statement));
-    }
-    else if (auto function_statement = std::dynamic_pointer_cast<ast::Function>(statement)) {
-
-        analyze_function_statement(std::move(function_statement));
-    }
-    else if (auto function_call_statement = std::dynamic_pointer_cast<ast::FunctionCall>(statement)) {
-
-        analyze_function_call_statement(std::move(function_call_statement));
-    }
-    else if (auto binary_statement = std::dynamic_pointer_cast<ast::Binary>(statement)) {
-
-        if (binary_statement->type() == lexeme_t::assign
-            ||  binary_statement->type() == lexeme_t::plus_assign
-            ||  binary_statement->type() == lexeme_t::minus_assign
-            ||  binary_statement->type() == lexeme_t::star_assign
-            ||  binary_statement->type() == lexeme_t::slash_assign)
+        if (binary->type() == lexeme_t::assign
+            ||  binary->type() == lexeme_t::plus_assign
+            ||  binary->type() == lexeme_t::minus_assign
+            ||  binary->type() == lexeme_t::star_assign
+            ||  binary->type() == lexeme_t::slash_assign)
         {
-            analyze_assign_statement(std::move(binary_statement));
+            analyze_assign_statement(std::move(binary));
         }
         else {
-            analyze_binary_statement(std::move(binary_statement));
+            analyze_binary_statement(std::move(binary));
         }
     }
     else {
@@ -76,11 +76,11 @@ void SemanticAnalyzer::analyze_assign_statement(std::shared_ptr<ast::Binary> sta
         throw SemanticError("Expression is not assignable");
     }
 
-    if (!std::dynamic_pointer_cast<ast::Symbol>(statement->rhs()) &&
-        !std::dynamic_pointer_cast<ast::Number>(statement->rhs()) &&
-        !std::dynamic_pointer_cast<ast::String>(statement->rhs()) &&
-        !std::dynamic_pointer_cast<ast::Binary>(statement->rhs()) &&
-        !std::dynamic_pointer_cast<ast::FunctionCall>(statement->rhs()))
+    if (!std::dynamic_pointer_cast<ast::Symbol>(statement->rhs())
+    &&  !std::dynamic_pointer_cast<ast::Number>(statement->rhs())
+    &&  !std::dynamic_pointer_cast<ast::String>(statement->rhs())
+    &&  !std::dynamic_pointer_cast<ast::Binary>(statement->rhs())
+    &&  !std::dynamic_pointer_cast<ast::FunctionCall>(statement->rhs()))
     {
         throw SemanticError("Expression is not assignable");
     }
@@ -99,7 +99,7 @@ void SemanticAnalyzer::analyze_binary_statement(std::shared_ptr<ast::Binary> sta
         case lexeme_t::minus:
         case lexeme_t::star:
         case lexeme_t::slash:
-        case lexeme_t::remainder:
+        case lexeme_t::mod:
         case lexeme_t::eq:
         case lexeme_t::neq:
         case lexeme_t::gt:
@@ -120,6 +120,27 @@ void SemanticAnalyzer::analyze_binary_statement(std::shared_ptr<ast::Binary> sta
 
         analyze_binary_statement(rhs);
     }
+}
+
+void SemanticAnalyzer::analyze_function_call_statement(std::shared_ptr<ast::FunctionCall> function_statement)
+{
+    for (const auto& argument : function_statement->arguments())
+    {
+        if (!std::dynamic_pointer_cast<ast::Number>(argument)
+        &&  !std::dynamic_pointer_cast<ast::String>(argument)
+        &&  !std::dynamic_pointer_cast<ast::Symbol>(argument)
+        &&  !std::dynamic_pointer_cast<ast::Binary>(argument)
+        &&  !std::dynamic_pointer_cast<ast::FunctionCall>(argument))
+        {
+            throw SemanticError("Wrong function call argument");
+        }
+    }
+}
+
+void SemanticAnalyzer::analyze_function_statement(std::shared_ptr<ast::Function> function_statement)
+{
+    /// Function arguments are easily checked in parser.
+    analyze_block_statement(function_statement->body());
 }
 
 void SemanticAnalyzer::analyze_if_statement(std::shared_ptr<ast::If> if_statement)
@@ -170,7 +191,7 @@ void SemanticAnalyzer::analyze_for_statement(std::shared_ptr<ast::For> for_state
         {
             if (for_init->type() != lexeme_t::assign)
             {
-                throw SemanticError("Bad for init");
+                throw SemanticError("For init part requires assignment operation");
             }
         }
         else {
@@ -203,25 +224,12 @@ void SemanticAnalyzer::analyze_for_statement(std::shared_ptr<ast::For> for_state
     }
 }
 
-void SemanticAnalyzer::analyze_function_call_statement(std::shared_ptr<ast::FunctionCall> function_statement)
+void SemanticAnalyzer::analyze_array_subscript_statement(std::shared_ptr<ast::ArraySubscriptOperator> statement)
 {
-    for (const auto& argument : function_statement->arguments())
+    if (!to_number_convertible(statement->index()))
     {
-        if (!std::dynamic_pointer_cast<ast::Number>(argument)
-            &&  !std::dynamic_pointer_cast<ast::String>(argument)
-            &&  !std::dynamic_pointer_cast<ast::Symbol>(argument)
-            &&  !std::dynamic_pointer_cast<ast::Binary>(argument)
-            &&  !std::dynamic_pointer_cast<ast::FunctionCall>(argument))
-        {
-            throw SemanticError("Wrong function call argument");
-        }
+        throw SemanticError("Array subscript operator requires convertible to number expression");
     }
-}
-
-void SemanticAnalyzer::analyze_function_statement(std::shared_ptr<ast::Function> function_statement)
-{
-    /// Function arguments are easily checked in parser.
-    analyze_block_statement(function_statement->body());
 }
 
 void SemanticAnalyzer::analyze_block_statement(std::shared_ptr<ast::Block> block_statement)
@@ -242,6 +250,10 @@ bool SemanticAnalyzer::to_bool_convertible(std::shared_ptr<ast::Object> statemen
 
         return true;
     }
+    else if (std::dynamic_pointer_cast<ast::FunctionCall>(statement)) {
+
+        return true;
+    }
     else if (auto binary_expression = std::dynamic_pointer_cast<ast::Binary>(statement)) {
 
         try
@@ -258,4 +270,9 @@ bool SemanticAnalyzer::to_bool_convertible(std::shared_ptr<ast::Object> statemen
     else {
         return false;
     }
+}
+
+bool SemanticAnalyzer::to_number_convertible(std::shared_ptr<ast::Object> statement)
+{
+    return to_bool_convertible(std::move(statement));
 }

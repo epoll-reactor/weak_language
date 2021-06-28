@@ -28,6 +28,7 @@ void assert_exception(Function&& test_body)
 }
 }
 
+#ifdef AST_DEBUG
 void parse_object_number_test()
 {
     std::shared_ptr<ast::Number> integral = std::make_shared<ast::Number>("123");
@@ -35,6 +36,20 @@ void parse_object_number_test()
 
     assert(integral->value() == 123);
     assert(floating_point->value() == 123.123);
+}
+
+void parse_object_array_test()
+{
+    std::vector<std::shared_ptr<ast::Object>> elements(100, std::make_shared<ast::Number>(1));
+
+    auto array = std::make_shared<ast::Array>(std::move(elements));
+
+    assert(array->elements().size() == 100);
+
+    for (const auto& element : array->elements())
+    {
+        assert(element->same_with(std::make_shared<ast::Number>(1)));
+    }
 }
 
 void parse_object_number_fuzz_test()
@@ -299,14 +314,17 @@ void parse_object_function_call_test()
     assert(std::dynamic_pointer_cast<ast::Number>(function_call_object->arguments()[0])->value() == 1);
     assert(std::dynamic_pointer_cast<ast::Symbol>(function_call_object->arguments()[1])->name() == "Symbol");
 }
+#endif // AST_DEBUG
 
 void run_expression_tests()
 {
+#ifdef AST_DEBUG
     std::cout << "Running parse tree tests...\n====\n";
 
     parse_object_number_test();
     parse_object_number_fuzz_test();
     parse_object_string_test();
+    parse_object_array_test();
     parse_object_binary_operation_test();
     parse_object_unary_operation_test();
     parse_object_nested_expression_test();
@@ -321,6 +339,7 @@ void run_expression_tests()
     parse_object_deep_nested_expression_test(1000);
 
     std::cout << "Parse tree tests passed successfully\n";
+#endif // AST_DEBUG
 }
 
 #endif // PARSE_OBJECT_TESTS_HPP

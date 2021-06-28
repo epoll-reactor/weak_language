@@ -13,7 +13,10 @@ class Object
 {
 public:
     virtual ~Object() = default;
+
+#ifdef AST_DEBUG
     virtual bool same_with(std::shared_ptr<Object> other) const noexcept = 0;
+#endif // AST_DEBUG
 };
 
 class RootObject
@@ -36,7 +39,9 @@ public:
 
     double value() const noexcept;
 
+#ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
 
 private:
     double m_data;
@@ -49,7 +54,9 @@ public:
 
     std::string value() const noexcept;
 
+#ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
 
 private:
     std::string m_data;
@@ -62,10 +69,66 @@ public:
 
     std::string name() const noexcept;
 
+#ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
 
 private:
     std::string m_name;
+};
+
+class Array : public Object
+{
+public:
+    Array(std::vector<std::shared_ptr<Object>> elements);
+
+    std::vector<std::shared_ptr<Object>> elements() const noexcept;
+
+#ifdef AST_DEBUG
+    bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
+
+private:
+    std::vector<std::shared_ptr<Object>> m_elements;
+};
+
+class ArraySubscriptOperator : public Object
+{
+public:
+    ArraySubscriptOperator(std::string_view name, std::shared_ptr<Object> index)
+        : m_name(name)
+        , m_index(std::move(index))
+    { }
+
+    std::string symbol_name() const noexcept
+    {
+        return m_name;
+    }
+
+    std::shared_ptr<Object> index() const noexcept
+    {
+        return m_index;
+    }
+
+#ifdef AST_DEBUG
+    bool same_with(std::shared_ptr<Object> other) const noexcept override
+    {
+        if (auto derived = std::dynamic_pointer_cast<ArraySubscriptOperator>(other))
+        {
+            if (m_name != derived->m_name)
+                return false;
+
+            return m_index->same_with(derived->m_index);
+        }
+        else {
+            return false;
+        }
+    };
+#endif // AST_DEBUG
+
+private:
+    std::string m_name;
+    std::shared_ptr<Object> m_index;
 };
 
 class Unary : public Object
@@ -77,7 +140,9 @@ public:
 
     lexeme_t type() const noexcept;
 
+#ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
 
 private:
     lexeme_t m_type;
@@ -95,7 +160,9 @@ public:
 
     lexeme_t type() const noexcept;
 
+#ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
 
 private:
     lexeme_t m_type;
@@ -110,7 +177,9 @@ public:
 
     std::vector<std::shared_ptr<Object>> statements();
 
+#ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
 
 private:
     std::vector<std::shared_ptr<Object>> m_statements;
@@ -125,7 +194,9 @@ public:
 
     std::shared_ptr<Block> body() const noexcept;
 
+#ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
 
 private:
     std::shared_ptr<Object> m_exit_condition;
@@ -153,7 +224,9 @@ public:
 
     std::shared_ptr<Block> body() const noexcept;
 
+#ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
 
 private:
     std::shared_ptr<Object> m_for_init;
@@ -175,7 +248,9 @@ public:
 
     std::shared_ptr<Object> else_body() const noexcept;
 
+#ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
 
 private:
     std::shared_ptr<Object> m_exit_condition;
@@ -194,7 +269,9 @@ public:
 
     std::shared_ptr<Block> body() const noexcept;
 
+#ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
 
 private:
     std::string m_name;
@@ -211,7 +288,9 @@ public:
 
     std::vector<std::shared_ptr<Object>> arguments() const noexcept;
 
+#ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
+#endif // AST_DEBUG
 
 private:
     std::string m_name;

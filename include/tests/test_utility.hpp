@@ -3,6 +3,12 @@
 
 #include "../parser/ast.hpp"
 
+#include "../lexer/lexical_error.hpp"
+#include "../parser/parse_error.hpp"
+#include "../semantic/semantic_error.hpp"
+#include "../eval/eval_error.hpp"
+
+extern std::ostream& default_stdout;
 
 void tree_print(std::shared_ptr<ast::Object> ptr)
 {
@@ -92,6 +98,46 @@ double tree_sum(std::shared_ptr<ast::Object> ptr)
     else {
         return 0;
     }
+}
+
+template <typename Fun>
+void trace_error(std::string_view program, Fun&& fn)
+{
+    try
+    {
+        fn();
+
+    } catch (LexicalError& lexical_error) {
+
+        std::cout << "While analyzing:\n\t" << program << "\nLexical error processed:\n\t" << lexical_error.what() << "\n\n";
+        goto clear_stdout;
+
+    } catch (ParseError& parse_error) {
+
+        std::cout << "While analyzing:\n\t" << program << "\nParse error processed:\n\t" << parse_error.what() << "\n\n";
+        goto clear_stdout;
+
+    } catch (SemanticError& semantic_error) {
+
+        std::cout << "While analyzing:\n\t" << program << "\nSemantic error processed\n\t" << semantic_error.what() << "\n\n";
+        goto clear_stdout;
+
+    } catch (EvalError& eval_error) {
+
+        std::cout << "While analyzing:\n\t" << program << "\nEval error processed\n\t" << eval_error.what() << "\n\n";
+        goto clear_stdout;
+    }
+
+clear_stdout:
+    try
+    {
+        auto& string_stream = dynamic_cast<std::ostringstream&>(default_stdout);
+
+        string_stream.str("");
+
+    } catch (std::bad_cast&) { }
+
+    default_stdout.clear();
 }
 
 #endif // TEST_UTILITY_HPP

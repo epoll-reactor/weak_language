@@ -9,6 +9,8 @@
 #include "../tests/test_utility.hpp"
 #include "../tests/grammar.hpp"
 
+#include "../tests/test_utility.hpp"
+
 namespace parser_detail {
 
 std::shared_ptr<ast::RootObject> create_parse_tree_impl(std::string_view data)
@@ -24,6 +26,7 @@ std::shared_ptr<ast::RootObject> create_parse_tree_impl(std::string_view data)
     return parser.parse();
 }
 
+#ifdef AST_DEBUG
 void run_test(std::string_view data, std::vector<std::shared_ptr<ast::Object>> assertion_trees)
 {
     const std::shared_ptr<ast::RootObject> parsed_trees = create_parse_tree_impl(data);
@@ -56,35 +59,24 @@ void run_block_test(std::string_view data, std::shared_ptr<ast::Block> assertion
 
 void assert_correct(std::string_view data) noexcept
 {
-    Lexer lexer = LexerBuilder{}
-        .operators(test_operators)
-        .keywords(test_keywords)
-        .input(std::istringstream{data.data()})
-        .build();
+    trace_error(data, [&data]{
+        Lexer lexer = LexerBuilder{}
+            .operators(test_operators)
+            .keywords(test_keywords)
+            .input(std::istringstream{data.data()})
+            .build();
 
-    try
-    {
         Parser parser(lexer.tokenize());
         parser.parse();
-
-    } catch (LexicalError& lex_error) {
-
-        std::cout << "While analyzing:\n\t" << data << "\nLexical error processed:\n\t" << lex_error.what() << "\n\n";
-
-    } catch (ParseError& parse_error) {
-
-        std::cout << "While analyzing:\n\t" << data << "\nParse error processed:\n\t" << parse_error.what() << "\n\n";
-
-    } catch (...) {
-
-        std::cout << "While analyzing:\n\t" << data << "\nUnknown error processed:\n\t\n\n";
-    }
+    });
 }
 
+#endif // AST_DEBUG
 } // namespace parser_detail
 
 void run_parser_tests()
 {
+#ifdef AST_DEBUG
     std::cout << "Running parser tests...\n====\n";
 
     auto alloc_num = [](std::string_view data) {
@@ -116,6 +108,12 @@ void run_parser_tests()
     };
     auto alloc_function_call = [](std::string name, std::vector<std::shared_ptr<ast::Object>> arguments) {
         return std::make_shared<ast::FunctionCall>(std::move(name), std::move(arguments));
+    };
+    auto alloc_array = [](std::vector<std::shared_ptr<ast::Object>> arguments) {
+        return std::make_shared<ast::Array>(std::move(arguments));
+    };
+    auto alloc_array_subscript_operator = [](std::string_view name, std::shared_ptr<ast::Object> object) {
+        return std::make_shared<ast::ArraySubscriptOperator>(name, std::move(object));
     };
 
     parser_detail::run_test("1;", {{
@@ -581,7 +579,7 @@ void run_parser_tests()
             }
         })__"
     );
-    parser_detail::assert_correct("if (while (1) {}) { \"Syntaxically correct, but that's actual semantic analyzer job\"; }");
+    parser_detail::assert_correct("if (while (1) {}) { \"Syntaxically correct, but that's actually semantic analyzer job\"; }");
 
     auto for_statement = std::make_shared<ast::For>();
 
@@ -627,7 +625,49 @@ void run_parser_tests()
 
     parser_detail::run_test("for (i = 0;;) {}", { partial_for });
 
+    parser_detail::run_test("[1, 2, 3, 4, 5];",  {
+        alloc_array({
+            alloc_num("1"),
+            alloc_num("2"),
+            alloc_num("3"),
+            alloc_num("4"),
+            alloc_num("5"),
+        })
+    });
+
+    parser_detail::run_test("[1, 2, 3, 4, [1, 2], 1 + 1];",  {
+        alloc_array({
+            alloc_num("1"),
+            alloc_num("2"),
+            alloc_num("3"),
+            alloc_num("4"),
+            alloc_array({alloc_num("1"), alloc_num("2")}),
+            alloc_binary(
+                lexeme_t::plus,
+                alloc_num("1"),
+                alloc_num("1")
+            )
+        })
+    });
+
+    parser_detail::run_test("array[0];", {
+        alloc_array_subscript_operator(
+            "array",
+            alloc_num("0"))
+    });
+    parser_detail::run_test("array[1 + 1];", {
+        alloc_array_subscript_operator(
+            "array",
+            alloc_binary(
+                lexeme_t::plus,
+                alloc_num("1"),
+                alloc_num("1")
+            )
+        )
+    });
+
     std::cout << "Parser tests passed successfully\n";
+#endif // AST_DEBUG
 }
 
 #endif // PARSER_TESTS_HPP

@@ -11,10 +11,20 @@ namespace {
 class FileInfo
 {
 public:
-    FileInfo(std::string_view absolute_path)
-        : m_path(absolute_path.substr(0, absolute_path.find_last_of('/')    ))
-        , m_name(absolute_path.substr(   absolute_path.find_last_of('/') + 1))
-    { }
+    FileInfo(std::string_view path)
+    {
+        std::size_t last_slash = path.find_last_of('/');
+
+        if (last_slash == std::string_view::npos)
+        {
+            m_path.clear();
+            m_name = path.substr(last_slash + 1);
+        }
+        else {
+            m_path = path.substr(0, last_slash);
+            m_path.push_back('/');
+        }
+    }
 
     const std::string& name() const noexcept
     {
@@ -73,8 +83,6 @@ std::vector<std::string_view> list_of_filenames(std::string_view contents)
 
 std::string preprocess_file(std::string_view filename)
 {
-    FileInfo file_info(filename);
-
     std::ifstream file(filename.data());
 
     if (file.fail())
@@ -82,8 +90,12 @@ std::string preprocess_file(std::string_view filename)
 
     std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
+    file.close();
+
+    FileInfo file_info(filename);
+
     for (auto load_file : list_of_filenames(contents))
-        contents.insert(0, preprocess_file(file_info.path() + "/" + std::string(load_file)));
+        contents.insert(0, preprocess_file(file_info.path() + std::string(load_file)));
 
     const std::regex remove_load_re("load\\ \\\".*?\\\"\\;");
     std::ostringstream processed_file;

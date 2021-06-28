@@ -50,6 +50,9 @@ private:
     /// @brief main parse function
     std::shared_ptr<ast::Object> primary();
 
+    /// @return array parse tree
+    std::shared_ptr<ast::Object> array();
+
     /// @return parse tree if ptr is additive operation, unchanged ptr otherwise
     std::shared_ptr<ast::Object> additive(std::shared_ptr<ast::Object> ptr);
 
@@ -97,6 +100,11 @@ private:
     /// @post   previous() returns ')' lexeme if function call argument processed, symbol lexeme otherwise
     /// @return symbol object, function call object if '(' token placed after symbol
     std::shared_ptr<ast::Object> resolve_symbol();
+
+    /// @pre    previous() returns symbol lexeme
+    /// @post   previous() returns ']' lexeme
+    /// @return array subscript parse tree
+    std::shared_ptr<ast::Object> resolve_array_subscript();
 
     std::vector<Lexeme> m_input;
     std::size_t m_current_index;

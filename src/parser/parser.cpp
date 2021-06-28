@@ -54,6 +54,9 @@ std::shared_ptr<ast::Object> Parser::primary()
         case lexeme_t::left_brace:
             return block();
 
+        case lexeme_t::left_box_brace:
+            return array();
+
         case lexeme_t::num:
             return binary(std::make_shared<ast::Number>(previous().data));
 
@@ -88,6 +91,7 @@ bool Parser::end_of_expression() const noexcept
     return current().type == lexeme_t::semicolon
         || current().type == lexeme_t::right_paren
         || current().type == lexeme_t::comma
+        || current().type == lexeme_t::right_box_brace
         || !has_next();
 }
 
@@ -179,9 +183,9 @@ std::shared_ptr<ast::Object> Parser::multiplicative(std::shared_ptr<ast::Object>
             continue;
         }
 
-        if (previous().type == lexeme_t::remainder)
+        if (previous().type == lexeme_t::mod)
         {
-            expr = std::make_shared<ast::Binary>(lexeme_t::remainder, ptr, multiplicative(ptr));
+            expr = std::make_shared<ast::Binary>(lexeme_t::mod, ptr, multiplicative(ptr));
             continue;
         }
 
@@ -226,6 +230,29 @@ std::shared_ptr<ast::Block> Parser::block()
     }
 
     return std::make_shared<ast::Block>(std::move(stmts));
+}
+
+std::shared_ptr<ast::Object> Parser::array()
+{
+    std::vector<std::shared_ptr<ast::Object>> objects;
+
+    while (true)
+    {
+        objects.emplace_back(primary());
+
+        auto term = require({lexeme_t::right_box_brace, lexeme_t::comma});
+
+        if (term.type == lexeme_t::comma)
+        {
+            continue;
+        }
+        else if (term.type == lexeme_t::right_box_brace) {
+
+            break;
+        }
+    }
+
+    return std::make_shared<ast::Array>(std::move(objects));
 }
 
 std::shared_ptr<ast::Object> Parser::if_statement()
@@ -397,11 +424,28 @@ std::vector<std::shared_ptr<ast::Object>> Parser::resolve_function_arguments()
     return arguments;
 }
 
+std::shared_ptr<ast::Object> Parser::resolve_array_subscript()
+{
+    std::string symbol_name = previous().data;
+
+    require({lexeme_t::left_box_brace});
+
+    auto term = primary();
+
+    require({lexeme_t::right_box_brace});
+
+    return std::make_shared<ast::ArraySubscriptOperator>(symbol_name, std::move(term));
+}
+
 std::shared_ptr<ast::Object> Parser::resolve_symbol()
 {
     if (current().type == lexeme_t::left_paren)
     {
         return std::make_shared<ast::FunctionCall>(previous().data, resolve_function_arguments());
+    }
+    else if (current().type == lexeme_t::left_box_brace) {
+
+        return resolve_array_subscript();
     }
     else {
         return binary(std::make_shared<ast::Symbol>(previous().data));

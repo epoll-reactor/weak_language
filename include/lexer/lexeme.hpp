@@ -18,7 +18,7 @@ enum struct lexeme_t
     eq,             // ==
     neq,            // !=
 
-    remainder,      // %
+    mod,            // %
     plus,           // +
     minus,          // -
     inc,            // ++
@@ -36,6 +36,8 @@ enum struct lexeme_t
     right_paren,    // )
     left_brace,     // {
     right_brace,    // }
+    left_box_brace, // [
+    right_box_brace,// ]
 
     colon,          // :
     semicolon,      // ;
@@ -73,11 +75,13 @@ inline std::string dispatch_lexeme(lexeme_t o)
         case lexeme_t::minus_assign:    return "-=";
         case lexeme_t::star_assign:     return "*=";
         case lexeme_t::slash_assign:    return "/=";
-        case lexeme_t::remainder:       return "%";
+        case lexeme_t::mod:             return "%";
         case lexeme_t::left_paren:      return "(";
         case lexeme_t::right_paren:     return ")";
         case lexeme_t::left_brace:      return "{";
         case lexeme_t::right_brace:     return "}";
+        case lexeme_t::left_box_brace:  return "[";
+        case lexeme_t::right_box_brace: return "]";
         case lexeme_t::colon:           return ":";
         case lexeme_t::semicolon:       return ";";
         case lexeme_t::num:             return "<number>";

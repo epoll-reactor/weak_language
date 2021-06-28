@@ -27,6 +27,7 @@ double Number::value() const noexcept
     return m_data;
 }
 
+#ifdef AST_DEBUG
 bool Number::same_with(std::shared_ptr<Object> other) const noexcept
 {
     if (auto derived = std::dynamic_pointer_cast<Number>(other))
@@ -37,6 +38,7 @@ bool Number::same_with(std::shared_ptr<Object> other) const noexcept
         return false;
     }
 }
+#endif // AST_DEBUG
 
 String::String(std::string data)
     : m_data(std::move(data))
@@ -47,6 +49,7 @@ std::string String::value() const noexcept
     return m_data;
 }
 
+#ifdef AST_DEBUG
 bool String::same_with(std::shared_ptr<Object> other) const noexcept
 {
     if (auto derived = std::dynamic_pointer_cast<String>(other))
@@ -57,6 +60,7 @@ bool String::same_with(std::shared_ptr<Object> other) const noexcept
         return false;
     }
 }
+#endif // AST_DEBUG
 
 
 Symbol::Symbol(std::string_view name)
@@ -68,6 +72,7 @@ std::string Symbol::name() const noexcept
     return m_name;
 }
 
+#ifdef AST_DEBUG
 bool Symbol::same_with(std::shared_ptr<Object> other) const noexcept
 {
     if (auto derived = std::dynamic_pointer_cast<Symbol>(other))
@@ -78,7 +83,41 @@ bool Symbol::same_with(std::shared_ptr<Object> other) const noexcept
         return false;
     }
 }
+#endif // AST_DEBUG
 
+
+Array::Array(std::vector<std::shared_ptr<Object>> elements)
+    : m_elements(std::move(elements))
+{ }
+
+std::vector<std::shared_ptr<Object>> Array::elements() const noexcept
+{
+    return m_elements;
+}
+
+#ifdef AST_DEBUG
+bool Array::same_with(std::shared_ptr<Object> other) const noexcept
+{
+    if (auto derived = std::dynamic_pointer_cast<Array>(other))
+    {
+        if (m_elements.size() != derived->m_elements.size())
+            return false;
+
+        for (std::size_t i = 0; i < m_elements.size(); i++)
+        {
+            if (!m_elements[i]->same_with(derived->m_elements[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+#endif // AST_DEBUG
 
 Unary::Unary(lexeme_t type, std::shared_ptr<Object> operation)
     : m_type(type)
@@ -95,6 +134,7 @@ lexeme_t Unary::type() const noexcept
     return m_type;
 }
 
+#ifdef AST_DEBUG
 bool Unary::same_with(std::shared_ptr<Object> other) const noexcept
 {
     if (auto derived = std::dynamic_pointer_cast<Unary>(other))
@@ -105,6 +145,7 @@ bool Unary::same_with(std::shared_ptr<Object> other) const noexcept
         return false;
     }
 }
+#endif // AST_DEBUG
 
 
 Binary::Binary(lexeme_t type, std::shared_ptr<Object> lhs, std::shared_ptr<Object> rhs)
@@ -128,6 +169,7 @@ lexeme_t Binary::type() const noexcept
     return m_type;
 }
 
+#ifdef AST_DEBUG
 bool Binary::same_with(std::shared_ptr<Object> other) const noexcept
 {
     if (auto derived = std::dynamic_pointer_cast<Binary>(other))
@@ -138,6 +180,7 @@ bool Binary::same_with(std::shared_ptr<Object> other) const noexcept
         return false;
     }
 }
+#endif // AST_DEBUG
 
 
 Block::Block(std::vector<std::shared_ptr<Object>> statements)
@@ -149,6 +192,7 @@ std::vector<std::shared_ptr<Object>> Block::statements()
     return m_statements;
 }
 
+#ifdef AST_DEBUG
 bool Block::same_with(std::shared_ptr<Object> other) const noexcept
 {
     if (auto derived = std::dynamic_pointer_cast<Block>(other))
@@ -168,6 +212,7 @@ bool Block::same_with(std::shared_ptr<Object> other) const noexcept
         return false;
     }
 }
+#endif // AST_DEBUG
 
 
 While::While(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> block)
@@ -185,6 +230,7 @@ std::shared_ptr<Block> While::body() const noexcept
     return m_block;
 }
 
+#ifdef AST_DEBUG
 bool While::same_with(std::shared_ptr<Object> other) const noexcept
 {
     if (auto derived = std::dynamic_pointer_cast<While>(other))
@@ -195,6 +241,7 @@ bool While::same_with(std::shared_ptr<Object> other) const noexcept
         return false;
     }
 }
+#endif // AST_DEBUG
 
 
 void For::set_init(std::shared_ptr<Object> init)
@@ -237,6 +284,7 @@ std::shared_ptr<Block> For::body() const noexcept
     return m_block;
 }
 
+#ifdef AST_DEBUG
 bool For::same_with(std::shared_ptr<Object> other) const noexcept
 {
     if (auto derived = std::dynamic_pointer_cast<For>(other))
@@ -258,6 +306,7 @@ bool For::same_with(std::shared_ptr<Object> other) const noexcept
         return false;
     }
 }
+#endif // AST_DEBUG
 
 
 If::If(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> body)
@@ -286,6 +335,7 @@ std::shared_ptr<Object> If::else_body() const noexcept
     return m_else_body;
 }
 
+#ifdef AST_DEBUG
 bool If::same_with(std::shared_ptr<Object> other) const noexcept
 {
     if (auto derived = std::dynamic_pointer_cast<If>(other))
@@ -309,6 +359,7 @@ bool If::same_with(std::shared_ptr<Object> other) const noexcept
         return false;
     }
 }
+#endif // AST_DEBUG
 
 
 Function::Function(std::string name, std::vector<std::shared_ptr<Object>> arguments, std::shared_ptr<Block> body)
@@ -332,6 +383,7 @@ std::shared_ptr<Block> Function::body() const noexcept
     return m_body;
 }
 
+#ifdef AST_DEBUG
 bool Function::same_with(std::shared_ptr<Object> other) const noexcept
 {
     if (auto other_function = std::dynamic_pointer_cast<Function>(other))
@@ -357,6 +409,7 @@ bool Function::same_with(std::shared_ptr<Object> other) const noexcept
         return false;
     }
 }
+#endif // AST_DEBUG
 
 
 FunctionCall::FunctionCall(std::string name, std::vector<std::shared_ptr<Object>> arguments)
@@ -374,6 +427,7 @@ std::vector<std::shared_ptr<Object>> FunctionCall::arguments() const noexcept
     return m_arguments;
 }
 
+#ifdef AST_DEBUG
 bool FunctionCall::same_with(std::shared_ptr<Object> other) const noexcept
 {
     if (auto function_call = std::dynamic_pointer_cast<FunctionCall>(other))
@@ -396,5 +450,6 @@ bool FunctionCall::same_with(std::shared_ptr<Object> other) const noexcept
         return false;
     }
 }
+#endif // AST_DEBUG
 
 } // namespace ast

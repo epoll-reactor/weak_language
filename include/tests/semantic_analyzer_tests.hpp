@@ -3,43 +3,22 @@
 
 #include "../semantic/semantic_analyzer.hpp"
 #include "../tests/parser_tests.hpp"
+#include "../tests/test_utility.hpp"
 
 namespace semantic_detail {
 
 void expect_error(std::string_view data)
 {
-    try
-    {
+    trace_error(data, [&data]{
         const std::shared_ptr<ast::RootObject> parsed_trees = parser_detail::create_parse_tree_impl(data);
 
         SemanticAnalyzer analyzer(parsed_trees);
 
         analyzer.analyze();
 
-    } catch (LexicalError& lex_error) {
-
-        std::cout << "While analyzing:\n\t" << data << "\nLexical error processed:\n\t" << lex_error.what() << "\n\n";
-        return;
-
-    } catch (ParseError& parse_error) {
-
-        std::cout << "While analyzing:\n\t" << data << "\nParse error processed:\n\t" << parse_error.what() << "\n\n";
-        return;
-
-    } catch (SemanticError& semantic_error) {
-
-        std::cout << "While analyzing:\n\t" << data << "\nSemantic error processed:\n\t" << semantic_error.what() << "\n\n";
-        return;
-
-    } catch (...) {
-
-        std::cout << "While analyzing:\n\t" << data << "\nUnknown error processed:\n\t\n\n";
-        return;
-    }
-
-    const bool error_expected = false;
-
-    assert(error_expected);
+        /// Will be skipped if exception thrown from analyzer function
+        assert(false && "Error expected");
+    });
 }
 
 void assert_correct(std::string_view data)
@@ -93,6 +72,13 @@ void semantic_analyzer_test_syntax()
     semantic_detail::assert_correct("simple(1);");
     semantic_detail::assert_correct("simple(\"text\");");
     semantic_detail::assert_correct("simple_1(simple_2());");
+
+    semantic_detail::assert_correct("array[1];");
+    semantic_detail::assert_correct("array[1 + 1];");
+    semantic_detail::assert_correct("array[name];");
+    semantic_detail::assert_correct("array[function_call()];");
+    semantic_detail::expect_error("array[\"String\"];");
+    semantic_detail::expect_error("array[fun main() {}];");
 }
 
 void run_semantic_analyzer_tests()

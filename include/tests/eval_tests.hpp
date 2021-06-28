@@ -6,6 +6,8 @@
 #include "../eval/eval.hpp"
 #include "../eval/eval_error.hpp"
 
+#include "../tests/test_utility.hpp"
+
 extern std::ostream& default_stdout;
 
 namespace eval_detail {
@@ -58,8 +60,7 @@ void expect_error(std::string_view program)
 {
     std::cout << "Run fuzz test " << test_counter++ << " => ";
 
-    try
-    {
+    trace_error(program, [&program]{
         Lexer lexer = LexerBuilder{}
             .keywords(test_keywords)
             .operators(test_operators)
@@ -76,38 +77,7 @@ void expect_error(std::string_view program)
         Evaluator evaluator(parsed_program);
 
         evaluator.eval();
-
-    } catch (LexicalError& lexical_error) {
-
-        std::cout << "While analyzing:\n\t" << program << "\nLexical error processed:\n\t" << lexical_error.what() << "\n\n";
-        goto clear_stdout;
-
-    } catch (ParseError& parse_error) {
-
-        std::cout << "While analyzing:\n\t" << program << "\nParse error processed:\n\t" << parse_error.what() << "\n\n";
-        goto clear_stdout;
-
-    } catch (SemanticError& semantic_error) {
-
-        std::cout << "While analyzing:\n\t" << program << "\nSemantic error processed\n\t" << semantic_error.what() << "\n\n";
-        goto clear_stdout;
-
-    } catch (EvalError& eval_error) {
-
-        std::cout << "While analyzing:\n\t" << program << "\nEval error processed\n\t" << eval_error.what() << "\n\n";
-        goto clear_stdout;
-    }
-
-clear_stdout:
-    try
-    {
-        auto& string_stream = dynamic_cast<std::ostringstream&>(default_stdout);
-
-        string_stream.str("");
-
-    } catch (std::bad_cast&) { }
-
-    default_stdout.clear();
+    });
 }
 
 } // namespace eval_detail
@@ -144,8 +114,8 @@ void run_eval_tests()
         "Different\n");
     eval_detail::run_test("fun main() { for (i = 0; i < 10; i = i + 1) { print(i); } }",
         "0123456789");
-//    eval_detail::run_test("fun main() { for (i = 0; i < 100000; i = i + 1) { } }",
-//        "");
+    eval_detail::run_test("fun main() { for (i = 0; i < 100000; i = i + 1) { } }",
+        "");
     eval_detail::run_test("fun copy(arg) { arg; } fun main() { for (i = 0; i < 10; i = i + 1) { print(copy(i)); } }",
         "0123456789");
     eval_detail::expect_error("fun main() { for (var = 0; var != 10; var = var + 1) { } print(var); }");
@@ -155,8 +125,6 @@ void run_eval_tests()
         "10");
     eval_detail::run_test("fun main() { var = \"0\"; print(number?(var)); print(string?(var)); }",
         "01");
-//    eval_detail::run_test("load \"examples/nested.wl\"; fun main() { print(test(), test2()); }",
-//        "1 2");
 
     eval_detail::run_test(R"__(
         fun sqrt(x) {
