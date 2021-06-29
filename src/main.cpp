@@ -33,7 +33,7 @@ void eval(std::string_view program)
 
         try
         {
-            std::ostringstream& ostream = dynamic_cast<std::ostringstream&>(default_stdout);
+            auto& ostream = dynamic_cast<std::ostringstream&>(default_stdout);
             std::cout << ostream.str() << '\n';
             ostream.str("");
 
@@ -52,7 +52,7 @@ void eval_file(std::string_view filename)
     eval(processed_file);
 }
 
-void run_repr()
+[[noreturn]] void run_repr()
 {
     while (true)
     {

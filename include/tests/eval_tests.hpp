@@ -92,8 +92,6 @@ void run_eval_tests()
         "2");
     eval_detail::run_test("fun simple() { var = 2; var; } fun main() { print(simple()); }",
         "2");
-    eval_detail::expect_error("fun simple() { { var = 2; } var; } fun main() { simple(); }");
-
     eval_detail::run_test("fun return_string() { \"String\"; } fun main() { print(return_string()); }",
         "String");
     eval_detail::run_test("fun simple() { var = \"Text\"; var; } fun main() { var = simple(); print(var); }",
@@ -114,17 +112,17 @@ void run_eval_tests()
         "Different\n");
     eval_detail::run_test("fun main() { for (i = 0; i < 10; i = i + 1) { print(i); } }",
         "0123456789");
-    eval_detail::run_test("fun main() { for (i = 0; i < 100000; i = i + 1) { } }",
+    eval_detail::run_test("fun main() { for (i = 0; i < 50000; i = i + 1) { } }",
         "");
     eval_detail::run_test("fun copy(arg) { arg; } fun main() { for (i = 0; i < 10; i = i + 1) { print(copy(i)); } }",
         "0123456789");
-    eval_detail::expect_error("fun main() { for (var = 0; var != 10; var = var + 1) { } print(var); }");
-    eval_detail::expect_error("fun main() { for (var = 0; var != 10; var = var + 1) { for (var_2 = 0; var_2 != 10; var_2 = var_2 + 1) { print(var); } print(var_2); } }");
+    eval_detail::run_test("fun main() { var = 0; print(number?(var), string?(var)); }",
+        "1 0");
+    eval_detail::run_test("fun main() { var = \"0\"; print(number?(var), string?(var)); }",
+        "0 1");
+    eval_detail::run_test("fun main() { array = [1, 2, 3]; print(array[0], array[1.44], array[2]); }",
+        "1 2 3");
 
-    eval_detail::run_test("fun main() { var = 0; print(number?(var)); print(string?(var)); }",
-        "10");
-    eval_detail::run_test("fun main() { var = \"0\"; print(number?(var)); print(string?(var)); }",
-        "01");
 
     eval_detail::run_test(R"__(
         fun sqrt(x) {
@@ -165,6 +163,12 @@ void run_eval_tests()
             print(power(2, 1), power(2, 2), power(2, 3), power(2, 4), power(2, 5), power(2, 6), power(2, 7), power(2, power(2, 3)));
         }
     )__", "2 4 8 16 32 64 128 256");
+
+    eval_detail::expect_error("fun simple() { { var = 2; } var; } fun main() { simple(); }");
+    eval_detail::expect_error("fun main() { for (var = 0; var != 10; var = var + 1) { } print(var); }");
+    eval_detail::expect_error("fun main() { for (var = 0; var != 10; var = var + 1) { for (var_2 = 0; var_2 != 10; var_2 = var_2 + 1) { print(var); } print(var_2); } }");
+    eval_detail::expect_error("fun main() { array = [1, 2, 3]; print(array[0], array[1], array[2], array[3]); }");
+    eval_detail::expect_error("fun main() { a = 1; b = \"2\"; print(a + b); }");
 
     std::cout << "Eval tests passed successfully\n";
 }

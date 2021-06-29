@@ -6,10 +6,12 @@
 #include <cstring>
 #include <iterator>
 #include <random>
+#include <chrono>
 
 #include "../lexer/lexer.hpp"
 #include "../lexer/lexer_builder.hpp"
 #include "../tests/grammar.hpp"
+#include "../tests/test_utility.hpp"
 
 
 namespace lexer_detail {
@@ -362,6 +364,33 @@ void lexer_fuzz_tests()
     lexer_detail::assert_exception(random_bytes(3000).data());
 }
 
+void lexer_speed_tests()
+{
+    std::string data =
+        "void f(int a, int b, int c) {"
+        "  if (true) {"
+        "    int variable_0 = 123;"
+        "  } else {"
+        "    string literal_1 = \"Lorem ipsum\";"
+        "  }"
+        "}";
+
+    /// Exponential grow
+    for (std::size_t i = 0; i < 13; i++)
+        data += data;
+
+    Lexer lexer = LexerBuilder{}
+        .operators(test_operators)
+        .keywords(test_keywords)
+        .input(std::istringstream{data.data()})
+        .build();
+
+    std::cout << "\nLexer speed test - input size (" << data.size() / 1024.0 / 1024.0 << " MiB.)\n";
+    speed_benchmark(1, [&lexer]{
+        const std::vector<Lexeme> lexemes = lexer.tokenize();
+    });
+}
+
 void run_lexer_tests()
 {
     std::cout << "Running lexer tests...\n====\n";
@@ -372,6 +401,7 @@ void run_lexer_tests()
     lexer_operator_tests();
     lexer_expression_tests();
     lexer_fuzz_tests();
+    lexer_speed_tests();
 
     std::cout << "Lexer tests passed successfully\n";
 }

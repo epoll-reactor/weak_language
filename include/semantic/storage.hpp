@@ -14,11 +14,10 @@ class Storage
 
 public:
     Storage()
-    {
-        m_inner_scopes.push_back(scope_t{});
-    }
+        : m_inner_scopes(1, scope_t{})
+    { }
 
-    void push(std::string_view name, std::shared_ptr<ast::Object> value)
+    void push(std::string_view name, const std::shared_ptr<ast::Object>& value)
     {
         if (std::find_if(m_inner_scopes.begin(), m_inner_scopes.end(), [&name](const scope_t& scope) {
             return scope.contains(name.data());
@@ -27,7 +26,7 @@ public:
             throw SemanticError(std::string("redefinition of ") + name.data());
         }
 
-        m_inner_scopes.back()[name.data()] = std::move(value);
+        m_inner_scopes.back()[name.data()] = value;
     }
 
     bool has(std::string_view name)
@@ -42,20 +41,20 @@ public:
         return false;
     }
 
-    void overwrite(std::string_view name, std::shared_ptr<ast::Object> value)
+    void overwrite(std::string_view name, const std::shared_ptr<ast::Object>& value)
     {
-        if (!has(name))
+        if (has(name))
         {
-            push(name, std::move(value));
-        }
-        else {
             for (auto& scope : m_inner_scopes)
             {
                 if (scope.contains(name.data()))
                 {
-                    scope[name.data()] = std::move(value);
+                    scope[name.data()] = value;
                 }
             }
+        }
+        else {
+            push(name, std::move(value));
         }
     }
 

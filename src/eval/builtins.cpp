@@ -16,7 +16,7 @@ std::shared_ptr<ast::Object> default_typecheck(const std::string& fun_name, cons
     return std::make_shared<ast::Number>(is_type);
 }
 
-std::unordered_map<std::string, builtin_function_t> builtins
+const std::unordered_map<std::string, builtin_function_t> builtins
 {
     {"number?", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
 
@@ -48,7 +48,7 @@ std::unordered_map<std::string, builtin_function_t> builtins
         return std::nullopt;
     }},
     {"println", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
-        builtins["print"](arguments);
+        builtins.at("print")(arguments);
 
         default_stdout << '\n';
 

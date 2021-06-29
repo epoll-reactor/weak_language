@@ -33,8 +33,6 @@ void run_test(std::string_view data, std::vector<std::shared_ptr<ast::Object>> a
 
     for (std::size_t i = 0; i < parsed_trees->get().size(); i++)
     {
-        tree_print(parsed_trees->get()[i]);
-        std::cout << '\n';
         assert(parsed_trees->get()[i]->same_with(assertion_trees[i]));
     }
 }

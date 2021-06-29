@@ -8,34 +8,34 @@
 class SemanticAnalyzer
 {
 public:
-    SemanticAnalyzer(std::shared_ptr<ast::RootObject> input);
+    SemanticAnalyzer(const std::shared_ptr<ast::RootObject>& input);
 
     void analyze();
 
 private:
-    void analyze_statement(std::shared_ptr<ast::Object> statement);
+    void analyze_statement(const std::shared_ptr<ast::Object>& statement);
 
-    void analyze_assign_statement(std::shared_ptr<ast::Binary> statement);
+    void analyze_assign_statement(const std::shared_ptr<ast::Binary>& statement);
 
-    void analyze_binary_statement(std::shared_ptr<ast::Binary> statement);
+    void analyze_binary_statement(const std::shared_ptr<ast::Binary>& statement);
 
-    void analyze_array_subscript_statement(std::shared_ptr<ast::ArraySubscriptOperator> statement);
+    void analyze_array_subscript_statement(const std::shared_ptr<ast::ArraySubscriptOperator>& statement);
 
-    void analyze_function_call_statement(std::shared_ptr<ast::FunctionCall> function_statement);
+    void analyze_function_call_statement(const std::shared_ptr<ast::FunctionCall>& function_statement);
 
-    void analyze_function_statement(std::shared_ptr<ast::Function> function_statement);
+    void analyze_function_statement(const std::shared_ptr<ast::Function>& function_statement);
 
-    void analyze_if_statement(std::shared_ptr<ast::If> if_statement);
+    void analyze_if_statement(const std::shared_ptr<ast::If>& if_statement);
 
-    void analyze_while_statement(std::shared_ptr<ast::While> while_statement);
+    void analyze_while_statement(const std::shared_ptr<ast::While>& while_statement);
 
-    void analyze_for_statement(std::shared_ptr<ast::For> for_statement);
+    void analyze_for_statement(const std::shared_ptr<ast::For>& for_statement);
 
-    void analyze_block_statement(std::shared_ptr<ast::Block> block_statement);
+    void analyze_block_statement(const std::shared_ptr<ast::Block>& block_statement);
 
-    bool to_bool_convertible(std::shared_ptr<ast::Object> statement);
+    bool to_bool_convertible(const std::shared_ptr<ast::Object>& statement);
 
-    bool to_number_convertible(std::shared_ptr<ast::Object> statement);
+    bool to_number_convertible(const std::shared_ptr<ast::Object>& statement);
 
     std::vector<std::shared_ptr<ast::Object>> m_input;
 };

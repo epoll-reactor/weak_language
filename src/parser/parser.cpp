@@ -100,12 +100,12 @@ bool Parser::has_next() const noexcept
     return m_current_index < m_input.size() && current().type != lexeme_t::end_of_data;
 }
 
-bool Parser::is_block(std::shared_ptr<ast::Object> statement) noexcept
+bool Parser::is_block(const std::shared_ptr<ast::Object>& statement) noexcept
 {
     return std::dynamic_pointer_cast<ast::Block>(statement).operator bool();
 }
 
-bool Parser::is_block_statement(std::shared_ptr<ast::Object> statement) noexcept
+bool Parser::is_block_statement(const std::shared_ptr<ast::Object>& statement) noexcept
 {
     return std::dynamic_pointer_cast<ast::If>(statement).operator bool()
         || std::dynamic_pointer_cast<ast::While>(statement).operator bool()
@@ -141,7 +141,7 @@ Lexeme Parser::require(const std::vector<lexeme_t>& expected_types)
     }
 }
 
-std::shared_ptr<ast::Object> Parser::additive(std::shared_ptr<ast::Object> ptr)
+std::shared_ptr<ast::Object> Parser::additive(const std::shared_ptr<ast::Object>& ptr)
 {
     auto expr = multiplicative(ptr);
 
@@ -165,7 +165,7 @@ std::shared_ptr<ast::Object> Parser::additive(std::shared_ptr<ast::Object> ptr)
     return expr;
 }
 
-std::shared_ptr<ast::Object> Parser::multiplicative(std::shared_ptr<ast::Object> ptr)
+std::shared_ptr<ast::Object> Parser::multiplicative(const std::shared_ptr<ast::Object>& ptr)
 {
     auto expr = primary();
 
@@ -195,7 +195,7 @@ std::shared_ptr<ast::Object> Parser::multiplicative(std::shared_ptr<ast::Object>
     return expr;
 }
 
-std::shared_ptr<ast::Object> Parser::binary(std::shared_ptr<ast::Object> ptr)
+std::shared_ptr<ast::Object> Parser::binary(const std::shared_ptr<ast::Object>& ptr)
 {
     if (end_of_expression())
     {

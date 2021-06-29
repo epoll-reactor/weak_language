@@ -85,8 +85,7 @@ std::string preprocess_file(std::string_view filename)
 {
     std::ifstream file(filename.data());
 
-    if (file.fail())
-        throw std::runtime_error("Cannot open file: " + std::string(filename));
+    if (file.fail()) { throw std::runtime_error("Cannot open file: " + std::string(filename)); }
 
     std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
@@ -97,7 +96,7 @@ std::string preprocess_file(std::string_view filename)
     for (auto load_file : list_of_filenames(contents))
         contents.insert(0, preprocess_file(file_info.path() + std::string(load_file)));
 
-    const std::regex remove_load_re("load\\ \\\".*?\\\"\\;");
+    const std::regex remove_load_re(R"(load\ \".*?\"\;)");
     std::ostringstream processed_file;
     std::regex_replace(std::ostream_iterator<char>(processed_file), contents.begin(), contents.end(), remove_load_re, "");
 

@@ -32,14 +32,6 @@ bool Lexer::is_alphanumeric(char token) noexcept
     return isalpha(token) || token == '_' || token == '?';
 }
 
-void Lexer::lexical_error_if(bool condition, std::string_view message)
-{
-    if (condition)
-    {
-        throw LexicalError(message);
-    }
-}
-
 std::vector<Lexeme> Lexer::tokenize()
 {
     std::vector<Lexeme> lexemes;
@@ -107,9 +99,9 @@ Lexeme Lexer::process_digit()
         digit += peek();
     }
 
-    lexical_error_if(has_next() && is_alphanumeric(current()), "Symbol can't start with digit");
-    lexical_error_if(dots_reached > 1, "Extra \".\" detected");
-    lexical_error_if(previous() == '.', "Digit after \".\" expected");
+    if (has_next() && is_alphanumeric(current())) { throw LexicalError("Symbol can't start with digit"); }
+    if (dots_reached > 1)  { throw LexicalError("Extra \".\" detected"); }
+    if (previous() == '.') { throw LexicalError("Digit after \".\" expected"); }
 
     return Lexeme{std::move(digit), lexeme_t::num};
 }
@@ -118,17 +110,15 @@ Lexeme Lexer::process_string_literal()
 {
     peek(); /// Eat opening "
 
-    if (previous() == '\"')
-        return Lexeme{"", lexeme_t::string_literal};
+    if (previous() == '\"') { return Lexeme{"", lexeme_t::string_literal}; }
 
     std::string literal(1, previous());
 
     while (has_next() && current() != '\"')
     {
-        if (current() == '\\')
-            peek();
+        if (current() == '\\') { peek(); }
 
-        lexical_error_if(current() == '\0', "Closing '\\\"' expected");
+        if (current() == '\0') { throw LexicalError("Closing '\\\"' expected"); }
 
         literal += peek();
     }

@@ -34,10 +34,10 @@ private:
     bool has_next() const noexcept;
 
     /// @return true if statement is raw block
-    static bool is_block(std::shared_ptr<ast::Object> statement) noexcept;
+    static bool is_block(const std::shared_ptr<ast::Object>& statement) noexcept;
 
     /// @return true if statement is block-based statement, but not block
-    static bool is_block_statement(std::shared_ptr<ast::Object> statement) noexcept;
+    static bool is_block_statement(const std::shared_ptr<ast::Object>& statement) noexcept;
 
     /// @brief  get current token and match with one of samples
     /// @return correct lexeme, std::nullopt if input has no more tokens
@@ -54,16 +54,16 @@ private:
     std::shared_ptr<ast::Object> array();
 
     /// @return parse tree if ptr is additive operation, unchanged ptr otherwise
-    std::shared_ptr<ast::Object> additive(std::shared_ptr<ast::Object> ptr);
+    std::shared_ptr<ast::Object> additive(const std::shared_ptr<ast::Object>& ptr);
 
     /// @return parse tree if ptr is multiplicative operation, unchanged ptr otherwise
-    std::shared_ptr<ast::Object> multiplicative(std::shared_ptr<ast::Object> ptr);
+    std::shared_ptr<ast::Object> multiplicative(const std::shared_ptr<ast::Object>& ptr);
 
     /// @note   this function does not check operation types
     /// @pre    previous() returns number or symbol lexeme
     /// @post   previous() returns first lexeme after parsed binary
     /// @return binary parse tree
-    std::shared_ptr<ast::Object> binary(std::shared_ptr<ast::Object> ptr);
+    std::shared_ptr<ast::Object> binary(const std::shared_ptr<ast::Object>&);
 
     /// @pre    previous() returns '{' lexeme
     /// @post   current() returns '}' lexeme

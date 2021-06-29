@@ -193,8 +193,6 @@ void parse_object_while_tests()
 
     auto while_object = std::make_shared<ast::While>(exit_condition, while_body);
 
-    tree_print(while_object);
-
     assert(while_object->exit_condition()->same_with(exit_condition));
     assert(while_object->body()->same_with(while_body));
 }
@@ -218,6 +216,7 @@ void parse_object_if_tests()
 
 void parse_object_if_else_tests()
 {
+
     auto if_block = std::make_shared<ast::If>(
         std::make_shared<ast::Binary>(
             lexeme_t::eq,

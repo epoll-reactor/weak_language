@@ -41,8 +41,6 @@ private:
 
     static bool is_alphanumeric(char token) noexcept;
 
-    static void lexical_error_if(bool condition, std::string_view message);
-
     /// @pre    previous() returns digit
     /// @post   m_current_index points to first element after number literal (with dot or not)
     /// @throw  LexicalError if digit does not match the pattern \b\d+(\.\d+)?\b
