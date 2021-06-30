@@ -92,8 +92,7 @@ std::shared_ptr<ast::Object> Evaluator::eval_binary(const std::shared_ptr<ast::B
         auto left_num = std::dynamic_pointer_cast<ast::Number>(eval_expression(binary->lhs()));
         auto right_num = std::dynamic_pointer_cast<ast::Number>(eval_expression(binary->rhs()));
 
-        if (!left_num || !right_num)
-            throw EvalError("Unsupported binary operands");
+        if (!left_num || !right_num) { throw EvalError("Unsupported binary operands"); }
 
         double l = left_num->value();
         double r = right_num->value();

@@ -6,17 +6,12 @@
 
 #include "../lexer/lexeme.hpp"
 
-
 namespace ast {
 
 class Object
 {
 public:
     virtual ~Object() = default;
-
-#ifdef AST_DEBUG
-    virtual bool same_with(std::shared_ptr<Object> other) const noexcept = 0;
-#endif // AST_DEBUG
 };
 
 class RootObject
@@ -39,10 +34,6 @@ public:
 
     double value() const noexcept;
 
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
-
 private:
     double m_data;
 };
@@ -53,10 +44,6 @@ public:
     String(std::string data);
 
     std::string value() const noexcept;
-
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
 
 private:
     std::string m_data;
@@ -69,10 +56,6 @@ public:
 
     std::string name() const noexcept;
 
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
-
 private:
     std::string m_name;
 };
@@ -84,10 +67,6 @@ public:
 
     std::vector<std::shared_ptr<Object>>& elements() noexcept;
 
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
-
 private:
     std::vector<std::shared_ptr<Object>> m_elements;
 };
@@ -95,36 +74,11 @@ private:
 class ArraySubscriptOperator : public Object
 {
 public:
-    ArraySubscriptOperator(std::string_view name, std::shared_ptr<Object> index)
-        : m_name(name)
-        , m_index(std::move(index))
-    { }
+    ArraySubscriptOperator(std::string_view name, std::shared_ptr<Object> index);
 
-    std::string symbol_name() const noexcept
-    {
-        return m_name;
-    }
+    std::string symbol_name() const noexcept;
 
-    std::shared_ptr<Object> index() const noexcept
-    {
-        return m_index;
-    }
-
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override
-    {
-        if (auto derived = std::dynamic_pointer_cast<ArraySubscriptOperator>(other))
-        {
-            if (m_name != derived->m_name)
-                return false;
-
-            return m_index->same_with(derived->m_index);
-        }
-        else {
-            return false;
-        }
-    };
-#endif // AST_DEBUG
+    std::shared_ptr<Object> index() const noexcept;
 
 private:
     std::string m_name;
@@ -139,10 +93,6 @@ public:
     std::shared_ptr<Object> operand() const noexcept;
 
     lexeme_t type() const noexcept;
-
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
 
 private:
     lexeme_t m_type;
@@ -160,10 +110,6 @@ public:
 
     lexeme_t type() const noexcept;
 
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
-
 private:
     lexeme_t m_type;
     std::shared_ptr<Object> m_lhs;
@@ -177,10 +123,6 @@ public:
 
     const std::vector<std::shared_ptr<Object>>& statements();
 
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
-
 private:
     std::vector<std::shared_ptr<Object>> m_statements;
 };
@@ -193,10 +135,6 @@ public:
     std::shared_ptr<Object> exit_condition() const noexcept;
 
     std::shared_ptr<Block> body() const noexcept;
-
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
 
 private:
     std::shared_ptr<Object> m_exit_condition;
@@ -224,10 +162,6 @@ public:
 
     std::shared_ptr<Block> body() const noexcept;
 
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
-
 private:
     std::shared_ptr<Object> m_for_init;
     std::shared_ptr<Object> m_for_exit_condition;
@@ -248,10 +182,6 @@ public:
 
     std::shared_ptr<Object> else_body() const noexcept;
 
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
-
 private:
     std::shared_ptr<Object> m_exit_condition;
     std::shared_ptr<Block> m_body;
@@ -269,10 +199,6 @@ public:
 
     std::shared_ptr<Block> body() const noexcept;
 
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
-
 private:
     std::string m_name;
     std::vector<std::shared_ptr<Object>> m_arguments;
@@ -287,10 +213,6 @@ public:
     std::string name() const noexcept;
 
     const std::vector<std::shared_ptr<Object>>& arguments() const noexcept;
-
-#ifdef AST_DEBUG
-    bool same_with(std::shared_ptr<Object> other) const noexcept override;
-#endif // AST_DEBUG
 
 private:
     std::string m_name;
