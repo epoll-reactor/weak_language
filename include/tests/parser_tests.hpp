@@ -89,6 +89,9 @@ void run_parser_tests()
     auto alloc_binary = [](lexeme_t type, auto lhs, auto rhs) {
         return std::make_shared<ast::Binary>(type, std::move(lhs), std::move(rhs));
     };
+    auto alloc_unary = [](lexeme_t type, auto arg) {
+        return std::make_shared<ast::Unary>(type, std::move(arg));
+    };
     auto alloc_block = [](std::vector<std::shared_ptr<ast::Object>> expressions) {
         return std::make_shared<ast::Block>(std::move(expressions));
     };
@@ -133,6 +136,10 @@ void run_parser_tests()
             alloc_num("1")
         )
     }});
+
+    parser_detail::run_test("++1;", {
+        alloc_unary(lexeme_t::inc, alloc_num("1"))
+    });
 
     parser_detail::run_test("2 + 3 + 4;", {{
         alloc_binary(

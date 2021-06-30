@@ -82,7 +82,7 @@ class Array : public Object
 public:
     Array(std::vector<std::shared_ptr<Object>> elements);
 
-    std::vector<std::shared_ptr<Object>> elements() const noexcept;
+    std::vector<std::shared_ptr<Object>>& elements() noexcept;
 
 #ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
@@ -175,7 +175,7 @@ class Block : public Object
 public:
     Block(std::vector<std::shared_ptr<Object>> statements);
 
-    std::vector<std::shared_ptr<Object>> statements();
+    const std::vector<std::shared_ptr<Object>>& statements();
 
 #ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;
@@ -265,7 +265,7 @@ public:
 
     std::string name() const noexcept;
 
-    std::vector<std::shared_ptr<Object>> arguments() const noexcept;
+    const std::vector<std::shared_ptr<Object>>& arguments() const noexcept;
 
     std::shared_ptr<Block> body() const noexcept;
 
@@ -286,7 +286,7 @@ public:
 
     std::string name() const noexcept;
 
-    std::vector<std::shared_ptr<Object>> arguments() const noexcept;
+    const std::vector<std::shared_ptr<Object>>& arguments() const noexcept;
 
 #ifdef AST_DEBUG
     bool same_with(std::shared_ptr<Object> other) const noexcept override;

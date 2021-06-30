@@ -61,9 +61,13 @@ private:
 
     /// @note   this function does not check operation types
     /// @pre    previous() returns number or symbol lexeme
-    /// @post   previous() returns first lexeme after parsed binary
+    /// @post   previous() returns first lexeme after parsed binary expression
     /// @return binary parse tree
-    std::shared_ptr<ast::Object> binary(const std::shared_ptr<ast::Object>&);
+    std::shared_ptr<ast::Object> binary(const std::shared_ptr<ast::Object>& ptr);
+
+    /// @pre    previous() returns unary operator
+    /// @post   previous() returns first lexeme after parsed unary expression
+    std::shared_ptr<ast::Object> unary();
 
     /// @pre    previous() returns '{' lexeme
     /// @post   current() returns '}' lexeme

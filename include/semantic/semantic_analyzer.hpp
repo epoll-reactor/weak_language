@@ -15,6 +15,8 @@ public:
 private:
     void analyze_statement(const std::shared_ptr<ast::Object>& statement);
 
+    void analyze_array_statement(const std::shared_ptr<ast::Array>& statement);
+
     void analyze_assign_statement(const std::shared_ptr<ast::Binary>& statement);
 
     void analyze_binary_statement(const std::shared_ptr<ast::Binary>& statement);

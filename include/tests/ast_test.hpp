@@ -315,7 +315,7 @@ void parse_object_function_call_test()
 }
 #endif // AST_DEBUG
 
-void run_expression_tests()
+void run_ast_tests()
 {
 #ifdef AST_DEBUG
     std::cout << "Running parse tree tests...\n====\n";

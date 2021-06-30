@@ -66,6 +66,12 @@ std::shared_ptr<ast::Object> Parser::primary()
         case lexeme_t::symbol:
             return resolve_symbol();
 
+        case lexeme_t::minus:
+        case lexeme_t::negation:
+        case lexeme_t::inc:
+        case lexeme_t::dec:
+            return unary();
+
         default:
             throw ParseError("Unknown expression: " + dispatch_lexeme(previous().type));
     }
@@ -197,16 +203,16 @@ std::shared_ptr<ast::Object> Parser::multiplicative(const std::shared_ptr<ast::O
 
 std::shared_ptr<ast::Object> Parser::binary(const std::shared_ptr<ast::Object>& ptr)
 {
-    if (end_of_expression())
-    {
-        return ptr;
-    }
-
-    lexeme_t op = current().type;
+    if (end_of_expression()) { return ptr; }
 
     peek();
 
-    return std::make_shared<ast::Binary>(op, ptr, additive(ptr));
+    return std::make_shared<ast::Binary>(previous().type, ptr, additive(ptr));
+}
+
+std::shared_ptr<ast::Object> Parser::unary()
+{
+    return std::make_shared<ast::Unary>(previous().type, primary());
 }
 
 std::shared_ptr<ast::Block> Parser::block()

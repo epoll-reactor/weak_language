@@ -17,6 +17,7 @@ void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& sta
     auto string = std::dynamic_pointer_cast<ast::String>(statement);
     auto number = std::dynamic_pointer_cast<ast::Number>(statement);
     auto symbol = std::dynamic_pointer_cast<ast::Symbol>(statement);
+    auto array = std::dynamic_pointer_cast<ast::Array>(statement);
     auto array_subscript = std::dynamic_pointer_cast<ast::ArraySubscriptOperator>(statement);
     auto block = std::dynamic_pointer_cast<ast::Block>(statement);
     auto if_ = std::dynamic_pointer_cast<ast::If>(statement);
@@ -28,6 +29,9 @@ void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& sta
 
     if (string || number || symbol)
         return;
+
+    else if (array)
+        analyze_array_statement(array);
 
     else if (array_subscript)
         analyze_array_subscript_statement(array_subscript);
@@ -69,6 +73,22 @@ void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& sta
     }
 }
 
+void SemanticAnalyzer::analyze_array_statement(const std::shared_ptr<ast::Array>& statement)
+{
+    for (const auto& element : statement->elements())
+    {
+        if (!std::dynamic_pointer_cast<ast::Symbol>(element)
+        &&  !std::dynamic_pointer_cast<ast::Number>(element)
+        &&  !std::dynamic_pointer_cast<ast::String>(element)
+        &&  !std::dynamic_pointer_cast<ast::Binary>(element)
+        &&  !std::dynamic_pointer_cast<ast::FunctionCall>(element)
+        &&  !std::dynamic_pointer_cast<ast::Array>(element))
+        {
+            throw SemanticError("Array expects object don't statement");
+        }
+    }
+}
+
 void SemanticAnalyzer::analyze_assign_statement(const std::shared_ptr<ast::Binary>& statement)
 {
     if (!std::dynamic_pointer_cast<ast::Symbol>(statement->lhs()))
@@ -81,7 +101,8 @@ void SemanticAnalyzer::analyze_assign_statement(const std::shared_ptr<ast::Binar
     &&  !std::dynamic_pointer_cast<ast::String>(statement->rhs())
     &&  !std::dynamic_pointer_cast<ast::Binary>(statement->rhs())
     &&  !std::dynamic_pointer_cast<ast::FunctionCall>(statement->rhs())
-    &&  !std::dynamic_pointer_cast<ast::Array>(statement->rhs()))
+    &&  !std::dynamic_pointer_cast<ast::Array>(statement->rhs())
+    &&  !std::dynamic_pointer_cast<ast::ArraySubscriptOperator>(statement->rhs()))
     {
         throw SemanticError("Expression is not assignable");
     }

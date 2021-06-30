@@ -376,7 +376,7 @@ void lexer_speed_tests()
         "}";
 
     /// Exponential grow
-    for (std::size_t i = 0; i < 13; i++)
+    for (std::size_t i = 0; i < 15; i++)
         data += data;
 
     Lexer lexer = LexerBuilder{}

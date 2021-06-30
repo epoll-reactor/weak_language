@@ -68,7 +68,7 @@ void eval_file(std::string_view filename)
 void run_tests()
 {
     run_lexer_tests();
-    run_expression_tests();
+    run_ast_tests();
     run_parser_tests();
     run_semantic_analyzer_tests();
     run_storage_tests();

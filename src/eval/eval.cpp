@@ -1,6 +1,12 @@
 #include "../../include/eval/builtins.hpp"
 #include "../../include/eval/eval.hpp"
 
+static bool is_datatype(const std::shared_ptr<ast::Object>& object) noexcept
+{
+    return std::dynamic_pointer_cast<ast::Number>(object)
+        || std::dynamic_pointer_cast<ast::String>(object)
+        || std::dynamic_pointer_cast<ast::Array>(object);
+}
 
 Evaluator::Evaluator(const std::shared_ptr<ast::RootObject>& program)
     : m_expressions(program->get())
@@ -32,7 +38,7 @@ std::shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, con
     m_storage.scope_begin();
 
     /// Load function arguments to local scope
-    for (std::size_t i = 0; i < evaluated_args.size(); i++)
+    for (std::size_t i = 0; i < evaluated_args.size(); ++i)
         m_storage.push(std::dynamic_pointer_cast<ast::Symbol>(stored_function->arguments()[i])->name(), evaluated_args[i]);
 
     for (const auto& arg : stored_function->body()->statements())
@@ -40,26 +46,22 @@ std::shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, con
 
     m_storage.scope_end();
 
-    if (std::dynamic_pointer_cast<ast::Number>(last_statement)
-        ||  std::dynamic_pointer_cast<ast::String>(last_statement))
-    {
+    if (is_datatype(last_statement))
         return last_statement;
-    }
-    else {
+    else
         return {};
-    }
 }
 
 std::shared_ptr<ast::Object> Evaluator::eval_function_call(const std::shared_ptr<ast::FunctionCall>& function_call)
 {
-    std::vector<std::shared_ptr<ast::Object>> evaluated_arguments;
+    std::vector<std::shared_ptr<ast::Object>> arguments;
 
     for (const auto& arg : function_call->arguments())
-        evaluated_arguments.emplace_back(eval_expression(arg));
+        arguments.emplace_back(eval_expression(arg));
 
     if (builtins.contains(function_call->name()))
     {
-        if (auto function_result = builtins.at(function_call->name())(evaluated_arguments))
+        if (auto function_result = builtins.at(function_call->name())(arguments))
         {
             return function_result.value();
         }
@@ -68,7 +70,19 @@ std::shared_ptr<ast::Object> Evaluator::eval_function_call(const std::shared_ptr
         }
     }
 
-    return call_function(function_call->name(), evaluated_arguments);
+    return call_function(function_call->name(), arguments);
+}
+
+std::shared_ptr<ast::Object> Evaluator::eval_block(const std::shared_ptr<ast::Block>& block)
+{
+    m_storage.scope_begin();
+
+    for (const auto& statement : block->statements())
+        eval_expression(statement);
+
+    m_storage.scope_end();
+
+    return block;
 }
 
 std::shared_ptr<ast::Object> Evaluator::eval_binary(const std::shared_ptr<ast::Binary>& binary)
@@ -92,7 +106,7 @@ std::shared_ptr<ast::Object> Evaluator::eval_binary(const std::shared_ptr<ast::B
             case lexeme_t::star:    result = l * r; break;
             case lexeme_t::slash:   result = l / r; break;
             /// Consequence of ill-conceived lexical analysis
-            /// without floats
+            /// without separating floats and ints
             case lexeme_t::mod:     result = static_cast<int>(l) % static_cast<int>(r); break;
             case lexeme_t::eq:      result = l == r; break;
             case lexeme_t::neq:     result = l != r; break;
@@ -119,6 +133,14 @@ std::shared_ptr<ast::Object> Evaluator::eval_binary(const std::shared_ptr<ast::B
     return binary_impl(binary);
 }
 
+std::shared_ptr<ast::Object> Evaluator::eval_array(const std::shared_ptr<ast::Array>& array)
+{
+    for (auto& element : array->elements())
+        element = eval_expression(element);
+
+    return array;
+}
+
 void Evaluator::eval_while(const std::shared_ptr<ast::While>& while_stmt)
 {
     auto exit_condition = eval_expression(while_stmt->exit_condition());
@@ -129,7 +151,6 @@ void Evaluator::eval_while(const std::shared_ptr<ast::While>& while_stmt)
     while (static_cast<bool>(boolean_exit_condition->value()))
     {
         eval_expression(while_stmt->body());
-
         boolean_exit_condition = std::dynamic_pointer_cast<ast::Number>(eval_expression(while_stmt->exit_condition()));
     }
 }
@@ -181,105 +202,40 @@ void Evaluator::eval_for(const std::shared_ptr<ast::For>& for_stmt)
     m_storage.scope_end();
 }
 
-namespace {
-
-class ExpressionResolver
-{
-public:
-    explicit ExpressionResolver(std::shared_ptr<ast::Object> expr)
-        : m_expr(std::move(expr)), m_result()
-    { }
-
-    template<typename AstType, typename Lambda>
-    void on_type(Lambda&& lambda)
-    {
-        if (auto target_type = std::dynamic_pointer_cast<AstType>(m_expr))
-            m_result = lambda(target_type);
-    }
-
-    std::shared_ptr<ast::Object> result() const noexcept
-    {
-        return m_result;
-    }
-
-private:
-    std::shared_ptr<ast::Object> m_expr;
-    std::shared_ptr<ast::Object> m_result;
-};
-} // anonymous namespace
-
 std::shared_ptr<ast::Object> Evaluator::eval_expression(const std::shared_ptr<ast::Object>& expression)
 {
-    /// Doubtfully
-    ExpressionResolver resolver(expression);
+    if (auto target = std::dynamic_pointer_cast<ast::Number>(expression))
+        return target;
 
-    resolver.on_type<ast::Number>([](const std::shared_ptr<ast::Number>& number)
-    {
-        return number;
-    });
+    if (auto target = std::dynamic_pointer_cast<ast::String>(expression))
+        return target;
 
-    resolver.on_type<ast::String>([](const std::shared_ptr<ast::String>& string)
-    {
-        return string;
-    });
+    if (auto target = std::dynamic_pointer_cast<ast::Symbol>(expression))
+        return m_storage.lookup(target->name());
 
-    resolver.on_type<ast::Symbol>([this](const std::shared_ptr<ast::Symbol>& symbol)
-    {
-        return m_storage.lookup(symbol->name());
-    });
+    if (auto target = std::dynamic_pointer_cast<ast::Array>(expression))
+        return eval_array(target);
 
-    resolver.on_type<ast::FunctionCall>([this](const std::shared_ptr<ast::FunctionCall>& function_call)
-    {
-        return eval_function_call(function_call);
-    });
+    if (auto target = std::dynamic_pointer_cast<ast::Binary>(expression))
+        return eval_binary(target);
 
-    resolver.on_type<ast::Binary>([this](const std::shared_ptr<ast::Binary>& binary)
-    {
-        return eval_binary(binary);
-    });
+    if (auto target = std::dynamic_pointer_cast<ast::Block>(expression))
+        return eval_block(target);
 
-    resolver.on_type<ast::Block>([this, &expression](const std::shared_ptr<ast::Block>& block)
-    {
-        m_storage.scope_begin();
+    if (auto target = std::dynamic_pointer_cast<ast::ArraySubscriptOperator>(expression))
+        return eval_array_subscript(target);
 
-        for (const auto& statement : block->statements())
-            eval_expression(statement);
+    if (auto target = std::dynamic_pointer_cast<ast::FunctionCall>(expression))
+        return eval_function_call(target);
 
-        m_storage.scope_end();
+    if (auto target = std::dynamic_pointer_cast<ast::While>(expression))
+        { eval_while(target); return expression; }
 
-        return expression;
-    });
+    if (auto target = std::dynamic_pointer_cast<ast::For>(expression))
+        { eval_for(target); return expression; }
 
-    resolver.on_type<ast::While>([this, &expression](const std::shared_ptr<ast::While>& while_stmt)
-    {
-        eval_while(while_stmt);
+    if (auto target = std::dynamic_pointer_cast<ast::If>(expression))
+        { eval_if(target); return expression; }
 
-        return expression;
-    });
-
-    resolver.on_type<ast::For>([this, &expression](const std::shared_ptr<ast::For>& for_stmt)
-    {
-        eval_for(for_stmt);
-
-        return expression;
-    });
-
-    resolver.on_type<ast::If>([this, &expression](const std::shared_ptr<ast::If>& if_stmt)
-    {
-        eval_if(if_stmt);
-
-        return expression;
-    });
-
-    resolver.on_type<ast::Array>([](const std::shared_ptr<ast::Array>& array)
-    {
-        return array;
-    });
-
-    resolver.on_type<ast::ArraySubscriptOperator>([this](const std::shared_ptr<ast::ArraySubscriptOperator>& array_subscript)
-    {
-        return eval_array_subscript(array_subscript);
-    });
-
-    return resolver.result();
+    throw EvalError("Unknown expression");
 }

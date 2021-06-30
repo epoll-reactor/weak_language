@@ -90,7 +90,7 @@ Array::Array(std::vector<std::shared_ptr<Object>> elements)
     : m_elements(std::move(elements))
 { }
 
-std::vector<std::shared_ptr<Object>> Array::elements() const noexcept
+std::vector<std::shared_ptr<Object>>& Array::elements() noexcept
 {
     return m_elements;
 }
@@ -187,7 +187,7 @@ Block::Block(std::vector<std::shared_ptr<Object>> statements)
     : m_statements(std::move(statements))
 { }
 
-std::vector<std::shared_ptr<Object>> Block::statements()
+const std::vector<std::shared_ptr<Object>>& Block::statements()
 {
     return m_statements;
 }
@@ -373,7 +373,7 @@ std::string Function::name() const noexcept
     return m_name;
 }
 
-std::vector<std::shared_ptr<Object>> Function::arguments() const noexcept
+const std::vector<std::shared_ptr<Object>>& Function::arguments() const noexcept
 {
     return m_arguments;
 }
@@ -422,7 +422,7 @@ std::string FunctionCall::name() const noexcept
     return m_name;
 }
 
-std::vector<std::shared_ptr<Object>> FunctionCall::arguments() const noexcept
+const std::vector<std::shared_ptr<Object>>& FunctionCall::arguments() const noexcept
 {
     return m_arguments;
 }

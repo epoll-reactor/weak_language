@@ -36,6 +36,8 @@ std::vector<Lexeme> Lexer::tokenize()
 {
     std::vector<Lexeme> lexemes;
 
+    lexemes.reserve(m_input.size() / 4);
+
     while (has_next())
     {
         peek();
@@ -82,6 +84,8 @@ std::vector<Lexeme> Lexer::tokenize()
 #pragma GCC diagnostic pop
 
     lexemes.emplace_back(Lexeme{"", lexeme_t::end_of_data});
+
+    lexemes.shrink_to_fit();
 
     return lexemes;
 }

@@ -38,6 +38,8 @@ static inline const std::unordered_map<std::string, lexeme_t> test_operators {
 
     {".", lexeme_t::dot},
     {",", lexeme_t::comma},
+    {":", lexeme_t::colon},
+    {";", lexeme_t::semicolon},
 
     {"(", lexeme_t::left_paren},
     {")", lexeme_t::right_paren},
@@ -45,9 +47,6 @@ static inline const std::unordered_map<std::string, lexeme_t> test_operators {
     {"}", lexeme_t::right_brace},
     {"[", lexeme_t::left_box_brace},
     {"]", lexeme_t::right_box_brace},
-
-    {":", lexeme_t::colon},
-    {";", lexeme_t::semicolon},
 };
 
 #endif //TEST_GRAMMAR_HPP
