@@ -12,7 +12,8 @@ static inline const std::unordered_map<std::string, lexeme_t> test_keywords {
     {"else", lexeme_t::kw_else},
     {"return", lexeme_t::kw_return},
     {"fun", lexeme_t::kw_function_decl},
-    {"load", lexeme_t::kw_load}
+    {"load", lexeme_t::kw_load},
+    {"define-type", lexeme_t::kw_define_type}
 };
 
 static inline const std::unordered_map<std::string, lexeme_t> test_operators {
@@ -35,6 +36,8 @@ static inline const std::unordered_map<std::string, lexeme_t> test_operators {
     {"<=", lexeme_t::le},
     {">", lexeme_t::gt},
     {">=", lexeme_t::ge},
+    {"<<", lexeme_t::slli},
+    {">>", lexeme_t::srli},
 
     {".", lexeme_t::dot},
     {",", lexeme_t::comma},

@@ -25,12 +25,25 @@ private:
     std::vector<std::shared_ptr<Object>> m_expressions;
 };
 
-class Number : public Object
+class Integer : public Object
 {
 public:
-    Number(std::string_view data);
+    Integer(std::string_view data);
 
-    Number(double data);
+    Integer(int32_t data);
+
+    int32_t value() const noexcept;
+
+private:
+    int32_t m_data;
+};
+
+class Float : public Object
+{
+public:
+    Float(std::string_view data);
+
+    Float(double data);
 
     double value() const noexcept;
 
@@ -217,6 +230,19 @@ public:
 private:
     std::string m_name;
     std::vector<std::shared_ptr<Object>> m_arguments;
+};
+
+class TypeDefinition : public Object
+{
+public:
+    TypeDefinition(std::string_view name, std::vector<std::string> fields);
+
+    std::string name() const noexcept;
+    std::vector<std::string> fields() const noexcept;
+
+private:
+    std::string m_name;
+    std::vector<std::string> m_fields;
 };
 
 } // namespace ast

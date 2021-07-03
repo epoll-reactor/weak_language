@@ -35,7 +35,7 @@ private:
 
     void analyze_block_statement(const std::shared_ptr<ast::Block>& block_statement);
 
-    bool to_bool_convertible(const std::shared_ptr<ast::Object>& statement);
+    bool to_integral_convertible(const std::shared_ptr<ast::Object>& statement);
 
     bool to_number_convertible(const std::shared_ptr<ast::Object>& statement);
 

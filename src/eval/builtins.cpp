@@ -12,14 +12,14 @@ std::shared_ptr<ast::Object> default_typecheck(const std::string& fun_name, cons
 
     bool is_type = std::dynamic_pointer_cast<TargetType>(arguments[0]).operator bool();
 
-    return std::make_shared<ast::Number>(is_type);
+    return std::make_shared<ast::Integer>(is_type);
 }
 
 const std::unordered_map<std::string, builtin_function_t> builtins
 {
     {"number?", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
 
-        return default_typecheck<ast::Number>("number?", arguments);
+        return default_typecheck<ast::Integer>("number?", arguments);
     }},
     {"string?", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
 
@@ -32,9 +32,15 @@ const std::unordered_map<std::string, builtin_function_t> builtins
     {"print", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
         for (std::size_t i = 0; i < arguments.size(); i++)
         {
-            if (auto num = std::dynamic_pointer_cast<ast::Number>(arguments[i]))
+            if (auto integral = std::dynamic_pointer_cast<ast::Integer>(arguments[i]))
             {
-                default_stdout << num->value();
+                default_stdout << integral->value();
+
+                if (i < arguments.size() - 1) { default_stdout << ' '; }
+            }
+            else if (auto floating_point = std::dynamic_pointer_cast<ast::Float>(arguments[i]))
+            {
+                default_stdout << floating_point->value();
 
                 if (i < arguments.size() - 1) { default_stdout << ' '; }
             }

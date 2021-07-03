@@ -51,6 +51,9 @@ std::shared_ptr<ast::Object> Parser::primary()
         case lexeme_t::kw_function_decl:
             return function_declare_statement();
 
+         case lexeme_t::kw_define_type:
+             return define_type_statement();
+
         case lexeme_t::left_brace:
             return block();
 
@@ -58,7 +61,10 @@ std::shared_ptr<ast::Object> Parser::primary()
             return array();
 
         case lexeme_t::num:
-            return binary(std::make_shared<ast::Number>(previous().data));
+            return binary(std::make_shared<ast::Integer>(previous().data));
+
+        case lexeme_t::floating_point:
+            return binary(std::make_shared<ast::Float>(previous().data));
 
         case lexeme_t::string_literal:
             return std::make_shared<ast::String>(previous().data);
@@ -147,21 +153,21 @@ Lexeme Parser::require(const std::vector<lexeme_t>& expected_types)
     }
 }
 
-std::shared_ptr<ast::Object> Parser::additive(const std::shared_ptr<ast::Object>& ptr)
+std::shared_ptr<ast::Object> Parser::additive()
 {
-    auto expr = multiplicative(ptr);
+    auto expr = multiplicative();
 
     while (true)
     {
         if (previous().type == lexeme_t::plus)
         {
-            expr = std::make_shared<ast::Binary>(lexeme_t::plus, ptr, multiplicative(ptr));
+            expr = std::make_shared<ast::Binary>(lexeme_t::plus, expr, multiplicative());
             continue;
         }
 
         if (previous().type == lexeme_t::minus)
         {
-            expr = std::make_shared<ast::Binary>(lexeme_t::minus, ptr, multiplicative(ptr));
+            expr = std::make_shared<ast::Binary>(lexeme_t::minus, expr, multiplicative());
             continue;
         }
 
@@ -171,7 +177,7 @@ std::shared_ptr<ast::Object> Parser::additive(const std::shared_ptr<ast::Object>
     return expr;
 }
 
-std::shared_ptr<ast::Object> Parser::multiplicative(const std::shared_ptr<ast::Object>& ptr)
+std::shared_ptr<ast::Object> Parser::multiplicative()
 {
     auto expr = primary();
 
@@ -179,19 +185,19 @@ std::shared_ptr<ast::Object> Parser::multiplicative(const std::shared_ptr<ast::O
     {
         if (previous().type == lexeme_t::star)
         {
-            expr = std::make_shared<ast::Binary>(lexeme_t::star, ptr, multiplicative(ptr));
+            expr = std::make_shared<ast::Binary>(lexeme_t::star, expr, multiplicative());
             continue;
         }
 
         if (previous().type == lexeme_t::slash)
         {
-            expr = std::make_shared<ast::Binary>(lexeme_t::slash, ptr, multiplicative(ptr));
+            expr = std::make_shared<ast::Binary>(lexeme_t::slash, expr, multiplicative());
             continue;
         }
 
         if (previous().type == lexeme_t::mod)
         {
-            expr = std::make_shared<ast::Binary>(lexeme_t::mod, ptr, multiplicative(ptr));
+            expr = std::make_shared<ast::Binary>(lexeme_t::mod, expr, multiplicative());
             continue;
         }
 
@@ -207,7 +213,7 @@ std::shared_ptr<ast::Object> Parser::binary(const std::shared_ptr<ast::Object>& 
 
     peek();
 
-    return std::make_shared<ast::Binary>(previous().type, ptr, additive(ptr));
+    return std::make_shared<ast::Binary>(previous().type, ptr, additive());
 }
 
 std::shared_ptr<ast::Object> Parser::unary()
@@ -400,6 +406,53 @@ std::shared_ptr<ast::Object> Parser::function_declare_statement()
     require({lexeme_t::right_brace});
 
     return std::make_shared<ast::Function>(std::move(function_name), std::move(arguments), std::move(function_body));
+}
+
+std::shared_ptr<ast::Object> Parser::define_type_statement()
+{
+    /// define-type structure(a, b, c);
+    /// define-type app(
+    ///     model,
+    ///     view,
+    ///     controller
+    /// );
+    ///
+    /// fun main() {
+    ///     object = make-app(1, 2, 3);
+    ///
+    ///     object.model = make-model(...);
+    /// }
+    std::string name = require({lexeme_t::symbol}).data;
+
+    require({lexeme_t::left_paren});
+
+    std::vector<std::string> fields;
+
+    while (true)
+    {
+        if (current().type != lexeme_t::symbol)
+        {
+            throw ParseError("Symbol as type field expected");
+        }
+        else {
+            fields.push_back(current().data);
+        }
+
+        peek();
+
+        auto term = require({lexeme_t::right_paren, lexeme_t::comma});
+
+        if (term.type == lexeme_t::comma)
+        {
+            continue;
+        }
+        else if (term.type == lexeme_t::right_paren) {
+
+            break;
+        }
+    }
+
+    return std::make_shared<ast::TypeDefinition>(std::move(name), std::move(fields));
 }
 
 std::vector<std::shared_ptr<ast::Object>> Parser::resolve_function_arguments()

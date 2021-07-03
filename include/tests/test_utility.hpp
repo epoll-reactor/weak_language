@@ -10,6 +10,80 @@
 
 extern std::ostream& default_stdout;
 
+void tree_print(std::shared_ptr<ast::Object> ptr)
+{
+    if (const auto binary = std::dynamic_pointer_cast<ast::Binary>(ptr))
+    {
+        std::cout << "{";
+        tree_print(binary->lhs());
+        std::cout << " " << dispatch_lexeme(binary->type()) << " ";
+        tree_print(binary->rhs());
+        std::cout << "}";
+    }
+    else if (const auto unary = std::dynamic_pointer_cast<ast::Unary>(ptr)) {
+        std::cout << "{";
+        std::cout << dispatch_lexeme(unary->type());
+        tree_print(unary->operand());
+        std::cout << "}";
+    }
+    else if (auto block = std::dynamic_pointer_cast<ast::Block>(ptr)) {
+        std::cout << "{ ";
+        for (const auto& statement : block->statements())
+        {
+            std::cout << " ";
+            tree_print(statement);
+            std::cout << " ";
+        }
+        std::cout << "} ";
+    }
+    else if (auto if_statement = std::dynamic_pointer_cast<ast::If>(ptr)) {
+        std::cout << "if (";
+        tree_print(if_statement->condition());
+        std::cout << ") ";
+        tree_print(if_statement->body());
+        if (if_statement->else_body())
+        {
+            std::cout << " else ";
+            tree_print(if_statement->else_body());
+        }
+        std::cout << " ";
+    }
+    else if (const auto numeric = std::dynamic_pointer_cast<ast::Integer>(ptr)) {
+        std::cout << numeric->value();
+    }
+    else if (const auto string = std::dynamic_pointer_cast<ast::String>(ptr)) {
+        std::cout <<  '\"' << string->value() << '\"';
+    }
+    else if (const auto symbol = std::dynamic_pointer_cast<ast::Symbol>(ptr)) {
+        std::cout << symbol->name();
+    }
+    else if (const auto while_object = std::dynamic_pointer_cast<ast::While>(ptr)) {
+        std::cout << "While (";
+        tree_print(while_object->exit_condition());
+        std::cout << ") ";
+        tree_print(while_object->body());
+    }
+    else if (const auto function_call = std::dynamic_pointer_cast<ast::FunctionCall>(ptr)) {
+        std::cout << function_call->name() << "(";
+        for (const auto& arg : function_call->arguments())
+        {
+            tree_print(arg);
+            std::cout << " ";
+        }
+        std::cout << ")";
+    }
+    else if (const auto function = std::dynamic_pointer_cast<ast::Function>(ptr)) {
+        std::cout << function->name() << "(";
+        for (const auto& arg : function->arguments())
+        {
+            tree_print(arg);
+            std::cout << " ";
+        }
+        std::cout << ") ";
+        tree_print(function->body());
+    }
+}
+
 template <typename Fun>
 void trace_error(std::string_view program, Fun&& fn)
 {

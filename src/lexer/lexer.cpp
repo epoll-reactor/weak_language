@@ -29,7 +29,7 @@ bool Lexer::has_next() const noexcept
 
 bool Lexer::is_alphanumeric(char token) noexcept
 {
-    return isalpha(token) || token == '_' || token == '?';
+    return isalpha(token) || token == '_' || token == '?' || token == '-';
 }
 
 std::vector<Lexeme> Lexer::tokenize()
@@ -107,7 +107,7 @@ Lexeme Lexer::process_digit()
     if (dots_reached > 1)  { throw LexicalError("Extra \".\" detected"); }
     if (previous() == '.') { throw LexicalError("Digit after \".\" expected"); }
 
-    return Lexeme{std::move(digit), lexeme_t::num};
+    return Lexeme{std::move(digit), (dots_reached == 0) ? lexeme_t::num : lexeme_t::floating_point};
 }
 
 Lexeme Lexer::process_string_literal()

@@ -15,7 +15,9 @@ void SemanticAnalyzer::analyze()
 void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& statement)
 {
     auto string = std::dynamic_pointer_cast<ast::String>(statement);
-    auto number = std::dynamic_pointer_cast<ast::Number>(statement);
+    auto number = std::dynamic_pointer_cast<ast::Integer>(statement);
+    auto binary = std::dynamic_pointer_cast<ast::Binary>(statement);
+    auto floating_point = std::dynamic_pointer_cast<ast::Float>(statement);
     auto symbol = std::dynamic_pointer_cast<ast::Symbol>(statement);
     auto array = std::dynamic_pointer_cast<ast::Array>(statement);
     auto array_subscript = std::dynamic_pointer_cast<ast::ArraySubscriptOperator>(statement);
@@ -25,9 +27,9 @@ void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& sta
     auto for_ = std::dynamic_pointer_cast<ast::For>(statement);
     auto function = std::dynamic_pointer_cast<ast::Function>(statement);
     auto function_call = std::dynamic_pointer_cast<ast::FunctionCall>(statement);
-    auto binary = std::dynamic_pointer_cast<ast::Binary>(statement);
+    auto type_definition = std::dynamic_pointer_cast<ast::TypeDefinition>(statement);
 
-    if (string || number || symbol)
+    if (string || number || floating_point || symbol)
         return;
 
     else if (array)
@@ -54,6 +56,9 @@ void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& sta
     else if (function_call)
         analyze_function_call_statement(function_call);
 
+    else if (type_definition)
+    { /* Actually nothing to analyze. */ }
+
     else if (binary)
     {
         if (binary->type() == lexeme_t::assign
@@ -78,7 +83,8 @@ void SemanticAnalyzer::analyze_array_statement(const std::shared_ptr<ast::Array>
     for (const auto& element : statement->elements())
     {
         if (!std::dynamic_pointer_cast<ast::Symbol>(element)
-        &&  !std::dynamic_pointer_cast<ast::Number>(element)
+        &&  !std::dynamic_pointer_cast<ast::Integer>(element)
+        &&  !std::dynamic_pointer_cast<ast::Float>(element)
         &&  !std::dynamic_pointer_cast<ast::String>(element)
         &&  !std::dynamic_pointer_cast<ast::Binary>(element)
         &&  !std::dynamic_pointer_cast<ast::FunctionCall>(element)
@@ -97,7 +103,8 @@ void SemanticAnalyzer::analyze_assign_statement(const std::shared_ptr<ast::Binar
     }
 
     if (!std::dynamic_pointer_cast<ast::Symbol>(statement->rhs())
-    &&  !std::dynamic_pointer_cast<ast::Number>(statement->rhs())
+    &&  !std::dynamic_pointer_cast<ast::Integer>(statement->rhs())
+    &&  !std::dynamic_pointer_cast<ast::Float>(statement->rhs())
     &&  !std::dynamic_pointer_cast<ast::String>(statement->rhs())
     &&  !std::dynamic_pointer_cast<ast::Binary>(statement->rhs())
     &&  !std::dynamic_pointer_cast<ast::FunctionCall>(statement->rhs())
@@ -148,7 +155,8 @@ void SemanticAnalyzer::analyze_function_call_statement(const std::shared_ptr<ast
 {
     for (const auto& argument : function_statement->arguments())
     {
-        if (!std::dynamic_pointer_cast<ast::Number>(argument)
+        if (!std::dynamic_pointer_cast<ast::Integer>(argument)
+        &&  !std::dynamic_pointer_cast<ast::Float>(argument)
         &&  !std::dynamic_pointer_cast<ast::String>(argument)
         &&  !std::dynamic_pointer_cast<ast::Symbol>(argument)
         &&  !std::dynamic_pointer_cast<ast::Binary>(argument)
@@ -169,7 +177,7 @@ void SemanticAnalyzer::analyze_function_statement(const std::shared_ptr<ast::Fun
 
 void SemanticAnalyzer::analyze_if_statement(const std::shared_ptr<ast::If>& if_statement)
 {
-    if (!to_bool_convertible(if_statement->condition()))
+    if (!to_integral_convertible(if_statement->condition()))
     {
         throw SemanticError("If condition requires convertible to bool expression");
     }
@@ -194,7 +202,7 @@ void SemanticAnalyzer::analyze_if_statement(const std::shared_ptr<ast::If>& if_s
 
 void SemanticAnalyzer::analyze_while_statement(const std::shared_ptr<ast::While>& while_statement)
 {
-    if (!to_bool_convertible(while_statement->exit_condition()))
+    if (!to_integral_convertible(while_statement->exit_condition()))
     {
         throw SemanticError("While condition requires convertible to bool expression");
     }
@@ -225,7 +233,7 @@ void SemanticAnalyzer::analyze_for_statement(const std::shared_ptr<ast::For>& fo
 
     if (for_statement->exit_condition())
     {
-        if (!to_bool_convertible(for_statement->exit_condition()))
+        if (!to_integral_convertible(for_statement->exit_condition()))
         {
             throw SemanticError("For condition requires convertible to bool expression");
         }
@@ -250,7 +258,7 @@ void SemanticAnalyzer::analyze_for_statement(const std::shared_ptr<ast::For>& fo
 
 void SemanticAnalyzer::analyze_array_subscript_statement(const std::shared_ptr<ast::ArraySubscriptOperator>& statement)
 {
-    if (!to_number_convertible(statement->index()))
+    if (!to_integral_convertible(statement->index()))
     {
         throw SemanticError("Array subscript operator requires convertible to number expression");
     }
@@ -264,9 +272,9 @@ void SemanticAnalyzer::analyze_block_statement(const std::shared_ptr<ast::Block>
     }
 }
 
-bool SemanticAnalyzer::to_bool_convertible(const std::shared_ptr<ast::Object>& statement)
+bool SemanticAnalyzer::to_integral_convertible(const std::shared_ptr<ast::Object>& statement)
 {
-    if (std::dynamic_pointer_cast<ast::Number>(statement))
+    if (std::dynamic_pointer_cast<ast::Integer>(statement))
     {
         return true;
     }
@@ -298,5 +306,5 @@ bool SemanticAnalyzer::to_bool_convertible(const std::shared_ptr<ast::Object>& s
 
 bool SemanticAnalyzer::to_number_convertible(const std::shared_ptr<ast::Object>& statement)
 {
-    return to_bool_convertible(statement);
+    return to_integral_convertible(statement) || std::dynamic_pointer_cast<ast::Float>(statement);
 }

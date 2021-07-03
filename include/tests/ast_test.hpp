@@ -30,8 +30,8 @@ void assert_exception(Function&& test_body)
 
 void parse_object_number_test()
 {
-    std::shared_ptr<ast::Number> integral = std::make_shared<ast::Number>("123");
-    std::shared_ptr<ast::Number> floating_point = std::make_shared<ast::Number>("123.123");
+    std::shared_ptr<ast::Integer> integral = std::make_shared<ast::Integer>("123");
+    std::shared_ptr<ast::Float> floating_point = std::make_shared<ast::Float>("123.123");
 
     assert(integral->value() == 123);
     assert(floating_point->value() == 123.123);
@@ -39,7 +39,7 @@ void parse_object_number_test()
 
 void parse_object_array_test()
 {
-    std::vector<std::shared_ptr<ast::Object>> elements(100, std::make_shared<ast::Number>(1));
+    std::vector<std::shared_ptr<ast::Object>> elements(100, std::make_shared<ast::Integer>(1));
 
     auto array = std::make_shared<ast::Array>(std::move(elements));
 
@@ -47,17 +47,17 @@ void parse_object_array_test()
 
     for (const auto& element : array->elements())
     {
-        assert(std::dynamic_pointer_cast<ast::Number>(element));
+        assert(std::dynamic_pointer_cast<ast::Integer>(element));
     }
 }
 
 void parse_object_number_fuzz_test()
 {
     parse_object_detail::assert_exception([](){
-        std::make_shared<ast::Number>("Text, but number expected");
+        std::make_shared<ast::Integer>("Text, but number expected");
     });
     parse_object_detail::assert_exception([](){
-        std::make_shared<ast::Number>("a11111");
+        std::make_shared<ast::Integer>("a11111");
     });
 }
 
@@ -70,7 +70,7 @@ void parse_object_string_test()
 
 void parse_object_binary_operation_test()
 {
-    std::shared_ptr<ast::Number> number = std::make_shared<ast::Number>("1");
+    std::shared_ptr<ast::Integer> number = std::make_shared<ast::Integer>("1");
 
     std::shared_ptr<ast::Binary> bin = std::make_shared<ast::Binary>(
         lexeme_t::plus,
@@ -79,18 +79,18 @@ void parse_object_binary_operation_test()
     );
 
     assert(bin->type() == lexeme_t::plus);
-    assert(std::dynamic_pointer_cast<ast::Number>(bin->lhs()));
-    assert(std::dynamic_pointer_cast<ast::Number>(bin->rhs()));
-    assert(std::dynamic_pointer_cast<ast::Number>(bin->lhs())->value() == 1);
-    assert(std::dynamic_pointer_cast<ast::Number>(bin->lhs())->value() == 1);
+    assert(std::dynamic_pointer_cast<ast::Integer>(bin->lhs()));
+    assert(std::dynamic_pointer_cast<ast::Integer>(bin->rhs()));
+    assert(std::dynamic_pointer_cast<ast::Integer>(bin->lhs())->value() == 1);
+    assert(std::dynamic_pointer_cast<ast::Integer>(bin->lhs())->value() == 1);
 
     auto assign_object = std::make_shared<ast::Binary>(
         lexeme_t::assign,
         std::make_shared<ast::Symbol>("Name"),
         std::make_shared<ast::Binary>(
             lexeme_t::plus,
-            std::make_shared<ast::Number>("100"),
-            std::make_shared<ast::Number>("200")
+            std::make_shared<ast::Integer>("100"),
+            std::make_shared<ast::Integer>("200")
         )
     );
 
@@ -101,7 +101,7 @@ void parse_object_binary_operation_test()
 
 void parse_object_unary_operation_test()
 {
-    std::shared_ptr<ast::Number> number = std::make_shared<ast::Number>("1");
+    std::shared_ptr<ast::Integer> number = std::make_shared<ast::Integer>("1");
 
     std::shared_ptr<ast::Unary> unary = std::make_shared<ast::Unary>(
         lexeme_t::inc,
@@ -109,15 +109,15 @@ void parse_object_unary_operation_test()
     );
 
     assert(unary->type() == lexeme_t::inc);
-    assert(std::dynamic_pointer_cast<ast::Number>(unary->operand())->value() == 1);
+    assert(std::dynamic_pointer_cast<ast::Integer>(unary->operand())->value() == 1);
 }
 
 void parse_object_nested_expression_test()
 {
     std::shared_ptr<ast::Binary> bin = std::make_shared<ast::Binary>(
         lexeme_t::plus,
-        std::make_shared<ast::Number>("1"),
-        std::make_shared<ast::Number>("2")
+        std::make_shared<ast::Integer>("1"),
+        std::make_shared<ast::Integer>("2")
     );
 
     std::shared_ptr<ast::Binary> nested_bin = std::make_shared<ast::Binary>(
@@ -129,10 +129,10 @@ void parse_object_nested_expression_test()
     auto left_node = std::dynamic_pointer_cast<ast::Binary>(nested_bin->lhs());
     auto right_node = std::dynamic_pointer_cast<ast::Binary>(nested_bin->rhs());
 
-    assert(std::dynamic_pointer_cast<ast::Number>(left_node->lhs())->value() == 1);
-    assert(std::dynamic_pointer_cast<ast::Number>(left_node->rhs())->value() == 2);
-    assert(std::dynamic_pointer_cast<ast::Number>(right_node->lhs())->value() == 1);
-    assert(std::dynamic_pointer_cast<ast::Number>(right_node->rhs())->value() == 2);
+    assert(std::dynamic_pointer_cast<ast::Integer>(left_node->lhs())->value() == 1);
+    assert(std::dynamic_pointer_cast<ast::Integer>(left_node->rhs())->value() == 2);
+    assert(std::dynamic_pointer_cast<ast::Integer>(right_node->lhs())->value() == 1);
+    assert(std::dynamic_pointer_cast<ast::Integer>(right_node->rhs())->value() == 2);
 }
 
 void parse_object_deep_nested_expression_test(std::size_t tree_depth)
@@ -165,8 +165,8 @@ void parse_object_while_tests()
 {
     auto exit_condition = std::make_shared<ast::Binary>(
         lexeme_t::eq,
-        std::make_shared<ast::Number>("1"),
-        std::make_shared<ast::Number>("1")
+        std::make_shared<ast::Integer>("1"),
+        std::make_shared<ast::Integer>("1")
     );
 
     auto while_body = std::make_shared<ast::Block>(
@@ -174,13 +174,13 @@ void parse_object_while_tests()
             std::make_shared<ast::Binary>(
                 lexeme_t::assign,
                 std::make_shared<ast::Symbol>("Symbol"),
-                std::make_shared<ast::Number>("1")
+                std::make_shared<ast::Integer>("1")
             )
         },                                        {
             std::make_shared<ast::Binary>(
                 lexeme_t::assign,
                 std::make_shared<ast::Symbol>("Symbol2"),
-                std::make_shared<ast::Number>("2")
+                std::make_shared<ast::Integer>("2")
             )
         },                                        {
             std::make_shared<ast::Unary>(
@@ -245,13 +245,13 @@ void parse_object_for_test()
         std::make_shared<ast::Binary>(
             lexeme_t::assign,
             std::make_shared<ast::Symbol>("var"),
-            std::make_shared<ast::Number>(1)));
+            std::make_shared<ast::Integer>(1)));
 
     for_statement->set_exit_condition(
         std::make_shared<ast::Binary>(
             lexeme_t::eq,
-            std::make_shared<ast::Number>(1),
-            std::make_shared<ast::Number>(1)));
+            std::make_shared<ast::Integer>(1),
+            std::make_shared<ast::Integer>(1)));
 
     for_statement->set_increment(
         std::make_shared<ast::Unary>(
@@ -266,15 +266,15 @@ void parse_object_for_test()
 void parse_object_function_test()
 {
     std::vector<std::shared_ptr<ast::Object>> arguments = {
-        std::make_shared<ast::Number>("1"),
+        std::make_shared<ast::Integer>("1"),
         std::make_shared<ast::Symbol>("Symbol")
     };
 
     std::vector<std::shared_ptr<ast::Object>> block_body = {
         std::make_shared<ast::Binary>(
             lexeme_t::plus,
-            std::make_shared<ast::Number>("1"),
-            std::make_shared<ast::Number>("1")
+            std::make_shared<ast::Integer>("1"),
+            std::make_shared<ast::Integer>("1")
         )
     };
 
@@ -291,7 +291,7 @@ void parse_object_function_test()
 void parse_object_function_call_test()
 {
     std::vector<std::shared_ptr<ast::Object>> arguments = {
-        std::make_shared<ast::Number>("1"),
+        std::make_shared<ast::Integer>("1"),
         std::make_shared<ast::Symbol>("Symbol")
     };
 
@@ -299,7 +299,7 @@ void parse_object_function_call_test()
 
     assert(function_call_object->name() == "Name");
     assert(function_call_object->arguments().size() == 2);
-    assert(std::dynamic_pointer_cast<ast::Number>(function_call_object->arguments()[0])->value() == 1);
+    assert(std::dynamic_pointer_cast<ast::Integer>(function_call_object->arguments()[0])->value() == 1);
     assert(std::dynamic_pointer_cast<ast::Symbol>(function_call_object->arguments()[1])->name() == "Symbol");
 }
 

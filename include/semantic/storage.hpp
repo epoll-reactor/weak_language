@@ -19,9 +19,7 @@ public:
 
     void push(std::string_view name, const std::shared_ptr<ast::Object>& value)
     {
-        if (std::find_if(m_inner_scopes.begin(), m_inner_scopes.end(), [&name](const scope_t& scope) {
-            return scope.contains(name.data());
-        }) != m_inner_scopes.end())
+        if (has(name))
         {
             throw SemanticError(std::string("redefinition of ") + name.data());
         }

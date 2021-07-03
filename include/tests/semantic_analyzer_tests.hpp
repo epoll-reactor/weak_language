@@ -2,15 +2,28 @@
 #define SEMANTIC_ANALYZER_TESTS_HPP
 
 #include "../semantic/semantic_analyzer.hpp"
-#include "../tests/parser_tests.hpp"
+#include "../parser/parser.hpp"
 #include "../tests/test_utility.hpp"
 
 namespace semantic_detail {
 
+std::shared_ptr<ast::RootObject> create_parse_tree(std::string_view data)
+{
+    Lexer lexer = LexerBuilder{}
+        .operators(test_operators)
+        .keywords(test_keywords)
+        .input(std::istringstream{data.data()})
+        .build();
+
+    Parser parser(lexer.tokenize());
+
+    return parser.parse();
+}
+
 void expect_error(std::string_view data)
 {
     trace_error(data, [&data]{
-        const std::shared_ptr<ast::RootObject> parsed_trees = parser_detail::create_parse_tree_impl(data);
+        const std::shared_ptr<ast::RootObject> parsed_trees = create_parse_tree(data);
 
         SemanticAnalyzer analyzer(parsed_trees);
 
@@ -23,7 +36,7 @@ void expect_error(std::string_view data)
 
 void assert_correct(std::string_view data)
 {
-    const std::shared_ptr<ast::RootObject> parsed_trees = parser_detail::create_parse_tree_impl(data);
+    const std::shared_ptr<ast::RootObject> parsed_trees = create_parse_tree(data);
 
     SemanticAnalyzer analyzer(parsed_trees);
     analyzer.analyze();
@@ -79,6 +92,7 @@ void semantic_analyzer_test_syntax()
     semantic_detail::assert_correct("array[function_call()];");
     semantic_detail::expect_error("array[\"String\"];");
     semantic_detail::expect_error("array[fun main() {}];");
+    semantic_detail::expect_error("array[1.42];");
 }
 
 void run_semantic_analyzer_tests()

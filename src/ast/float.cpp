@@ -2,16 +2,16 @@
 
 namespace ast {
 
-Number::Number(std::string_view data)
+Float::Float(std::string_view data)
 {
     m_data = std::stod(data.data());
 }
 
-Number::Number(double data)
+Float::Float(double data)
     : m_data(data)
 { }
 
-double Number::value() const noexcept
+double Float::value() const noexcept
 {
     return m_data;
 }

@@ -54,10 +54,10 @@ private:
     std::shared_ptr<ast::Object> array();
 
     /// @return parse tree if ptr is additive operation, unchanged ptr otherwise
-    std::shared_ptr<ast::Object> additive(const std::shared_ptr<ast::Object>& ptr);
+    std::shared_ptr<ast::Object> additive();
 
     /// @return parse tree if ptr is multiplicative operation, unchanged ptr otherwise
-    std::shared_ptr<ast::Object> multiplicative(const std::shared_ptr<ast::Object>& ptr);
+    std::shared_ptr<ast::Object> multiplicative();
 
     /// @note   this function does not check operation types
     /// @pre    previous() returns number or symbol lexeme
@@ -94,6 +94,11 @@ private:
     /// @post   previous() returns first lexeme after function declaration
     /// @return function parse tree that contains function name, argument list and body (block)
     std::shared_ptr<ast::Object> function_declare_statement();
+
+    /// @pre    previous() returns 'define-type' lexeme
+    /// @post   previous() returns first lexeme after type definition
+    /// @return parsed type definition with only field names
+    std::shared_ptr<ast::Object> define_type_statement();
 
     /// @pre    previous() returns '(' lexeme
     /// @post   previous() returns ')' lexeme

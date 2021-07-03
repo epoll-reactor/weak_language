@@ -85,18 +85,18 @@ void lexer_number_literal_tests()
         Lexeme{"2", lexeme_t::num}
     });
     lexer_detail::run_test("111.111", {
-        Lexeme{"111.111", lexeme_t::num},
+        Lexeme{"111.111", lexeme_t::floating_point},
     });
     lexer_detail::run_test("111.111 222.222", {
-        Lexeme{"111.111", lexeme_t::num},
-        Lexeme{"222.222", lexeme_t::num}
+        Lexeme{"111.111", lexeme_t::floating_point},
+        Lexeme{"222.222", lexeme_t::floating_point}
     });
     lexer_detail::run_test(" 111.111 222.222 333.333 444.444 555.555 ", {
-        Lexeme{"111.111", lexeme_t::num},
-        Lexeme{"222.222", lexeme_t::num},
-        Lexeme{"333.333", lexeme_t::num},
-        Lexeme{"444.444", lexeme_t::num},
-        Lexeme{"555.555", lexeme_t::num},
+        Lexeme{"111.111", lexeme_t::floating_point},
+        Lexeme{"222.222", lexeme_t::floating_point},
+        Lexeme{"333.333", lexeme_t::floating_point},
+        Lexeme{"444.444", lexeme_t::floating_point},
+        Lexeme{"555.555", lexeme_t::floating_point},
     });
 
     lexer_detail::assert_exception("1.");
@@ -273,9 +273,9 @@ void lexer_expression_tests()
     lexer_detail::run_test(
         "void f(int a, int b, int c) {"
         "  if (true) {"
-        "    int variable_0 = 123;"
+        "    int variable-0 = 123;"
         "  } else {"
-        "    string literal_1 = \"Lorem ipsum\";"
+        "    string literal-1 = \"Lorem ipsum\";"
         "  }"
         "}",
     {
@@ -298,7 +298,7 @@ void lexer_expression_tests()
         Lexeme{"",          lexeme_t::right_paren},
         Lexeme{"",          lexeme_t::left_brace},
         Lexeme{"int",       lexeme_t::symbol},
-        Lexeme{"variable_0",lexeme_t::symbol},
+        Lexeme{"variable-0",lexeme_t::symbol},
         Lexeme{"",          lexeme_t::assign},
         Lexeme{"123",       lexeme_t::num},
         Lexeme{"",          lexeme_t::semicolon},
@@ -306,7 +306,7 @@ void lexer_expression_tests()
         Lexeme{"",          lexeme_t::kw_else},
         Lexeme{"",          lexeme_t::left_brace},
         Lexeme{"string",    lexeme_t::symbol},
-        Lexeme{"literal_1", lexeme_t::symbol},
+        Lexeme{"literal-1", lexeme_t::symbol},
         Lexeme{"",          lexeme_t::assign},
         Lexeme{"Lorem ipsum", lexeme_t::string_literal},
         Lexeme{"",          lexeme_t::semicolon},
@@ -376,7 +376,7 @@ void lexer_speed_tests()
         "}";
 
     /// Exponential grow
-    for (std::size_t i = 0; i < 16; i++)
+    for (std::size_t i = 0; i < 10; i++)
         data += data;
 
     Lexer lexer = LexerBuilder{}
@@ -395,12 +395,12 @@ void run_lexer_tests()
 {
     std::cout << "Running lexer tests...\n====\n";
 
-//    lexer_number_literal_tests();
-//    lexer_string_literal_tests();
-//    lexer_symbol_tests();
-//    lexer_operator_tests();
-//    lexer_expression_tests();
-//    lexer_fuzz_tests();
+    lexer_number_literal_tests();
+    lexer_string_literal_tests();
+    lexer_symbol_tests();
+    lexer_operator_tests();
+    lexer_expression_tests();
+    lexer_fuzz_tests();
     lexer_speed_tests();
 
     std::cout << "Lexer tests passed successfully\n";

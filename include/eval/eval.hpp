@@ -17,19 +17,19 @@ private:
 
     std::shared_ptr<ast::Object> eval_function_call(const std::shared_ptr<ast::FunctionCall>& function_call);
 
-    std::shared_ptr<ast::Object> eval_block(const std::shared_ptr<ast::Block>& block);
+    void eval_block(const std::shared_ptr<ast::Block>& block);
 
     std::shared_ptr<ast::Object> eval_binary(const std::shared_ptr<ast::Binary>& binary);
 
-    std::shared_ptr<ast::Object> eval_array(const std::shared_ptr<ast::Array>& array);
-
     std::shared_ptr<ast::Object> eval_array_subscript(const std::shared_ptr<ast::ArraySubscriptOperator>& argument);
+
+    void eval_array(const std::shared_ptr<ast::Array>& array);
+
+    void eval_for(const std::shared_ptr<ast::For>& for_stmt);
 
     void eval_while(const std::shared_ptr<ast::While>& while_stmt);
 
     void eval_if(const std::shared_ptr<ast::If>& if_stmt);
-
-    void eval_for(const std::shared_ptr<ast::For>& for_stmt);
 
     std::shared_ptr<ast::Object> eval_expression(const std::shared_ptr<ast::Object>& expression);
 
