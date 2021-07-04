@@ -60,7 +60,7 @@ void assert_exception(std::string_view data)
         return;
     }
 
-    const bool error_expected = false;
+    [[maybe_unused]] const bool error_expected = false;
 
     assert(error_expected);
 }

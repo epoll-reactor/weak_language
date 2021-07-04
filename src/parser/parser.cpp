@@ -14,14 +14,10 @@ std::shared_ptr<ast::RootObject> Parser::parse()
     {
         if (current().type == lexeme_t::left_brace)
         {
-            require({lexeme_t::left_brace});
-
             root->add(block());
-
-            require({lexeme_t::right_brace});
         }
         else {
-            auto expression = primary();
+            auto expression = additive();
 
             if (!is_block_statement(expression))
                 require({lexeme_t::semicolon});
@@ -51,14 +47,17 @@ std::shared_ptr<ast::Object> Parser::primary()
         case lexeme_t::kw_function_decl:
             return function_declare_statement();
 
-         case lexeme_t::kw_define_type:
-             return define_type_statement();
+        case lexeme_t::kw_define_type:
+            return define_type_statement();
 
         case lexeme_t::left_brace:
             return block();
 
         case lexeme_t::left_box_brace:
             return array();
+
+//        case lexeme_t::left_paren:
+//          ...
 
         case lexeme_t::num:
             return binary(std::make_shared<ast::Integer>(previous().data));
@@ -223,11 +222,13 @@ std::shared_ptr<ast::Object> Parser::unary()
 
 std::shared_ptr<ast::Block> Parser::block()
 {
+    require({lexeme_t::left_brace});
+
     std::vector<std::shared_ptr<ast::Object>> stmts;
 
     while (current().type != lexeme_t::right_brace)
     {
-        auto stmt = primary();
+        auto stmt = additive();
 
         stmts.push_back(stmt);
 
@@ -240,6 +241,8 @@ std::shared_ptr<ast::Block> Parser::block()
             require({lexeme_t::semicolon});
         }
     }
+
+    require({lexeme_t::right_brace});
 
     return std::make_shared<ast::Block>(std::move(stmts));
 }
@@ -275,19 +278,11 @@ std::shared_ptr<ast::Object> Parser::if_statement()
 
     require({lexeme_t::right_paren});
 
-    require({lexeme_t::left_brace});
-
     auto if_body = block();
-
-    require({lexeme_t::right_brace});
 
     if (match({lexeme_t::kw_else}))
     {
-        require({lexeme_t::left_brace});
-
         auto else_body = block();
-
-        require({lexeme_t::right_brace});
 
         return std::make_shared<ast::If>(std::move(if_condition), std::move(if_body), std::move(else_body));
     }
@@ -305,11 +300,7 @@ std::shared_ptr<ast::Object> Parser::while_statement()
 
     require({lexeme_t::right_paren});
 
-    require({lexeme_t::left_brace});
-
     auto while_body = block();
-
-    require({lexeme_t::right_brace});
 
     return std::make_shared<ast::While>(std::move(while_condition), std::move(while_body));
 }
@@ -340,11 +331,7 @@ std::shared_ptr<ast::Object> Parser::for_statement()
         require({lexeme_t::right_paren});
     }
 
-    require({lexeme_t::left_brace});
-
     auto for_body = block();
-
-    require({lexeme_t::right_brace});
 
     auto for_statement = std::make_shared<ast::For>();
 
@@ -399,11 +386,7 @@ std::shared_ptr<ast::Object> Parser::function_declare_statement()
         }
     }
 
-    require({lexeme_t::left_brace});
-
     auto function_body = block();
-
-    require({lexeme_t::right_brace});
 
     return std::make_shared<ast::Function>(std::move(function_name), std::move(arguments), std::move(function_body));
 }

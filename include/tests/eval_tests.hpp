@@ -58,7 +58,9 @@ void expect_error(std::string_view program)
 {
     std::cout << "Run fuzz test " << test_counter++ << " => ";
 
-    trace_error(program, [&program]{
+    bool error = true;
+
+    trace_error(program, [&error, &program]{
         Lexer lexer = LexerBuilder{}
             .keywords(test_keywords)
             .operators(test_operators)
@@ -75,7 +77,12 @@ void expect_error(std::string_view program)
         Evaluator evaluator(parsed_program);
 
         evaluator.eval();
+
+        /// Will false if exception thrown
+        error = false;
     });
+
+    assert(error);
 }
 
 } // namespace eval_detail
@@ -85,6 +92,8 @@ void run_eval_tests()
     std::cout << "Running eval tests...\n====\n";
 
     eval_detail::run_test("fun main() { print(1); }", "1");
+//    eval_detail::run_test("fun main() { print(2 + 2 * 2 * 2); }", "10");
+//    eval_detail::run_test("fun main() { print(2 * 2 * 2 + 2); }", "10");
     eval_detail::run_test("fun main() { print(1 + 1.5); }", "2.5");
     eval_detail::run_test("fun main() { print(1.5 + 1); }", "2.5");
     eval_detail::run_test("fun main() { print(1.5 + 1.5); }", "3");
@@ -112,13 +121,12 @@ void run_eval_tests()
 
     eval_detail::run_test(R"__(
         fun sqrt(x) {
-            temp = 0;
+            temp = 0.0;
             number = x;
-            root = number / 2;
+            root = number / 2.0;
 
             while (root != temp) {
                 temp = root;
-
                 tmp_value = number / temp;
                 tmp_value = tmp_value + temp;
                 tmp_value = tmp_value / 2;
@@ -129,9 +137,12 @@ void run_eval_tests()
         }
 
         fun main() {
-            print(sqrt(9), sqrt(16), sqrt(25), sqrt(36), sqrt(49), sqrt(64), sqrt(81));
+            for (i = 0; i < 1000; i = i + 1) {
+                sqrt(i);
+            }
         }
-    )__", "3 4 5 6 7 8 9");
+    )__", "");
+
     eval_detail::run_test(R"__(
         fun power(num, stage) {
             result = 1;
@@ -146,9 +157,13 @@ void run_eval_tests()
         }
 
         fun main() {
-            print(power(2, 1), power(2, 2), power(2, 3), power(2, 4), power(2, 5), power(2, 6), power(2, 7), power(2, power(2, 3)));
+            print(power(2, 10));
+
+            for (i = 0; i < 1000; i = i + 1) {
+                power(2, 1); power(2, 2); power(2, 3); power(2, 4); power(2, 5); power(2, 6); power(2, 7); power(2, power(2, 3));
+            }
         }
-    )__", "2 4 8 16 32 64 128 256");
+    )__", "1024");
 
     eval_detail::expect_error("fun simple() { { var = 2; } var; } fun main() { simple(); }");
     eval_detail::expect_error("fun main() { for (var = 0; var != 10; var = var + 1) { } print(var); }");
@@ -157,8 +172,7 @@ void run_eval_tests()
     eval_detail::expect_error("fun main() { array = [1, 2, 3]; print(array[0], array[1.44], array[2]); }");
     eval_detail::expect_error("fun main() { array = [1, 2, 3]; index = 1.25; array[index]; }");
     eval_detail::expect_error("fun main() { a = 1; b = \"Text\"; print(a + b); }");
-    eval_detail::expect_error("fun main() { a = 3.5 % 2; }");
-    eval_detail::expect_error("fun main() { a = 1.2 == 3; }");
+    eval_detail::expect_error("fun main() { a = 1 % 1.5; }");
 
     std::cout << "Eval tests passed successfully\n";
 }

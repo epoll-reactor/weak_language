@@ -13,7 +13,7 @@ void test_found(const Storage& env, std::string_view name, bool expected_found_r
 
         if (expected_found_result)
         {
-            const bool variable_expected = false;
+            [[maybe_unused]] const bool variable_expected = false;
 
             assert(variable_expected);
         }
@@ -24,7 +24,7 @@ void test_found(const Storage& env, std::string_view name, bool expected_found_r
 
     if (!expected_found_result)
     {
-        const bool not_found_expected = false;
+        [[maybe_unused]] const bool not_found_expected = false;
 
         assert(not_found_expected);
     }

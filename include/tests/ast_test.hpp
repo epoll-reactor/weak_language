@@ -22,7 +22,7 @@ void assert_exception(Function&& test_body)
         return;
     }
 
-    bool error_expected = false;
+    [[maybe_unused]] const bool error_expected = false;
 
     assert(error_expected);
 }
@@ -45,7 +45,7 @@ void parse_object_array_test()
 
     assert(array->elements().size() == 100);
 
-    for (const auto& element : array->elements())
+    for ([[maybe_unused]] const auto& element : array->elements())
     {
         assert(std::dynamic_pointer_cast<ast::Integer>(element));
     }

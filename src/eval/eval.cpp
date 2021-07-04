@@ -1,5 +1,5 @@
 #include <variant>
-#include <map>
+#include <array>
 
 #include "../../include/eval/builtins.hpp"
 #include "../../include/eval/eval.hpp"
@@ -7,6 +7,7 @@
 static bool is_datatype(const std::shared_ptr<ast::Object>& object) noexcept
 {
     return std::dynamic_pointer_cast<ast::Integer>(object)
+        || std::dynamic_pointer_cast<ast::Float>(object)
         || std::dynamic_pointer_cast<ast::String>(object)
         || std::dynamic_pointer_cast<ast::Array>(object);
 }
@@ -60,10 +61,10 @@ std::shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, con
 
 std::shared_ptr<ast::Object> Evaluator::eval_function_call(const std::shared_ptr<ast::FunctionCall>& function_call)
 {
-    std::vector<std::shared_ptr<ast::Object>> arguments;
+    std::vector<std::shared_ptr<ast::Object>> arguments = function_call->arguments();
 
-    for (const auto& arg : function_call->arguments())
-        arguments.emplace_back(eval_expression(arg));
+    for (auto& arg : arguments)
+        arg = eval_expression(arg);
 
     if (builtins.contains(function_call->name()))
     {
@@ -90,11 +91,8 @@ void Evaluator::eval_block(const std::shared_ptr<ast::Block>& block)
 }
 
 template <typename LeftOperand, typename RightOperand>
-static constexpr bool comparison_impl(lexeme_t type, LeftOperand l, RightOperand r)
+[[gnu::always_inline]] static constexpr bool comparison_impl(lexeme_t type, LeftOperand l, RightOperand r)
 {
-    if constexpr (!std::is_same_v<LeftOperand, RightOperand>)
-        throw EvalError("Comparisons of different numeric types are forbidden");
-
     switch (type)
     {
         case lexeme_t::eq:      return l == r;
@@ -104,12 +102,12 @@ static constexpr bool comparison_impl(lexeme_t type, LeftOperand l, RightOperand
         case lexeme_t::le:      return l <= r;
         case lexeme_t::lt:      return l < r;
         default:
-            throw EvalError("Unsupported binary operator");
+            throw EvalError("Incorrect binary expression");
     }
 }
 
-template <typename LeftIntegral, typename RightIntegral>
-static constexpr double floating_point_arithmetic_impl(lexeme_t type, LeftIntegral l, RightIntegral r)
+template <typename LeftFloatingPoint, typename RightFloatingPoint>
+[[gnu::always_inline]] static constexpr double floating_point_arithmetic_impl(lexeme_t type, LeftFloatingPoint l, RightFloatingPoint r)
 {
     switch (type)
     {
@@ -118,12 +116,12 @@ static constexpr double floating_point_arithmetic_impl(lexeme_t type, LeftIntegr
         case lexeme_t::star:    return l * r;
         case lexeme_t::slash:   return l / r;
         default:
-            return comparison_impl<LeftIntegral, RightIntegral>(type, l, r);
+            return comparison_impl<LeftFloatingPoint, RightFloatingPoint>(type, l, r);
     }
 }
 
 template <typename LeftIntegral, typename RightIntegral>
-static constexpr int32_t integral_arithmetic_impl(lexeme_t type, LeftIntegral l, RightIntegral r)
+[[gnu::always_inline]] static constexpr int32_t integral_arithmetic_impl(lexeme_t type, LeftIntegral l, RightIntegral r)
 {
     switch (type)
     {
@@ -140,7 +138,7 @@ static constexpr int32_t integral_arithmetic_impl(lexeme_t type, LeftIntegral l,
 }
 
 template <typename LeftOperand, typename RightOperand>
-static constexpr std::variant<int32_t, double> arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs)
+[[gnu::always_inline]] static constexpr std::variant<int32_t, double> arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs)
 {
     if constexpr (std::is_same_v<ast::Integer, LeftOperand> && std::is_same_v<ast::Integer, RightOperand>)
         return integral_arithmetic_impl(
@@ -156,26 +154,41 @@ static constexpr std::variant<int32_t, double> arithmetic(lexeme_t type, const s
     );
 }
 
+template <typename LeftArg, typename RightArg>
+[[gnu::always_inline]] static constexpr bool match_type(const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) noexcept
+{
+    return std::dynamic_pointer_cast<LeftArg>(lhs) && std::dynamic_pointer_cast<RightArg>(rhs);
+}
+
+template <typename LeftIntegral, typename LeftExpected, typename RightIntegral, typename RightExpected>
+[[gnu::always_inline]] static constexpr bool relation() noexcept
+{
+    return std::is_same_v<LeftExpected, LeftIntegral> && std::is_same_v<RightExpected, RightIntegral>;
+}
+
 template <typename LeftIntegral, typename RightIntegral>
-static constexpr std::variant<int32_t, double> binary(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs)
+[[gnu::always_inline]] static constexpr std::variant<int32_t, double> binary(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs)
 {
     static_assert(std::is_same_v<int32_t, LeftIntegral>  || std::is_same_v<double, LeftIntegral>);
     static_assert(std::is_same_v<int32_t, RightIntegral> || std::is_same_v<double, RightIntegral>);
 
-    auto relation = []<typename LeftArg, typename RightArg>() noexcept {
-        return std::is_same_v<LeftArg, LeftIntegral> && std::is_same_v<RightArg, RightIntegral>;
-    };
+    if constexpr (relation<LeftIntegral, int32_t, RightIntegral, int32_t>())    { return arithmetic<ast::Integer, ast::Integer>(type, lhs, rhs); }
+    if constexpr (relation<LeftIntegral, int32_t, RightIntegral, double>())     { return arithmetic<ast::Integer, ast::Float>  (type, lhs, rhs); }
+    if constexpr (relation<LeftIntegral, double,  RightIntegral, int32_t>())    { return arithmetic<ast::Float,   ast::Integer>(type, lhs, rhs); }
+    if constexpr (relation<LeftIntegral, double,  RightIntegral, double>())     { return arithmetic<ast::Float,   ast::Float>  (type, lhs, rhs); }
+}
 
-    if constexpr (relation.template operator()<int32_t, int32_t>())     { return arithmetic<ast::Integer, ast::Integer>(type, lhs, rhs); }
-    else if constexpr (relation.template operator()<double, double>())  { return arithmetic<ast::Float, ast::Float>(type, lhs, rhs); }
-    else if constexpr (relation.template operator()<double, int32_t>()) { return arithmetic<ast::Float, ast::Integer>(type, lhs, rhs); }
-    else if constexpr (relation.template operator()<int32_t, double>()) { return arithmetic<ast::Integer, ast::Float>(type, lhs, rhs); }
-};
-
-template <typename LeftArg, typename RightArg>
-bool relation(auto lhs, auto rhs)
-{
-    return std::dynamic_pointer_cast<LeftArg>(lhs) && std::dynamic_pointer_cast<RightArg>(rhs);
+[[gnu::always_inline]] constexpr int32_t i_i_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+    return std::get<int32_t>(::binary<int32_t, int32_t>(type, lhs, rhs));
+}
+[[gnu::always_inline]] constexpr double i_f_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+    return std::get<double>(::binary<int32_t, double>(type, lhs, rhs));
+}
+[[gnu::always_inline]] constexpr double f_i_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+    return std::get<double>(::binary<double, int32_t>(type, lhs, rhs));
+}
+[[gnu::always_inline]] constexpr double f_f_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+    return std::get<double>(::binary<double, double>(type, lhs, rhs));
 }
 
 std::shared_ptr<ast::Object> Evaluator::eval_binary(const std::shared_ptr<ast::Binary>& binary)
@@ -191,19 +204,10 @@ std::shared_ptr<ast::Object> Evaluator::eval_binary(const std::shared_ptr<ast::B
     auto lhs = eval_expression(binary->lhs());
     auto rhs = eval_expression(binary->rhs());
 
-    enum struct integer_float_rel { i_i, i_f, f_i, f_f };
-
-    std::unordered_map<integer_float_rel, std::function<std::variant<int32_t, double>()>> type_relations = z{
-        {integer_float_rel::i_i, [&lhs, &rhs, &binary] { return ::binary<int32_t, int32_t>(binary->type(), lhs, rhs); }},
-        {integer_float_rel::i_f, [&lhs, &rhs, &binary] { return ::binary<int32_t, double> (binary->type(), lhs, rhs); }},
-        {integer_float_rel::f_i, [&lhs, &rhs, &binary] { return ::binary<double,  int32_t>(binary->type(), lhs, rhs); }},
-        {integer_float_rel::f_f, [&lhs, &rhs, &binary] { return ::binary<double,  double> (binary->type(), lhs, rhs); }}
-    };
-
-    if (relation<ast::Integer, ast::Integer>(lhs, rhs)) { return std::make_shared<ast::Integer>(std::get<int32_t>(type_relations[integer_float_rel::i_i]())); }
-    if (relation<ast::Integer, ast::Float>(lhs, rhs))   { return std::make_shared<ast::Float>  (std::get<double> (type_relations[integer_float_rel::i_f]())); }
-    if (relation<ast::Float, ast::Integer>(lhs, rhs))   { return std::make_shared<ast::Float>  (std::get<double> (type_relations[integer_float_rel::f_i]())); }
-    if (relation<ast::Float, ast::Float>(lhs, rhs))     { return std::make_shared<ast::Float>  (std::get<double> (type_relations[integer_float_rel::f_f]())); }
+    if (match_type<ast::Integer, ast::Integer>(lhs, rhs)) { return std::make_shared<ast::Integer>(i_i_arithmetic(binary->type(), lhs, rhs)); }
+    if (match_type<ast::Integer, ast::Float>(lhs, rhs))   { return std::make_shared<ast::Float>  (i_f_arithmetic(binary->type(), lhs, rhs)); }
+    if (match_type<ast::Float,   ast::Integer>(lhs, rhs)) { return std::make_shared<ast::Float>  (f_i_arithmetic(binary->type(), lhs, rhs)); }
+    if (match_type<ast::Float,   ast::Float>(lhs, rhs))   { return std::make_shared<ast::Float>  (f_f_arithmetic(binary->type(), lhs, rhs)); }
 
     throw EvalError("Unknown binary expr");
 }
@@ -230,6 +234,8 @@ std::shared_ptr<ast::Object> Evaluator::eval_array_subscript(const std::shared_p
 
 void Evaluator::eval_for(const std::shared_ptr<ast::For>& for_stmt)
 {
+    m_storage.scope_begin();
+
     auto init = std::dynamic_pointer_cast<ast::Binary>(eval_expression(for_stmt->loop_init()));
 
     auto boolean_exit_condition = std::dynamic_pointer_cast<ast::Integer>(eval_expression(for_stmt->exit_condition()));
@@ -251,13 +257,27 @@ void Evaluator::eval_while(const std::shared_ptr<ast::While>& while_stmt)
 {
     auto exit_condition = eval_expression(while_stmt->exit_condition());
 
-    auto boolean_exit_condition = std::dynamic_pointer_cast<ast::Integer>(exit_condition);
-    if (!boolean_exit_condition) { throw EvalError("While requires bool-convertible exit condition"); }
+    auto integral_exit_condition = std::dynamic_pointer_cast<ast::Integer>(exit_condition);
+    auto floating_point_exit_condition = std::dynamic_pointer_cast<ast::Float>(exit_condition);
 
-    while (static_cast<bool>(boolean_exit_condition->value()))
+    if (!integral_exit_condition && !floating_point_exit_condition) { throw EvalError("While requires bool-convertible exit condition"); }
+
+    if (integral_exit_condition)
     {
-        eval_expression(while_stmt->body());
-        boolean_exit_condition = std::dynamic_pointer_cast<ast::Integer>(eval_expression(while_stmt->exit_condition()));
+        while (static_cast<bool>(integral_exit_condition->value()))
+        {
+            eval_expression(while_stmt->body());
+            integral_exit_condition = std::dynamic_pointer_cast<ast::Integer>(eval_expression(while_stmt->exit_condition()));
+        }
+    }
+
+    if (floating_point_exit_condition)
+    {
+        while (static_cast<bool>(floating_point_exit_condition->value()))
+        {
+            eval_expression(while_stmt->body());
+            floating_point_exit_condition = std::dynamic_pointer_cast<ast::Float>(eval_expression(while_stmt->exit_condition()));
+        }
     }
 }
 

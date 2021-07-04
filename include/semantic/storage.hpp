@@ -10,46 +10,35 @@
 
 class Storage
 {
-    using scope_t = std::unordered_map<std::string, std::shared_ptr<ast::Object>>;
+    struct StorageRecord
+    {
+        std::size_t depth;
+        std::shared_ptr<ast::Object> payload;
+    };
 
 public:
-    Storage()
-        : m_inner_scopes(1, scope_t{})
-    { }
-
     void push(std::string_view name, const std::shared_ptr<ast::Object>& value)
     {
-        if (has(name))
-        {
-            throw SemanticError(std::string("redefinition of ") + name.data());
-        }
-
-        m_inner_scopes.back()[name.data()] = value;
+        m_inner_scopes[name.data()] = StorageRecord{m_scope_depth, value};
     }
 
-    bool has(std::string_view name)
+    Storage::StorageRecord* has(std::string_view name) const
     {
-        if (std::find_if(m_inner_scopes.begin(), m_inner_scopes.end(), [&name](const scope_t& scope) {
-            return scope.contains(name.data());
-        }) != m_inner_scopes.end())
-        {
-            return true;
-        }
+        auto it = m_inner_scopes.find(name.data());
 
-        return false;
+        if (it == m_inner_scopes.end() || it->second.depth > m_scope_depth)
+            return nullptr;
+
+        return &it->second;
     }
 
     void overwrite(std::string_view name, const std::shared_ptr<ast::Object>& value)
     {
-        if (has(name))
+        auto found_data = has(name);
+
+        if (found_data)
         {
-            for (auto& scope : m_inner_scopes)
-            {
-                if (scope.contains(name.data()))
-                {
-                    scope[name.data()] = value;
-                }
-            }
+            found_data->payload = value;
         }
         else {
             push(name, std::move(value));
@@ -58,29 +47,30 @@ public:
 
     std::shared_ptr<ast::Object> lookup(std::string_view name) const
     {
-        for (const auto& scope : m_inner_scopes)
-        {
-            if (scope.contains(name.data()))
-            {
-                return scope.at(name.data());
-            }
-        }
+        auto found_data = has(name);
 
-        throw SemanticError(std::string("Variable not found: ") + name.data());
+        if (found_data)
+        {
+            return found_data->payload;
+        }
+        else {
+            throw SemanticError("Variable not found: " + std::string(name));
+        }
     }
 
     void scope_begin()
     {
-        m_inner_scopes.push_back(scope_t{});
+        ++m_scope_depth;
     }
 
     void scope_end()
     {
-        m_inner_scopes.pop_back();
+        --m_scope_depth;
     }
 
 private:
-    std::vector<scope_t> m_inner_scopes;
+    std::size_t m_scope_depth = 0;
+    mutable std::unordered_map<std::string, StorageRecord> m_inner_scopes;
 };
 
 #endif // SYMBOL_TABLE_HPP
