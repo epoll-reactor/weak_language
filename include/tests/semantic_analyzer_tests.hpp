@@ -9,11 +9,7 @@ namespace semantic_detail {
 
 std::shared_ptr<ast::RootObject> create_parse_tree(std::string_view data)
 {
-    Lexer lexer = LexerBuilder{}
-        .operators(test_operators)
-        .keywords(test_keywords)
-        .input(std::istringstream{data.data()})
-        .build();
+    Lexer lexer(std::istringstream{data.data()});
 
     Parser parser(lexer.tokenize());
 

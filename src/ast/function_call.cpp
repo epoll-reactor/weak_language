@@ -7,7 +7,7 @@ FunctionCall::FunctionCall(std::string name, std::vector<std::shared_ptr<Object>
     , m_arguments(std::move(arguments))
 { }
 
-std::string FunctionCall::name() const noexcept
+const std::string& FunctionCall::name() const noexcept
 {
     return m_name;
 }

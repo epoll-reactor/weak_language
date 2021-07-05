@@ -6,7 +6,7 @@ String::String(std::string data)
     : m_data(std::move(data))
 { }
 
-std::string String::value() const noexcept
+const std::string& String::value() const noexcept
 {
     return m_data;
 }

@@ -2,7 +2,7 @@
 
 namespace ast {
 
-std::vector<std::shared_ptr<Object>> RootObject::get()
+const std::vector<std::shared_ptr<Object>>& RootObject::get()
 {
     return m_expressions;
 }

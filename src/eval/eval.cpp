@@ -21,10 +21,10 @@ void Evaluator::eval()
     for (const auto& expr : m_expressions)
     {
         auto function = std::dynamic_pointer_cast<ast::Function>(expr);
-        if (function) { m_storage.push(function->name(), function); continue; }
+        if (function) { m_storage.push(function->name(), std::move(function)); continue; }
 
         auto type_def = std::dynamic_pointer_cast<ast::TypeDefinition>(expr);
-        if (type_def) { m_storage.push(type_def->name(), type_def); continue; }
+        if (type_def) { m_storage.push(type_def->name(), std::move(type_def)); continue; }
 
         throw EvalError("Only functions as global objects supported");
     }
@@ -46,7 +46,7 @@ std::shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, con
 
     /// Load function arguments to local scope
     for (std::size_t i = 0; i < evaluated_args.size(); ++i)
-        m_storage.push(std::dynamic_pointer_cast<ast::Symbol>(stored_function->arguments()[i])->name(), evaluated_args[i]);
+        m_storage.push(std::static_pointer_cast<ast::Symbol>(stored_function->arguments()[i])->name(), evaluated_args[i]);
 
     for (const auto& arg : stored_function->body()->statements())
         last_statement = eval_expression(arg);
@@ -143,15 +143,28 @@ template <typename LeftOperand, typename RightOperand>
     if constexpr (std::is_same_v<ast::Integer, LeftOperand> && std::is_same_v<ast::Integer, RightOperand>)
         return integral_arithmetic_impl(
             type,
-            std::dynamic_pointer_cast<ast::Integer>(lhs)->value(),
-            std::dynamic_pointer_cast<ast::Integer>(rhs)->value()
+            std::static_pointer_cast<ast::Integer>(lhs)->value(),
+            std::static_pointer_cast<ast::Integer>(rhs)->value()
         );
 
     return floating_point_arithmetic_impl(
         type,
-        std::dynamic_pointer_cast<LeftOperand>(lhs)->value(),
-        std::dynamic_pointer_cast<RightOperand>(rhs)->value()
+        std::static_pointer_cast<LeftOperand>(lhs)->value(),
+        std::static_pointer_cast<RightOperand>(rhs)->value()
     );
+}
+
+[[gnu::always_inline]] constexpr int32_t i_i_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+    return std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(type, lhs, rhs));
+}
+[[gnu::always_inline]] constexpr double i_f_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+    return std::get<double>(arithmetic<ast::Integer, ast::Float>(type, lhs, rhs));
+}
+[[gnu::always_inline]] constexpr double f_i_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+    return std::get<double>(arithmetic<ast::Float, ast::Integer>(type, lhs, rhs));
+}
+[[gnu::always_inline]] constexpr double f_f_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+    return std::get<double>(arithmetic<ast::Float, ast::Float>(type, lhs, rhs));
 }
 
 template <typename LeftArg, typename RightArg>
@@ -160,42 +173,11 @@ template <typename LeftArg, typename RightArg>
     return std::dynamic_pointer_cast<LeftArg>(lhs) && std::dynamic_pointer_cast<RightArg>(rhs);
 }
 
-template <typename LeftIntegral, typename LeftExpected, typename RightIntegral, typename RightExpected>
-[[gnu::always_inline]] static constexpr bool relation() noexcept
-{
-    return std::is_same_v<LeftExpected, LeftIntegral> && std::is_same_v<RightExpected, RightIntegral>;
-}
-
-template <typename LeftIntegral, typename RightIntegral>
-[[gnu::always_inline]] static constexpr std::variant<int32_t, double> binary(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs)
-{
-    static_assert(std::is_same_v<int32_t, LeftIntegral>  || std::is_same_v<double, LeftIntegral>);
-    static_assert(std::is_same_v<int32_t, RightIntegral> || std::is_same_v<double, RightIntegral>);
-
-    if constexpr (relation<LeftIntegral, int32_t, RightIntegral, int32_t>())    { return arithmetic<ast::Integer, ast::Integer>(type, lhs, rhs); }
-    if constexpr (relation<LeftIntegral, int32_t, RightIntegral, double>())     { return arithmetic<ast::Integer, ast::Float>  (type, lhs, rhs); }
-    if constexpr (relation<LeftIntegral, double,  RightIntegral, int32_t>())    { return arithmetic<ast::Float,   ast::Integer>(type, lhs, rhs); }
-    if constexpr (relation<LeftIntegral, double,  RightIntegral, double>())     { return arithmetic<ast::Float,   ast::Float>  (type, lhs, rhs); }
-}
-
-[[gnu::always_inline]] constexpr int32_t i_i_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
-    return std::get<int32_t>(::binary<int32_t, int32_t>(type, lhs, rhs));
-}
-[[gnu::always_inline]] constexpr double i_f_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
-    return std::get<double>(::binary<int32_t, double>(type, lhs, rhs));
-}
-[[gnu::always_inline]] constexpr double f_i_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
-    return std::get<double>(::binary<double, int32_t>(type, lhs, rhs));
-}
-[[gnu::always_inline]] constexpr double f_f_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
-    return std::get<double>(::binary<double, double>(type, lhs, rhs));
-}
-
 std::shared_ptr<ast::Object> Evaluator::eval_binary(const std::shared_ptr<ast::Binary>& binary)
 {
     if (binary->type() == lexeme_t::assign)
     {
-        auto variable = std::dynamic_pointer_cast<ast::Symbol>(binary->lhs());
+        auto variable = std::static_pointer_cast<ast::Symbol>(binary->lhs());
         m_storage.overwrite(variable->name(), eval_expression(binary->rhs()));
 
         return binary;
@@ -236,7 +218,7 @@ void Evaluator::eval_for(const std::shared_ptr<ast::For>& for_stmt)
 {
     m_storage.scope_begin();
 
-    auto init = std::dynamic_pointer_cast<ast::Binary>(eval_expression(for_stmt->loop_init()));
+    auto init = std::static_pointer_cast<ast::Binary>(eval_expression(for_stmt->loop_init()));
 
     auto boolean_exit_condition = std::dynamic_pointer_cast<ast::Integer>(eval_expression(for_stmt->exit_condition()));
     if (!boolean_exit_condition) { throw EvalError("For loop requires bool-convertible exit condition"); }
@@ -247,7 +229,7 @@ void Evaluator::eval_for(const std::shared_ptr<ast::For>& for_stmt)
 
         eval_expression(for_stmt->increment());
 
-        boolean_exit_condition = std::dynamic_pointer_cast<ast::Integer>(eval_expression(for_stmt->exit_condition()));
+        boolean_exit_condition = std::static_pointer_cast<ast::Integer>(eval_expression(for_stmt->exit_condition()));
     }
 
     m_storage.scope_end();
@@ -267,7 +249,7 @@ void Evaluator::eval_while(const std::shared_ptr<ast::While>& while_stmt)
         while (static_cast<bool>(integral_exit_condition->value()))
         {
             eval_expression(while_stmt->body());
-            integral_exit_condition = std::dynamic_pointer_cast<ast::Integer>(eval_expression(while_stmt->exit_condition()));
+            integral_exit_condition = std::static_pointer_cast<ast::Integer>(eval_expression(while_stmt->exit_condition()));
         }
     }
 
@@ -276,7 +258,7 @@ void Evaluator::eval_while(const std::shared_ptr<ast::While>& while_stmt)
         while (static_cast<bool>(floating_point_exit_condition->value()))
         {
             eval_expression(while_stmt->body());
-            floating_point_exit_condition = std::dynamic_pointer_cast<ast::Float>(eval_expression(while_stmt->exit_condition()));
+            floating_point_exit_condition = std::static_pointer_cast<ast::Float>(eval_expression(while_stmt->exit_condition()));
         }
     }
 }
@@ -285,7 +267,7 @@ void Evaluator::eval_if(const std::shared_ptr<ast::If>& if_stmt)
 {
     auto if_condition = eval_expression(if_stmt->condition());
 
-    if (static_cast<bool>(std::dynamic_pointer_cast<ast::Integer>(if_condition)->value()))
+    if (static_cast<bool>(std::static_pointer_cast<ast::Integer>(if_condition)->value()))
     {
         eval_expression(if_stmt->body());
     }

@@ -7,11 +7,11 @@
 
 #include "lexeme.hpp"
 #include "lexical_error.hpp"
-
+#include "../../include/tests/grammar.hpp"
 
 /// Lexical analyzer. Keywords and accepted operators configured by user.
 ///
-/// @note Operator matching has the following preconditions:
+/// @note Operator matching find the following preconditions:
 ///   Longest operator must have a set of its shortened versions until the
 ///   length of operator is 1.
 ///   For example, to parse operator "<<==", operator set must have also
@@ -19,6 +19,8 @@
 class Lexer
 {
 public:
+    Lexer(std::istringstream data);
+
     /// @pre    m_input is constructed
     /// @post   m_current_index == m_input size. It means that all symbols were processed
     /// @throw  LexicalError if the analyzed data is incorrect
@@ -26,10 +28,10 @@ public:
     std::vector<Lexeme> tokenize();
 
 private:
-    friend class LexerBuilder;
+//    friend class LexerBuilder;
 
-    /// Used in LexerBuilder
-    Lexer(std::unordered_map<std::string, lexeme_t> keywords, std::unordered_map<std::string, lexeme_t> operators, std::istringstream data);
+//     Used in LexerBuilder
+//    Lexer(std::unordered_map<std::string, lexeme_t> keywords, std::unordered_map<std::string, lexeme_t> operators, std::istringstream data);
 
     char current() const;
 
@@ -64,8 +66,8 @@ private:
     /// @return the longest parsed operator
     Lexeme process_operator();
 
-    const std::unordered_map<std::string, lexeme_t> m_keywords;
-    const std::unordered_map<std::string, lexeme_t> m_operators;
+    const std::unordered_map<std::string, lexeme_t>& m_keywords = test_keywords;
+    const std::unordered_map<std::string, lexeme_t>& m_operators = test_operators;
 
     std::size_t m_current_index{0};
     std::vector<char> m_input;

@@ -3,6 +3,8 @@
 
 #include <optional>
 
+#include <boost/pool/pool_alloc.hpp>
+
 #include "../lexer/lexeme.hpp"
 #include "../parser/ast.hpp"
 #include "../parser/parse_error.hpp"
@@ -40,7 +42,7 @@ private:
     static bool is_block_statement(const std::shared_ptr<ast::Object>& statement) noexcept;
 
     /// @brief  get current token and match with one of samples
-    /// @return correct lexeme, std::nullopt if input has no more tokens
+    /// @return correct lexeme, std::nullopt if input find no more tokens
     std::optional<Lexeme> match(const std::vector<lexeme_t>& expected_types);
 
     /// @throws ParseError if the match was unsuccessful
@@ -115,6 +117,13 @@ private:
     /// @return array subscript parse tree
     std::shared_ptr<ast::Object> resolve_array_subscript();
 
+    boost::pool_allocator<
+        ast::Object,
+        boost::default_user_allocator_new_delete,
+        boost::details::pool::default_mutex,
+        16,
+        8192
+    > m_pool_allocator;
     std::vector<Lexeme> m_input;
     std::size_t m_current_index;
 };

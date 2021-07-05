@@ -10,7 +10,7 @@ std::shared_ptr<ast::Object> default_typecheck(const std::string& fun_name, cons
 {
     if (arguments.size() != 1) { throw EvalError(fun_name + ": 1 argument required, got " + std::to_string(arguments.size())); }
 
-    bool is_type = std::dynamic_pointer_cast<TargetType>(arguments[0]).operator bool();
+    bool is_type = static_cast<bool>(std::dynamic_pointer_cast<TargetType>(arguments[0]));
 
     return std::make_shared<ast::Integer>(is_type);
 }

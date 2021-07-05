@@ -7,7 +7,7 @@ ArraySubscriptOperator::ArraySubscriptOperator(std::string_view name, std::share
     , m_index(std::move(index))
 { }
 
-std::string ArraySubscriptOperator::symbol_name() const noexcept
+const std::string& ArraySubscriptOperator::symbol_name() const noexcept
 {
     return m_name;
 }

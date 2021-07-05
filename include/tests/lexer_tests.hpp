@@ -18,11 +18,7 @@ namespace lexer_detail {
 
 void run_test(std::string_view data, std::vector<Lexeme> assertion_lexemes)
 {
-    Lexer lexer = LexerBuilder{}
-        .operators(test_operators)
-        .keywords(test_keywords)
-        .input(std::istringstream{data.data()})
-        .build();
+    Lexer lexer(std::istringstream{data.data()});
 
     const std::vector<Lexeme> lexemes = lexer.tokenize();
 
@@ -44,12 +40,7 @@ void assert_exception(std::string_view data)
 {
     try
     {
-        LexerBuilder{}
-            .operators(test_operators)
-            .keywords(test_keywords)
-            .input(std::istringstream{data.data()})
-            .build()
-            .tokenize();
+        Lexer lexer(std::istringstream{data.data()});
     }
     catch (LexicalError& error) {
         std::cout << std::setw(25) << "Lexical error processed: " << error.what() << '\n';
@@ -379,11 +370,7 @@ void lexer_speed_tests()
     for (std::size_t i = 0; i < 10; i++)
         data += data;
 
-    Lexer lexer = LexerBuilder{}
-        .operators(test_operators)
-        .keywords(test_keywords)
-        .input(std::istringstream{data.data()})
-        .build();
+    Lexer lexer(std::istringstream{data.data()});
 
     std::cout << "\nLexer speed test - input size (" << data.size() / 1024.0 / 1024.0 << " MiB.)\n";
     speed_benchmark(1, [&lexer]{

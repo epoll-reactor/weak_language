@@ -15,11 +15,7 @@ void eval(std::string_view program)
 {
     trace_error("", [&program]{
 
-        Lexer lexer = LexerBuilder{}
-            .operators(test_operators)
-            .keywords(test_keywords)
-            .input(std::istringstream{program.data()})
-            .build();
+        Lexer lexer(std::istringstream{program.data()});
 
         Parser parser(lexer.tokenize());
         auto parsed_program = parser.parse();
@@ -71,6 +67,7 @@ void run_tests()
     run_semantic_analyzer_tests();
     run_storage_tests();
     run_eval_tests();
+//    eval_speed_tests();
     std::cout << "All tests passed successfully\n";
 }
 

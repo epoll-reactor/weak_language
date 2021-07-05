@@ -127,7 +127,7 @@ clear_stdout:
 template <class Function, class... Args>
 void speed_benchmark(std::string_view label, uint64_t iterations, Function function, Args&&... args)
 {
-    std::cout << label << "\t: " << iterations << " iteration(s): ";
+    std::cout << std::setw(50) << label << "\t: " << iterations << " iteration(s): ";
     auto start = std::chrono::high_resolution_clock::now();
     while (iterations-- > 0)
         function(std::forward<Args>(args)...);

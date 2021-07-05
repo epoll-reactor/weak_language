@@ -16,11 +16,7 @@ void run_test(std::string_view program, std::string_view expected_output)
 {
     std::cout << "Run test " << test_counter++ << " => ";
 
-    Lexer lexer = LexerBuilder{}
-        .keywords(test_keywords)
-        .operators(test_operators)
-        .input(std::istringstream{program.data()})
-        .build();
+    Lexer lexer(std::istringstream{program.data()});
 
     Parser parser(lexer.tokenize());
 
@@ -61,11 +57,7 @@ void expect_error(std::string_view program)
     bool error = true;
 
     trace_error(program, [&error, &program]{
-        Lexer lexer = LexerBuilder{}
-            .keywords(test_keywords)
-            .operators(test_operators)
-            .input(std::istringstream{program.data()})
-            .build();
+        Lexer lexer(std::istringstream{program.data()});
 
         Parser parser(lexer.tokenize());
 
@@ -137,8 +129,9 @@ void run_eval_tests()
         }
 
         fun main() {
-            for (i = 0; i < 1000; i = i + 1) {
-                sqrt(i);
+            sum = 0.0;
+            for (i = 0; i < 10000; i = i + 1) {
+                sum = sum + sqrt(i);
             }
         }
     )__", "");
@@ -175,6 +168,74 @@ void run_eval_tests()
     eval_detail::expect_error("fun main() { a = 1 % 1.5; }");
 
     std::cout << "Eval tests passed successfully\n";
+}
+
+auto create_evaluator(std::string_view program) {
+    Lexer lexer(std::istringstream{program.data()});
+
+    Parser parser(lexer.tokenize());
+
+    auto parsed_program = parser.parse();
+
+    SemanticAnalyzer semantic_analyzer(parsed_program);
+    semantic_analyzer.analyze();
+
+    Evaluator evaluator(parsed_program);
+
+    return evaluator;
+};
+
+void eval_speed_tests()
+{
+    auto run_test = [](std::string_view description, std::string_view program)
+    {
+        speed_benchmark(description, 1, [&program]{
+            create_evaluator(program).eval();
+        });
+    };
+
+    run_test("Multiply 1'000'000 times", R"(
+        fun complex() { for (i = 0; i < 1000; i = i + 1) { for (j = 0; j < 1000; j = j + 1) { i * j; } } }
+        fun main()    { for (i = 0; i < 1000; i = i + 1) { complex(); } }
+    )");
+    run_test("Count elements in array 27x20 1000 times", R"(
+        fun main() {
+            array = [
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0
+            ];
+
+            ones = 0; zeros = 0;
+            for (tests_count = 0; tests_count < 1000; tests_count = tests_count + 1) {
+                for (i = 0; i < 540; i = i + 1) {
+                    var = array[i];
+                    if (var == 1) {
+                        ones = ones + 1;
+                    } else {
+                        zeros = zeros + 1;
+                    }
+                }
+            }
+        }
+)");
 }
 
 #endif // EVAL_TESTS_HPP

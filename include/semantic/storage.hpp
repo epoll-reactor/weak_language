@@ -17,12 +17,17 @@ class Storage
     };
 
 public:
-    void push(std::string_view name, const std::shared_ptr<ast::Object>& value)
+    Storage()
     {
-        m_inner_scopes[name.data()] = StorageRecord{m_scope_depth, value};
+        m_inner_scopes.max_load_factor(0.50f);
     }
 
-    Storage::StorageRecord* has(std::string_view name) const
+    void push(std::string_view name, std::shared_ptr<ast::Object> value)
+    {
+        m_inner_scopes[name.data()] = StorageRecord{m_scope_depth, std::move(value)};
+    }
+
+    Storage::StorageRecord* find(std::string_view name) const
     {
         auto it = m_inner_scopes.find(name.data());
 
@@ -34,7 +39,7 @@ public:
 
     void overwrite(std::string_view name, const std::shared_ptr<ast::Object>& value)
     {
-        auto found_data = has(name);
+        auto found_data = find(name);
 
         if (found_data)
         {
@@ -47,7 +52,7 @@ public:
 
     std::shared_ptr<ast::Object> lookup(std::string_view name) const
     {
-        auto found_data = has(name);
+        auto found_data = find(name);
 
         if (found_data)
         {
@@ -58,12 +63,12 @@ public:
         }
     }
 
-    void scope_begin()
+    void scope_begin() noexcept
     {
         ++m_scope_depth;
     }
 
-    void scope_end()
+    void scope_end() noexcept
     {
         --m_scope_depth;
     }

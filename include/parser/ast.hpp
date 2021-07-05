@@ -17,7 +17,7 @@ public:
 class RootObject
 {
 public:
-    std::vector<std::shared_ptr<Object>> get();
+    const std::vector<std::shared_ptr<Object>>& get();
 
     void add(std::shared_ptr<Object> expression);
 
@@ -56,7 +56,7 @@ class String : public Object
 public:
     String(std::string data);
 
-    std::string value() const noexcept;
+    const std::string& value() const noexcept;
 
 private:
     std::string m_data;
@@ -67,7 +67,7 @@ class Symbol : public Object
 public:
     Symbol(std::string_view name);
 
-    std::string name() const noexcept;
+    const std::string& name() const noexcept;
 
 private:
     std::string m_name;
@@ -89,7 +89,7 @@ class ArraySubscriptOperator : public Object
 public:
     ArraySubscriptOperator(std::string_view name, std::shared_ptr<Object> index);
 
-    std::string symbol_name() const noexcept;
+    const std::string& symbol_name() const noexcept;
 
     std::shared_ptr<Object> index() const noexcept;
 
@@ -223,7 +223,7 @@ class FunctionCall : public Object
 public:
     FunctionCall(std::string name, std::vector<std::shared_ptr<Object>> arguments);
 
-    std::string name() const noexcept;
+    const std::string& name() const noexcept;
 
     const std::vector<std::shared_ptr<Object>>& arguments() const noexcept;
 
@@ -237,8 +237,8 @@ class TypeDefinition : public Object
 public:
     TypeDefinition(std::string_view name, std::vector<std::string> fields);
 
-    std::string name() const noexcept;
-    std::vector<std::string> fields() const noexcept;
+    const std::string& name() const noexcept;
+    const std::vector<std::string>& fields() const noexcept;
 
 private:
     std::string m_name;

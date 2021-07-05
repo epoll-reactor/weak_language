@@ -1,10 +1,14 @@
 #include "../../include/lexer/lexer_builder.hpp"
 #include "../../include/lexer/lexer.hpp"
 
-Lexer::Lexer(std::unordered_map<std::string, lexeme_t> keywords, std::unordered_map<std::string, lexeme_t> operators, std::istringstream data)
-    : m_keywords(std::move(keywords))
-    , m_operators(std::move(operators))
-    , m_input(std::istreambuf_iterator<char>(data), std::istreambuf_iterator<char>())
+//Lexer::Lexer(std::unordered_map<std::string, lexeme_t> keywords, std::unordered_map<std::string, lexeme_t> operators, std::istringstream data)
+//    : m_keywords(std::move(keywords))
+//    , m_operators(std::move(operators))
+//    , m_input(std::istreambuf_iterator<char>(data), std::istreambuf_iterator<char>())
+//{ }
+
+Lexer::Lexer(std::istringstream data)
+    : m_input(std::istreambuf_iterator<char>(data), std::istreambuf_iterator<char>())
 { }
 
 char Lexer::current() const
