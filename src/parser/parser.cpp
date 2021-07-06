@@ -12,7 +12,7 @@ Parser::Parser(std::vector<Lexeme> lexemes)
 
 std::shared_ptr<ast::RootObject> Parser::parse()
 {
-    std::shared_ptr<ast::RootObject> root = std::make_shared<ast::RootObject>();
+    std::shared_ptr<ast::RootObject> root = pool_allocate<ast::RootObject>();
 
     while (has_next())
     {
@@ -61,13 +61,13 @@ std::shared_ptr<ast::Object> Parser::primary()
             return array();
 
         case lexeme_t::num:
-            return binary(std::allocate_shared<ast::Integer, decltype(m_pool_allocator)>(m_pool_allocator, previous().data));
+            return binary(pool_allocate<ast::Integer>(previous().data));
 
         case lexeme_t::floating_point:
-            return binary(std::allocate_shared<ast::Float, decltype(m_pool_allocator)>(m_pool_allocator, previous().data));
+            return binary(pool_allocate<ast::Float>(previous().data));
 
         case lexeme_t::string_literal:
-            return std::allocate_shared<ast::String, decltype(m_pool_allocator)>(m_pool_allocator, previous().data);
+            return pool_allocate<ast::String>(previous().data);
 
         case lexeme_t::symbol:
             return resolve_symbol();
@@ -161,13 +161,13 @@ std::shared_ptr<ast::Object> Parser::additive()
     {
         if (previous().type == lexeme_t::plus)
         {
-            expr = std::allocate_shared<ast::Binary, decltype(m_pool_allocator)>(m_pool_allocator, lexeme_t::plus, expr, multiplicative());
+            expr = pool_allocate<ast::Binary>(lexeme_t::plus, expr, multiplicative());
             continue;
         }
 
         if (previous().type == lexeme_t::minus)
         {
-            expr = std::allocate_shared<ast::Binary, decltype(m_pool_allocator)>(m_pool_allocator, lexeme_t::minus, expr, multiplicative());
+            expr = pool_allocate<ast::Binary>(lexeme_t::minus, expr, multiplicative());
             continue;
         }
 
@@ -185,19 +185,19 @@ std::shared_ptr<ast::Object> Parser::multiplicative()
     {
         if (previous().type == lexeme_t::star)
         {
-            expr = std::allocate_shared<ast::Binary, decltype(m_pool_allocator)>(m_pool_allocator, lexeme_t::star, expr, multiplicative());
+            expr = pool_allocate<ast::Binary>(lexeme_t::star, expr, multiplicative());
             continue;
         }
 
         if (previous().type == lexeme_t::slash)
         {
-            expr = std::allocate_shared<ast::Binary, decltype(m_pool_allocator)>(m_pool_allocator, lexeme_t::slash, expr, multiplicative());
+            expr = pool_allocate<ast::Binary>(lexeme_t::slash, expr, multiplicative());
             continue;
         }
 
         if (previous().type == lexeme_t::mod)
         {
-            expr = std::allocate_shared<ast::Binary, decltype(m_pool_allocator)>(m_pool_allocator, lexeme_t::mod, expr, multiplicative());
+            expr = pool_allocate<ast::Binary>(lexeme_t::mod, expr, multiplicative());
             continue;
         }
 
@@ -213,12 +213,12 @@ std::shared_ptr<ast::Object> Parser::binary(const std::shared_ptr<ast::Object>& 
 
     peek();
 
-    return std::make_shared<ast::Binary>(previous().type, ptr, additive());
+    return pool_allocate<ast::Binary>(previous().type, ptr, additive());
 }
 
 std::shared_ptr<ast::Object> Parser::unary()
 {
-    return std::make_shared<ast::Unary>(previous().type, primary());
+    return pool_allocate<ast::Unary>(previous().type, primary());
 }
 
 std::shared_ptr<ast::Block> Parser::block()
@@ -245,7 +245,7 @@ std::shared_ptr<ast::Block> Parser::block()
 
     require({lexeme_t::right_brace});
 
-    return std::make_shared<ast::Block>(std::move(stmts));
+    return pool_allocate<ast::Block>(std::move(stmts));
 }
 
 std::shared_ptr<ast::Object> Parser::array()
@@ -268,7 +268,7 @@ std::shared_ptr<ast::Object> Parser::array()
         }
     }
 
-    return std::allocate_shared<ast::Array, decltype(m_pool_allocator)>(m_pool_allocator, std::move(objects));
+    return pool_allocate<ast::Array>(std::move(objects));
 }
 
 std::shared_ptr<ast::Object> Parser::if_statement()
@@ -285,11 +285,11 @@ std::shared_ptr<ast::Object> Parser::if_statement()
     {
         auto else_body = block();
 
-        return std::allocate_shared<ast::If, decltype(m_pool_allocator)>(m_pool_allocator, std::move(if_condition), std::move(if_body), std::move(else_body));
+        return pool_allocate<ast::If>(std::move(if_condition), std::move(if_body), std::move(else_body));
     }
     else {
 
-        return std::allocate_shared<ast::If, decltype(m_pool_allocator)>(m_pool_allocator, std::move(if_condition), std::move(if_body));
+        return pool_allocate<ast::If>(std::move(if_condition), std::move(if_body));
     }
 }
 
@@ -303,7 +303,7 @@ std::shared_ptr<ast::Object> Parser::while_statement()
 
     auto while_body = block();
 
-    return std::allocate_shared<ast::While, decltype(m_pool_allocator)>(m_pool_allocator, std::move(while_condition), std::move(while_body));
+    return pool_allocate<ast::While>(std::move(while_condition), std::move(while_body));
 }
 
 std::shared_ptr<ast::Object> Parser::for_statement()
@@ -384,7 +384,7 @@ std::shared_ptr<ast::Object> Parser::function_declare_statement()
 
     auto function_body = block();
 
-    return std::allocate_shared<ast::Function, decltype(m_pool_allocator)>(m_pool_allocator, std::move(function_name), std::move(arguments), std::move(function_body));
+    return pool_allocate<ast::Function>(function_name, std::move(arguments), std::move(function_body));
 }
 
 std::shared_ptr<ast::Object> Parser::define_type_statement()
@@ -419,7 +419,7 @@ std::shared_ptr<ast::Object> Parser::define_type_statement()
         }
     }
 
-    return std::allocate_shared<ast::TypeDefinition, decltype(m_pool_allocator)>(m_pool_allocator, std::move(name), std::move(fields));
+    return pool_allocate<ast::TypeDefinition>(name, std::move(fields));
 }
 
 std::vector<std::shared_ptr<ast::Object>> Parser::resolve_function_arguments()
@@ -460,21 +460,21 @@ std::shared_ptr<ast::Object> Parser::resolve_array_subscript()
 
     require({lexeme_t::right_box_brace});
 
-    return std::allocate_shared<ast::ArraySubscriptOperator, decltype(m_pool_allocator)>(m_pool_allocator, symbol_name, std::move(term));
+    return pool_allocate<ast::ArraySubscriptOperator>(symbol_name, std::move(term));
 }
 
 std::shared_ptr<ast::Object> Parser::resolve_symbol()
 {
     if (current().type == lexeme_t::left_paren)
     {
-        return std::allocate_shared<ast::FunctionCall, decltype(m_pool_allocator)>(m_pool_allocator, previous().data, resolve_function_arguments());
+        return pool_allocate<ast::FunctionCall>(previous().data, resolve_function_arguments());
     }
     else if (current().type == lexeme_t::left_box_brace) {
 
         return resolve_array_subscript();
     }
     else {
-        return binary(std::allocate_shared<ast::Symbol, decltype(m_pool_allocator)>(m_pool_allocator, previous().data));
+        return binary(pool_allocate<ast::Symbol>(previous().data));
     }
 }
 #endif // BOOST_ALLOC_PARSER

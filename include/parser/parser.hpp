@@ -117,12 +117,18 @@ private:
     /// @return array subscript parse tree
     std::shared_ptr<ast::Object> resolve_array_subscript();
 
+    template <typename T, typename... Args>
+    auto pool_allocate(Args&&... args)
+    {
+        return std::allocate_shared<T, decltype(m_pool_allocator)>(m_pool_allocator, std::forward<Args>(args)...);
+    }
+
     boost::pool_allocator<
         ast::Object,
         boost::default_user_allocator_new_delete,
         boost::details::pool::default_mutex,
         16,
-        8192
+        std::numeric_limits<int>::max() /// I don't know how it works
     > m_pool_allocator;
     std::vector<Lexeme> m_input;
     std::size_t m_current_index;

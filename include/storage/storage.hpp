@@ -4,15 +4,17 @@
 #include <unordered_map>
 #include <vector>
 
+#include "crc32.hpp"
+
 #include "../parser/ast.hpp"
 #include "../semantic/semantic_error.hpp"
-
 
 class Storage
 {
     struct StorageRecord
     {
         std::size_t depth;
+        std::string name;
         std::shared_ptr<ast::Object> payload;
     };
 
@@ -24,12 +26,12 @@ public:
 
     void push(std::string_view name, std::shared_ptr<ast::Object> value)
     {
-        m_inner_scopes[name.data()] = StorageRecord{m_scope_depth, std::move(value)};
+        m_inner_scopes[crc32::create(name.data())] = StorageRecord{m_scope_depth, name.data(), std::move(value)};
     }
 
     Storage::StorageRecord* find(std::string_view name) const
     {
-        auto it = m_inner_scopes.find(name.data());
+        auto it = m_inner_scopes.find(crc32::create(name.data()));
 
         if (it == m_inner_scopes.end() || it->second.depth > m_scope_depth)
             return nullptr;
@@ -46,10 +48,11 @@ public:
             found_data->payload = value;
         }
         else {
-            push(name, std::move(value));
+            push(name, value);
         }
     }
-
+    /// So slow due to the many calls of __cxa_throw. I don't know
+    /// why it works this way.
     std::shared_ptr<ast::Object> lookup(std::string_view name) const
     {
         auto found_data = find(name);
@@ -75,7 +78,7 @@ public:
 
 private:
     std::size_t m_scope_depth = 0;
-    mutable std::unordered_map<std::string, StorageRecord> m_inner_scopes;
+    mutable std::unordered_map<uint64_t, StorageRecord> m_inner_scopes;
 };
 
 #endif // SYMBOL_TABLE_HPP

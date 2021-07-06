@@ -22,4 +22,9 @@ lexeme_t Binary::type() const noexcept
 {
     return m_type;
 }
+
+ast_type_t Binary::ast_type() const noexcept
+{
+    return ast_type_t::BINARY;
 }
+} // namespace ast

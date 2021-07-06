@@ -11,4 +11,4 @@ set(LEAK_DETECTOR_FLAGS "")
 set(CMAKE_CXX_FLAGS "${OPTIMISE_FLAGS} ${EXTRA_WARN_FLAGS} ${LEAK_DETECTOR_FLAGS}")
 
 file(GLOB_RECURSE SRC include/*.hpp src/*.cpp)
-add_executable(WeakLanguage ${SRC})
+add_executable(WeakLanguage ${SRC} include/storage/crc32.hpp)

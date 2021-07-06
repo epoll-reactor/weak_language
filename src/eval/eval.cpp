@@ -4,6 +4,12 @@
 #include "../../include/eval/builtins.hpp"
 #include "../../include/eval/eval.hpp"
 
+template <ast::ast_type_t Arg>
+[[gnu::always_inline]] static constexpr bool match_type(const std::shared_ptr<ast::Object>& ptr) noexcept
+{
+    return ptr->ast_type() == Arg;
+}
+
 static bool is_datatype(const std::shared_ptr<ast::Object>& object) noexcept
 {
     return std::dynamic_pointer_cast<ast::Integer>(object)
@@ -167,10 +173,10 @@ template <typename LeftOperand, typename RightOperand>
     return std::get<double>(arithmetic<ast::Float, ast::Float>(type, lhs, rhs));
 }
 
-template <typename LeftArg, typename RightArg>
+template <ast::ast_type_t LeftArg, ast::ast_type_t RightArg>
 [[gnu::always_inline]] static constexpr bool match_type(const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) noexcept
 {
-    return std::dynamic_pointer_cast<LeftArg>(lhs) && std::dynamic_pointer_cast<RightArg>(rhs);
+    return lhs->ast_type() == LeftArg && rhs->ast_type() == RightArg;
 }
 
 std::shared_ptr<ast::Object> Evaluator::eval_binary(const std::shared_ptr<ast::Binary>& binary)
@@ -186,10 +192,10 @@ std::shared_ptr<ast::Object> Evaluator::eval_binary(const std::shared_ptr<ast::B
     auto lhs = eval_expression(binary->lhs());
     auto rhs = eval_expression(binary->rhs());
 
-    if (match_type<ast::Integer, ast::Integer>(lhs, rhs)) { return std::make_shared<ast::Integer>(i_i_arithmetic(binary->type(), lhs, rhs)); }
-    if (match_type<ast::Integer, ast::Float>(lhs, rhs))   { return std::make_shared<ast::Float>  (i_f_arithmetic(binary->type(), lhs, rhs)); }
-    if (match_type<ast::Float,   ast::Integer>(lhs, rhs)) { return std::make_shared<ast::Float>  (f_i_arithmetic(binary->type(), lhs, rhs)); }
-    if (match_type<ast::Float,   ast::Float>(lhs, rhs))   { return std::make_shared<ast::Float>  (f_f_arithmetic(binary->type(), lhs, rhs)); }
+    if (match_type<ast::ast_type_t::INTEGER, ast::ast_type_t::INTEGER>(lhs, rhs)) { return std::make_shared<ast::Integer>(i_i_arithmetic(binary->type(), lhs, rhs)); }
+    if (match_type<ast::ast_type_t::INTEGER, ast::ast_type_t::FLOAT>(lhs, rhs))   { return std::make_shared<ast::Float>  (i_f_arithmetic(binary->type(), lhs, rhs)); }
+    if (match_type<ast::ast_type_t::FLOAT,   ast::ast_type_t::INTEGER>(lhs, rhs)) { return std::make_shared<ast::Float>  (f_i_arithmetic(binary->type(), lhs, rhs)); }
+    if (match_type<ast::ast_type_t::FLOAT,   ast::ast_type_t::FLOAT>(lhs, rhs))   { return std::make_shared<ast::Float>  (f_f_arithmetic(binary->type(), lhs, rhs)); }
 
     throw EvalError("Unknown binary expr");
 }
@@ -202,16 +208,19 @@ void Evaluator::eval_array(const std::shared_ptr<ast::Array>& array)
 
 std::shared_ptr<ast::Object> Evaluator::eval_array_subscript(const std::shared_ptr<ast::ArraySubscriptOperator>& argument)
 {
-    auto array = std::dynamic_pointer_cast<ast::Array>(m_storage.lookup(argument->symbol_name()));
-    if (!array) { throw EvalError("Try to subscript non-array expression"); }
+    auto array = m_storage.lookup(argument->symbol_name());
+    if (array->ast_type() != ast::ast_type_t::ARRAY) { throw EvalError("Try to subscript non-array expression"); }
 
-    auto index = std::dynamic_pointer_cast<ast::Integer>(eval_expression(argument->index()));
-    if (!index) { throw EvalError("Index must be integral type"); }
+    auto index = eval_expression(argument->index());
+    if (index->ast_type() != ast::ast_type_t::INTEGER) { throw EvalError("Index must be integral type"); }
 
-    auto numeric_index = static_cast<std::size_t>(index->value());
-    if (array->elements().size() <= numeric_index) { throw EvalError("Out of range"); }
+    auto casted_index = std::static_pointer_cast<ast::Integer>(index);
+    auto casted_array = std::static_pointer_cast<ast::Array>(array);
 
-    return array->elements().at(numeric_index);
+    auto numeric_index = static_cast<std::size_t>(casted_index->value());
+    if (casted_array->elements().size() <= numeric_index) { throw EvalError("Out of range"); }
+
+    return casted_array->elements().at(numeric_index);
 }
 
 void Evaluator::eval_for(const std::shared_ptr<ast::For>& for_stmt)
@@ -279,17 +288,18 @@ void Evaluator::eval_if(const std::shared_ptr<ast::If>& if_stmt)
 
 std::shared_ptr<ast::Object> Evaluator::eval_expression(const std::shared_ptr<ast::Object>& expression)
 {
-    if (auto target = std::dynamic_pointer_cast<ast::Integer>(expression))      { return target; }
-    if (auto target = std::dynamic_pointer_cast<ast::Float>(expression))        { return target; }
-    if (auto target = std::dynamic_pointer_cast<ast::String>(expression))       { return target; }
-    if (auto target = std::dynamic_pointer_cast<ast::Symbol>(expression))       { return m_storage.lookup(target->name()); }
-    if (auto target = std::dynamic_pointer_cast<ast::Binary>(expression))       { return eval_binary(target); }
-    if (auto target = std::dynamic_pointer_cast<ast::FunctionCall>(expression)) { return eval_function_call(target); }
-    if (auto target = std::dynamic_pointer_cast<ast::ArraySubscriptOperator>(expression)) { return eval_array_subscript(target); }
-    if (auto target = std::dynamic_pointer_cast<ast::Array>(expression))        { eval_array(target); return expression; }
-    if (auto target = std::dynamic_pointer_cast<ast::Block>(expression))        { eval_block(target); return expression; }
-    if (auto target = std::dynamic_pointer_cast<ast::While>(expression))        { eval_while(target); return expression; }
-    if (auto target = std::dynamic_pointer_cast<ast::For>(expression))          { eval_for(target); return expression; }
-    if (auto target = std::dynamic_pointer_cast<ast::If>(expression))           { eval_if(target); return expression; }
+    if (expression->ast_type() == ast::ast_type_t::INTEGER)      { return expression; }
+    if (expression->ast_type() == ast::ast_type_t::FLOAT)        { return expression; }
+    if (expression->ast_type() == ast::ast_type_t::STRING)       { return expression; }
+    if (expression->ast_type() == ast::ast_type_t::SYMBOL)       { return m_storage.lookup(std::static_pointer_cast<ast::Symbol>(expression)->name()); }
+    if (expression->ast_type() == ast::ast_type_t::BINARY)       { return eval_binary(std::static_pointer_cast<ast::Binary>(expression)); }
+    if (expression->ast_type() == ast::ast_type_t::FUNCTION_CALL) { return eval_function_call(std::static_pointer_cast<ast::FunctionCall>(expression)); }
+    if (expression->ast_type() == ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR) { return eval_array_subscript(std::static_pointer_cast<ast::ArraySubscriptOperator>(expression)); }
+    if (expression->ast_type() == ast::ast_type_t::ARRAY)        { eval_array(std::static_pointer_cast<ast::Array>(expression)); return expression; }
+    if (expression->ast_type() == ast::ast_type_t::BLOCK)        { eval_block(std::static_pointer_cast<ast::Block>(expression)); return expression; }
+    if (expression->ast_type() == ast::ast_type_t::WHILE)        { eval_while(std::static_pointer_cast<ast::While>(expression)); return expression; }
+    if (expression->ast_type() == ast::ast_type_t::FOR)          { eval_for(std::static_pointer_cast<ast::For>(expression)); return expression; }
+    if (expression->ast_type() == ast::ast_type_t::IF)           { eval_if(std::static_pointer_cast<ast::If>(expression)); return expression; }
+
     throw EvalError("Unknown expression");
 }

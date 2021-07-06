@@ -3,7 +3,7 @@
 
 #include "../parser/ast.hpp"
 #include "../semantic/semantic_error.hpp"
-#include "../semantic/storage.hpp"
+#include "../storage/storage.hpp"
 
 class SemanticAnalyzer
 {

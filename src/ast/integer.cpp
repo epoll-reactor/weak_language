@@ -15,4 +15,9 @@ int32_t Integer::value() const noexcept
 {
     return m_data;
 }
+
+ast_type_t Integer::ast_type() const noexcept
+{
+    return ast_type_t::INTEGER;
+}
 } // namespace ast

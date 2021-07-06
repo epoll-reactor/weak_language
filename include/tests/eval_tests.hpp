@@ -104,9 +104,10 @@ void run_eval_tests()
     eval_detail::run_test("fun main() { var = 0; if (var != 0) { println(\"Equal\"); } else { println(\"Different\"); } }", "Different\n");
     eval_detail::run_test("fun main() { for (i = 0; i < 10; i = i + 1) { print(i); } }", "0123456789");
     eval_detail::run_test("fun copy(arg) { arg; } fun main() { for (i = 0; i < 10; i = i + 1) { print(copy(i)); } }", "0123456789");
-    eval_detail::run_test("fun main() { var = 0; print(number?(var), string?(var)); }", "1 0");
+    eval_detail::run_test("fun main() { var = 0  ; print(integer?(var), float?(var)); }", "1 0");
+    eval_detail::run_test("fun main() { var = 0.0; print(integer?(var), float?(var)); }", "0 1");
     eval_detail::run_test("fun main() { array = [0, 0, 0]; digit = 1; print(array?(array), array?(digit)); }", "1 0");
-    eval_detail::run_test("fun main() { var = \"0\"; print(number?(var), string?(var)); }", "0 1");
+    eval_detail::run_test("fun main() { var = \"0\"; print(integer?(var), string?(var)); }", "0 1");
     eval_detail::run_test("fun create_array(a, b, c) { [a, b, c]; } fun main() { array = create_array(1,2,3); print(array?(array)); }", "1");
     eval_detail::run_test("fun create_array(a, b, c) { [a, b, c]; } fun main() { array = create_array(5,6,7); print(array[0]); }", "5");
     eval_detail::run_test("define-type structure(a, b, c); fun main() { structure; }", "");

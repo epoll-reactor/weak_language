@@ -2,7 +2,7 @@
 #define EVAL_HPP
 
 #include "../parser/ast.hpp"
-#include "../semantic/storage.hpp"
+#include "../storage/storage.hpp"
 
 
 class Evaluator

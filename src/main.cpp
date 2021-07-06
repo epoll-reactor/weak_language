@@ -67,7 +67,7 @@ void run_tests()
     run_semantic_analyzer_tests();
     run_storage_tests();
     run_eval_tests();
-//    eval_speed_tests();
+    eval_speed_tests();
     std::cout << "All tests passed successfully\n";
 }
 

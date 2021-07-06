@@ -16,4 +16,9 @@ const std::vector<std::string>& TypeDefinition::fields() const noexcept
 {
     return m_fields;
 }
+
+ast_type_t TypeDefinition::ast_type() const noexcept
+{
+    return ast_type_t::TYPE_DEFINITION;
+}
 } // namespace ast

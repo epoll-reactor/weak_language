@@ -41,4 +41,9 @@ std::shared_ptr<Block> For::body() const noexcept
 {
     return m_block;
 }
+
+ast_type_t For::ast_type() const noexcept
+{
+    return ast_type_t::FOR;
+}
 } // namespace ast

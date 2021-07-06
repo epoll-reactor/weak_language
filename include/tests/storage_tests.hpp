@@ -1,7 +1,7 @@
 #ifndef SYMBOL_TABLE_TESTS_HPP
 #define SYMBOL_TABLE_TESTS_HPP
 
-#include "../semantic/storage.hpp"
+#include "../storage/storage.hpp"
 
 void test_found(const Storage& env, std::string_view name, bool expected_found_result)
 {

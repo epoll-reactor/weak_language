@@ -10,16 +10,18 @@ std::shared_ptr<ast::Object> default_typecheck(const std::string& fun_name, cons
 {
     if (arguments.size() != 1) { throw EvalError(fun_name + ": 1 argument required, got " + std::to_string(arguments.size())); }
 
-    bool is_type = static_cast<bool>(std::dynamic_pointer_cast<TargetType>(arguments[0]));
-
-    return std::make_shared<ast::Integer>(is_type);
+    return std::make_shared<ast::Integer>(static_cast<bool>(std::dynamic_pointer_cast<TargetType>(arguments[0])));
 }
 
 const std::unordered_map<std::string, builtin_function_t> builtins
 {
-    {"number?", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
+    {"integer?", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
 
-        return default_typecheck<ast::Integer>("number?", arguments);
+        return default_typecheck<ast::Integer>("integer?", arguments);
+    }},
+    {"float?", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
+
+        return default_typecheck<ast::Float>("float?", arguments);
     }},
     {"string?", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
 

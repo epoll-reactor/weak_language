@@ -10,4 +10,9 @@ const std::string& Symbol::name() const noexcept
 {
     return m_name;
 }
+
+ast_type_t Symbol::ast_type() const noexcept
+{
+    return ast_type_t::SYMBOL;
+}
 } // namespace ast

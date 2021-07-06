@@ -16,4 +16,9 @@ lexeme_t Unary::type() const noexcept
 {
     return m_type;
 }
+
+ast_type_t Unary::ast_type() const noexcept
+{
+    return ast_type_t::UNARY;
+}
 } // namespace ast

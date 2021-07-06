@@ -16,4 +16,9 @@ std::shared_ptr<Object> ArraySubscriptOperator::index() const noexcept
 {
     return m_index;
 }
+
+ast_type_t ArraySubscriptOperator::ast_type() const noexcept
+{
+    return ast_type_t::ARRAY_SUBSCRIPT_OPERATOR;
+}
 } // namespace ast
