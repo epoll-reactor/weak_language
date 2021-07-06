@@ -17,6 +17,6 @@ fun power(num, stage) {
 
 fun main() {
   hello_world();
-  println(power(2, 10);
+  println(power(2, 10));
 }
 ```
