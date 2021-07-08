@@ -2,9 +2,9 @@
 
 namespace ast {
 
-Unary::Unary(lexeme_t type, std::shared_ptr<Object> operation)
+Unary::Unary(lexeme_t type, std::weak_ptr<Object> operation)
     : m_type(type)
-    , m_operation(std::move(operation))
+    , m_operation(operation)
 { }
 
 std::shared_ptr<Object> Unary::operand() const noexcept

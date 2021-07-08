@@ -112,15 +112,15 @@ bool Parser::has_next() const noexcept
 
 bool Parser::is_block(const std::shared_ptr<ast::Object>& statement) noexcept
 {
-    return std::dynamic_pointer_cast<ast::Block>(statement).operator bool();
+    return statement->ast_type() == ast::ast_type_t::BLOCK;
 }
 
 bool Parser::is_block_statement(const std::shared_ptr<ast::Object>& statement) noexcept
 {
-    return std::dynamic_pointer_cast<ast::If>(statement).operator bool()
-        || std::dynamic_pointer_cast<ast::While>(statement).operator bool()
-        || std::dynamic_pointer_cast<ast::Function>(statement).operator bool()
-        || std::dynamic_pointer_cast<ast::For>(statement).operator bool();
+    return statement->ast_type() == ast::ast_type_t::IF
+        || statement->ast_type() == ast::ast_type_t::WHILE
+        || statement->ast_type() == ast::ast_type_t::FUNCTION
+        || statement->ast_type() == ast::ast_type_t::FOR;
 }
 
 std::optional<Lexeme> Parser::match(const std::vector<lexeme_t>& expected_types)

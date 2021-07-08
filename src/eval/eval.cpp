@@ -4,7 +4,7 @@
 #include "../../include/eval/builtins.hpp"
 #include "../../include/eval/eval.hpp"
 
-static bool is_datatype(const std::shared_ptr<ast::Object>& object) noexcept
+static bool is_datatype(const ast::Object* object) noexcept
 {
     if (!object) { return false; }
 
@@ -55,7 +55,7 @@ std::shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, con
 
     m_storage.scope_end();
 
-    if (is_datatype(last_statement))
+    if (is_datatype(last_statement.get()))
         return last_statement;
     else
         return {};
@@ -140,37 +140,37 @@ template <typename LeftIntegral, typename RightIntegral>
 }
 
 template <typename LeftOperand, typename RightOperand>
-[[gnu::always_inline]] static constexpr std::variant<int32_t, double> arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs)
+[[gnu::always_inline]] static constexpr std::variant<int32_t, double> arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs)
 {
     if constexpr (std::is_same_v<ast::Integer, LeftOperand> && std::is_same_v<ast::Integer, RightOperand>)
         return integral_arithmetic_impl(
             type,
-            std::static_pointer_cast<ast::Integer>(lhs)->value(),
-            std::static_pointer_cast<ast::Integer>(rhs)->value()
+            static_cast<const ast::Integer*>(lhs)->value(),
+            static_cast<const ast::Integer*>(rhs)->value()
         );
 
     return floating_point_arithmetic_impl(
         type,
-        std::static_pointer_cast<LeftOperand>(lhs)->value(),
-        std::static_pointer_cast<RightOperand>(rhs)->value()
+        static_cast<const LeftOperand*>(lhs)->value(),
+        static_cast<const RightOperand*>(rhs)->value()
     );
 }
 
-[[gnu::always_inline]] constexpr int32_t i_i_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+[[gnu::always_inline]] constexpr int32_t i_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(type, lhs, rhs));
 }
-[[gnu::always_inline]] constexpr double i_f_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+[[gnu::always_inline]] constexpr double i_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<double>(arithmetic<ast::Integer, ast::Float>(type, lhs, rhs));
 }
-[[gnu::always_inline]] constexpr double f_i_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+[[gnu::always_inline]] constexpr double f_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<double>(arithmetic<ast::Float, ast::Integer>(type, lhs, rhs));
 }
-[[gnu::always_inline]] constexpr double f_f_arithmetic(lexeme_t type, const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) {
+[[gnu::always_inline]] constexpr double f_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<double>(arithmetic<ast::Float, ast::Float>(type, lhs, rhs));
 }
 
 template <ast::ast_type_t LeftArg, ast::ast_type_t RightArg>
-[[gnu::always_inline]] static constexpr bool match_type(const std::shared_ptr<ast::Object>& lhs, const std::shared_ptr<ast::Object>& rhs) noexcept
+[[gnu::always_inline]] static constexpr bool match_type(const ast::Object* lhs, const ast::Object* rhs) noexcept
 {
     return lhs->ast_type() == LeftArg && rhs->ast_type() == RightArg;
 }
@@ -188,10 +188,10 @@ std::shared_ptr<ast::Object> Evaluator::eval_binary(const std::shared_ptr<ast::B
     auto lhs = eval_expression(binary->lhs());
     auto rhs = eval_expression(binary->rhs());
 
-    if (match_type<ast::ast_type_t::INTEGER, ast::ast_type_t::INTEGER>(lhs, rhs)) { return std::make_shared<ast::Integer>(i_i_arithmetic(binary->type(), lhs, rhs)); }
-    if (match_type<ast::ast_type_t::INTEGER, ast::ast_type_t::FLOAT>(lhs, rhs))   { return std::make_shared<ast::Float>  (i_f_arithmetic(binary->type(), lhs, rhs)); }
-    if (match_type<ast::ast_type_t::FLOAT,   ast::ast_type_t::INTEGER>(lhs, rhs)) { return std::make_shared<ast::Float>  (f_i_arithmetic(binary->type(), lhs, rhs)); }
-    if (match_type<ast::ast_type_t::FLOAT,   ast::ast_type_t::FLOAT>(lhs, rhs))   { return std::make_shared<ast::Float>  (f_f_arithmetic(binary->type(), lhs, rhs)); }
+    if (match_type<ast::ast_type_t::INTEGER, ast::ast_type_t::INTEGER>(lhs.get(), rhs.get())) { return std::make_shared<ast::Integer>(i_i_arithmetic(binary->type(), lhs.get(), rhs.get())); }
+    if (match_type<ast::ast_type_t::INTEGER, ast::ast_type_t::FLOAT>(lhs.get(), rhs.get()))   { return std::make_shared<ast::Float>  (i_f_arithmetic(binary->type(), lhs.get(), rhs.get())); }
+    if (match_type<ast::ast_type_t::FLOAT,   ast::ast_type_t::INTEGER>(lhs.get(), rhs.get())) { return std::make_shared<ast::Float>  (f_i_arithmetic(binary->type(), lhs.get(), rhs.get())); }
+    if (match_type<ast::ast_type_t::FLOAT,   ast::ast_type_t::FLOAT>(lhs.get(), rhs.get()))   { return std::make_shared<ast::Float>  (f_f_arithmetic(binary->type(), lhs.get(), rhs.get())); }
 
     throw EvalError("Unknown binary expr");
 }

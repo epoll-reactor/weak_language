@@ -2,9 +2,9 @@
 
 namespace ast {
 
-ArraySubscriptOperator::ArraySubscriptOperator(std::string_view name, std::shared_ptr<Object> index)
+ArraySubscriptOperator::ArraySubscriptOperator(std::string_view name, std::weak_ptr<Object> index)
     : m_name(name)
-    , m_index(std::move(index))
+    , m_index(index)
 { }
 
 const std::string& ArraySubscriptOperator::symbol_name() const noexcept

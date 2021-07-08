@@ -2,10 +2,10 @@
 
 namespace ast {
 
-Binary::Binary(lexeme_t type, std::shared_ptr<Object> lhs, std::shared_ptr<Object> rhs)
+Binary::Binary(lexeme_t type, std::weak_ptr<Object> lhs, std::weak_ptr<Object> rhs)
     : m_type(type)
-    , m_lhs(std::move(lhs))
-    , m_rhs(std::move(rhs))
+    , m_lhs(lhs)
+    , m_rhs(rhs)
 { }
 
 std::shared_ptr<Object> Binary::lhs() const noexcept

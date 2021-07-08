@@ -100,7 +100,7 @@ private:
 class ArraySubscriptOperator : public Object
 {
 public:
-    ArraySubscriptOperator(std::string_view name, std::shared_ptr<Object> index);
+    ArraySubscriptOperator(std::string_view name, std::weak_ptr<Object> index);
 
     const std::string& symbol_name() const noexcept;
 
@@ -116,7 +116,7 @@ private:
 class Unary : public Object
 {
 public:
-    Unary(lexeme_t type, std::shared_ptr<Object> operation);
+    Unary(lexeme_t type, std::weak_ptr<Object> operation);
 
     std::shared_ptr<Object> operand() const noexcept;
 
@@ -132,7 +132,7 @@ private:
 class Binary : public Object
 {
 public:
-    Binary(lexeme_t type, std::shared_ptr<Object> lhs, std::shared_ptr<Object> rhs);
+    Binary(lexeme_t type, std::weak_ptr<Object> lhs, std::weak_ptr<Object> rhs);
 
     std::shared_ptr<Object> lhs() const noexcept;
 
@@ -164,7 +164,7 @@ private:
 class While : public Object
 {
 public:
-    While(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> block);
+    While(std::weak_ptr<Object> exit_condition, std::weak_ptr<Block> block);
 
     std::shared_ptr<Object> exit_condition() const noexcept;
 
@@ -210,9 +210,9 @@ private:
 class If : public Object
 {
 public:
-    If(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> body);
+    If(std::weak_ptr<Object> exit_condition, std::weak_ptr<Block> body);
 
-    If(std::shared_ptr<Object> exit_condition, std::shared_ptr<Block> body, std::shared_ptr<Block> else_body);
+    If(std::weak_ptr<Object> exit_condition, std::weak_ptr<Block> body, std::weak_ptr<Block> else_body);
 
     std::shared_ptr<Object> condition() const noexcept;
 
