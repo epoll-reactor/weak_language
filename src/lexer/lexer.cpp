@@ -1,12 +1,6 @@
 #include "../../include/lexer/lexer_builder.hpp"
 #include "../../include/lexer/lexer.hpp"
 
-//Lexer::Lexer(std::unordered_map<std::string, lexeme_t> keywords, std::unordered_map<std::string, lexeme_t> operators, std::istringstream data)
-//    : m_keywords(std::move(keywords))
-//    , m_operators(std::move(operators))
-//    , m_input(std::istreambuf_iterator<char>(data), std::istreambuf_iterator<char>())
-//{ }
-
 Lexer::Lexer(std::istringstream data)
     : m_input(std::istreambuf_iterator<char>(data), std::istreambuf_iterator<char>())
 { }
@@ -109,7 +103,7 @@ Lexeme Lexer::process_digit()
 
     if (has_next() && is_alphanumeric(current())) { throw LexicalError("Symbol can't start with digit"); }
     if (dots_reached > 1)  { throw LexicalError("Extra \".\" detected"); }
-    if (previous() == '.') { throw LexicalError("Digit after \".\" expected"); }
+    if (digit.back() == '.') { throw LexicalError("Digit after \".\" expected"); }
 
     return Lexeme{std::move(digit), (dots_reached == 0) ? lexeme_t::num : lexeme_t::floating_point};
 }

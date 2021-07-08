@@ -7,7 +7,7 @@ void test_found(const Storage& env, std::string_view name, bool expected_found_r
 {
     try
     {
-        env.lookup(name);
+        env.lookup(name.data());
 
     } catch (SemanticError&) {
 

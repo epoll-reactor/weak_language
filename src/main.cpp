@@ -60,15 +60,19 @@ void eval_file(std::string_view filename)
     }
 }
 
-void run_tests()
+float run_tests()
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     run_lexer_tests();
     run_ast_tests();
     run_semantic_analyzer_tests();
     run_storage_tests();
     run_eval_tests();
     eval_speed_tests();
-    std::cout << "All tests passed successfully\n";
+
+    auto time_spent = std::chrono::high_resolution_clock::now() - start;
+    return std::chrono::duration_cast<std::chrono::duration<float>>(time_spent).count();
 }
 
 int main(int argc, char* argv[])
@@ -82,6 +86,13 @@ int main(int argc, char* argv[])
         if (strcmp(argv[1], "test") == 0)
         {
             run_tests();
+//            std::array<float, 10> times;
+
+//            for (int i = 0; i < 10; ++i)
+//                times[i] = run_tests();
+
+//            for (int i = 0; i < 10; ++i)
+//                std::cout << "Test " << i << ": " << times[i] << " s.\n";
         }
         else {
             eval_file(argv[1]);

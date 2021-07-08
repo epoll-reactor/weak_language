@@ -17,27 +17,43 @@ static inline const std::unordered_map<std::string, lexeme_t> test_keywords {
 };
 
 static inline const std::unordered_map<std::string, lexeme_t> test_operators {
-    {"%", lexeme_t::mod},
+    {"=", lexeme_t::assign},
+
     {"!", lexeme_t::negation},
+
     {"==", lexeme_t::eq},
     {"!=", lexeme_t::neq},
-    {"++", lexeme_t::inc},
-    {"--", lexeme_t::dec},
-    {"+", lexeme_t::plus},
-    {"-", lexeme_t::minus},
-    {"*", lexeme_t::star},
-    {"/", lexeme_t::slash},
-    {"=", lexeme_t::assign},
-    {"+=", lexeme_t::plus_assign},
-    {"*=", lexeme_t::star_assign},
-    {"-=", lexeme_t::minus_assign},
-    {"/=", lexeme_t::slash_assign},
     {"<", lexeme_t::lt},
     {"<=", lexeme_t::le},
     {">", lexeme_t::gt},
     {">=", lexeme_t::ge},
+
+    {"++", lexeme_t::inc},
+    {"--", lexeme_t::dec},
+
     {"<<", lexeme_t::slli},
     {">>", lexeme_t::srli},
+    {"&",  lexeme_t::bit_and},
+    {"|",  lexeme_t::bit_or},
+    {"^",  lexeme_t::bit_xor},
+    {"&&", lexeme_t::logical_and},
+    {"||", lexeme_t::logical_or},
+
+    {"+", lexeme_t::plus},
+    {"-", lexeme_t::minus},
+    {"*", lexeme_t::star},
+    {"/", lexeme_t::slash},
+    {"%", lexeme_t::mod},
+
+    {"+=", lexeme_t::plus_assign},
+    {"*=", lexeme_t::star_assign},
+    {"-=", lexeme_t::minus_assign},
+    {"/=", lexeme_t::slash_assign},
+    {"<<=", lexeme_t::slli_assign},
+    {">>=", lexeme_t::srli_assign},
+    {"&=",  lexeme_t::and_assign},
+    {"|=", lexeme_t::or_assign},
+    {"^=", lexeme_t::xor_assign},
 
     {".", lexeme_t::dot},
     {",", lexeme_t::comma},

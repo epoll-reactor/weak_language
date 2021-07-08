@@ -37,7 +37,7 @@ public:
 
     int32_t value() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     int32_t m_data;
@@ -52,7 +52,7 @@ public:
 
     double value() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     double m_data;
@@ -65,7 +65,7 @@ public:
 
     const std::string& value() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     std::string m_data;
@@ -78,7 +78,7 @@ public:
 
     const std::string& name() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     std::string m_name;
@@ -91,7 +91,7 @@ public:
 
     std::vector<std::shared_ptr<Object>>& elements() noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     std::vector<std::shared_ptr<Object>> m_elements;
@@ -106,7 +106,7 @@ public:
 
     std::shared_ptr<Object> index() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     std::string m_name;
@@ -122,7 +122,7 @@ public:
 
     lexeme_t type() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     lexeme_t m_type;
@@ -140,7 +140,7 @@ public:
 
     lexeme_t type() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     lexeme_t m_type;
@@ -155,7 +155,7 @@ public:
 
     const std::vector<std::shared_ptr<Object>>& statements();
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     std::vector<std::shared_ptr<Object>> m_statements;
@@ -170,7 +170,7 @@ public:
 
     std::shared_ptr<Block> body() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     std::shared_ptr<Object> m_exit_condition;
@@ -198,7 +198,7 @@ public:
 
     std::shared_ptr<Block> body() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     std::shared_ptr<Object> m_for_init;
@@ -220,7 +220,7 @@ public:
 
     std::shared_ptr<Object> else_body() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     std::shared_ptr<Object> m_exit_condition;
@@ -239,7 +239,7 @@ public:
 
     std::shared_ptr<Block> body() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     std::string m_name;
@@ -256,7 +256,7 @@ public:
 
     const std::vector<std::shared_ptr<Object>>& arguments() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     std::string m_name;
@@ -271,7 +271,7 @@ public:
     const std::string& name() const noexcept;
     const std::vector<std::string>& fields() const noexcept;
 
-    ast_type_t ast_type() const noexcept override;
+    ast_type_t ast_type() const noexcept override final;
 
 private:
     std::string m_name;

@@ -1,6 +1,7 @@
 #ifndef SEMANTIC_ANALYZER_TESTS_HPP
 #define SEMANTIC_ANALYZER_TESTS_HPP
 
+#include "../lexer/lexer.hpp"
 #include "../semantic/semantic_analyzer.hpp"
 #include "../parser/parser.hpp"
 #include "../tests/test_utility.hpp"

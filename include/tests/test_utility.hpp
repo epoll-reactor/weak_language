@@ -1,6 +1,8 @@
 #ifndef TEST_UTILITY_HPP
 #define TEST_UTILITY_HPP
 
+#include <iostream>
+
 #include "../parser/ast.hpp"
 
 #include "../lexer/lexical_error.hpp"

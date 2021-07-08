@@ -2,7 +2,10 @@
 #define PARSE_OBJECT_TESTS_HPP
 
 #include <cassert>
+#include <iostream>
 #include <iomanip>
+
+#include "../../include/parser/parser.hpp"
 
 namespace parse_object_detail {
 

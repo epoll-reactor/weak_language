@@ -4,18 +4,14 @@
 #include "../../include/eval/builtins.hpp"
 #include "../../include/eval/eval.hpp"
 
-template <ast::ast_type_t Arg>
-[[gnu::always_inline]] static constexpr bool match_type(const std::shared_ptr<ast::Object>& ptr) noexcept
-{
-    return ptr->ast_type() == Arg;
-}
-
 static bool is_datatype(const std::shared_ptr<ast::Object>& object) noexcept
 {
-    return std::dynamic_pointer_cast<ast::Integer>(object)
-        || std::dynamic_pointer_cast<ast::Float>(object)
-        || std::dynamic_pointer_cast<ast::String>(object)
-        || std::dynamic_pointer_cast<ast::Array>(object);
+    if (!object) { return false; }
+
+    return object->ast_type() == ast::ast_type_t::INTEGER
+        || object->ast_type() == ast::ast_type_t::FLOAT
+        || object->ast_type() == ast::ast_type_t::STRING
+        || object->ast_type() == ast::ast_type_t::ARRAY;
 }
 
 Evaluator::Evaluator(const std::shared_ptr<ast::RootObject>& program)
@@ -27,10 +23,10 @@ void Evaluator::eval()
     for (const auto& expr : m_expressions)
     {
         auto function = std::dynamic_pointer_cast<ast::Function>(expr);
-        if (function) { m_storage.push(function->name(), std::move(function)); continue; }
+        if (function) { m_storage.push(function->name().data(), function); continue; }
 
         auto type_def = std::dynamic_pointer_cast<ast::TypeDefinition>(expr);
-        if (type_def) { m_storage.push(type_def->name(), std::move(type_def)); continue; }
+        if (type_def) { m_storage.push(type_def->name().data(), type_def); continue; }
 
         throw EvalError("Only functions as global objects supported");
     }
@@ -40,7 +36,7 @@ void Evaluator::eval()
 
 std::shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, const std::vector<std::shared_ptr<ast::Object>>& evaluated_args)
 {
-    auto stored_function = std::dynamic_pointer_cast<ast::Function>(m_storage.lookup(name));
+    auto stored_function = std::dynamic_pointer_cast<ast::Function>(m_storage.lookup(name.data()));
     if (!stored_function) { throw EvalError("Try to call not a function"); }
 
     if (stored_function->arguments().size() != evaluated_args.size())
@@ -52,7 +48,7 @@ std::shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, con
 
     /// Load function arguments to local scope
     for (std::size_t i = 0; i < evaluated_args.size(); ++i)
-        m_storage.push(std::static_pointer_cast<ast::Symbol>(stored_function->arguments()[i])->name(), evaluated_args[i]);
+        m_storage.push(std::static_pointer_cast<ast::Symbol>(stored_function->arguments()[i])->name().data(), evaluated_args[i]);
 
     for (const auto& arg : stored_function->body()->statements())
         last_statement = eval_expression(arg);
@@ -184,7 +180,7 @@ std::shared_ptr<ast::Object> Evaluator::eval_binary(const std::shared_ptr<ast::B
     if (binary->type() == lexeme_t::assign)
     {
         auto variable = std::static_pointer_cast<ast::Symbol>(binary->lhs());
-        m_storage.overwrite(variable->name(), eval_expression(binary->rhs()));
+        m_storage.overwrite(variable->name().data(), eval_expression(binary->rhs()));
 
         return binary;
     }
@@ -208,8 +204,9 @@ void Evaluator::eval_array(const std::shared_ptr<ast::Array>& array)
 
 std::shared_ptr<ast::Object> Evaluator::eval_array_subscript(const std::shared_ptr<ast::ArraySubscriptOperator>& argument)
 {
-    auto array = m_storage.lookup(argument->symbol_name());
-    if (array->ast_type() != ast::ast_type_t::ARRAY) { throw EvalError("Try to subscript non-array expression"); }
+    auto array_object = m_storage.lookup(argument->symbol_name().data());
+    if (array_object->ast_type() != ast::ast_type_t::ARRAY) { throw EvalError("Try to subscript non-array expression"); }
+    auto array = std::static_pointer_cast<ast::Array>(array_object);
 
     auto index = eval_expression(argument->index());
     if (index->ast_type() != ast::ast_type_t::INTEGER) { throw EvalError("Index must be integral type"); }
@@ -291,7 +288,7 @@ std::shared_ptr<ast::Object> Evaluator::eval_expression(const std::shared_ptr<as
     if (expression->ast_type() == ast::ast_type_t::INTEGER)      { return expression; }
     if (expression->ast_type() == ast::ast_type_t::FLOAT)        { return expression; }
     if (expression->ast_type() == ast::ast_type_t::STRING)       { return expression; }
-    if (expression->ast_type() == ast::ast_type_t::SYMBOL)       { return m_storage.lookup(std::static_pointer_cast<ast::Symbol>(expression)->name()); }
+    if (expression->ast_type() == ast::ast_type_t::SYMBOL)       { return m_storage.lookup(std::static_pointer_cast<ast::Symbol>(expression)->name().data()); }
     if (expression->ast_type() == ast::ast_type_t::BINARY)       { return eval_binary(std::static_pointer_cast<ast::Binary>(expression)); }
     if (expression->ast_type() == ast::ast_type_t::FUNCTION_CALL) { return eval_function_call(std::static_pointer_cast<ast::FunctionCall>(expression)); }
     if (expression->ast_type() == ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR) { return eval_array_subscript(std::static_pointer_cast<ast::ArraySubscriptOperator>(expression)); }

@@ -30,10 +30,22 @@ enum struct lexeme_t
     slli,           // <<
     srli,           // >>
 
+    bit_and,        // &
+    bit_or,         // |
+    bit_xor,        // ^
+
+    logical_and,    // &&
+    logical_or,     // ||
+
     plus_assign,    // +=
     minus_assign,   // -=
     star_assign,    // *=
     slash_assign,   // /=
+    slli_assign,    // <<=
+    srli_assign,    // >>=
+    and_assign,     // &=
+    or_assign,      // |=
+    xor_assign,     // ^=
 
     left_paren,     // (
     right_paren,    // )

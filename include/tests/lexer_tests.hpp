@@ -41,6 +41,7 @@ void assert_exception(std::string_view data)
     try
     {
         Lexer lexer(std::istringstream{data.data()});
+        lexer.tokenize();
     }
     catch (LexicalError& error) {
         std::cout << std::setw(25) << "Lexical error processed: " << error.what() << '\n';
@@ -255,7 +256,7 @@ void lexer_operator_tests()
     });
 
     // Unknown operators
-    lexer_detail::assert_exception("+++^+++");
+    lexer_detail::assert_exception("+++`+++");
     lexer_detail::assert_exception("@@@@@@@");
 }
 

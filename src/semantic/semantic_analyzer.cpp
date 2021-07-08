@@ -14,19 +14,21 @@ void SemanticAnalyzer::analyze()
 
 void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& statement)
 {
-    if (std::dynamic_pointer_cast<ast::String>(statement)
-    ||  std::dynamic_pointer_cast<ast::Integer>(statement)
-    ||  std::dynamic_pointer_cast<ast::Float>(statement)
-    ||  std::dynamic_pointer_cast<ast::Symbol>(statement))
+    if (statement->ast_type() == ast::ast_type_t::STRING
+    ||  statement->ast_type() == ast::ast_type_t::INTEGER
+    ||  statement->ast_type() == ast::ast_type_t::FLOAT
+    ||  statement->ast_type() == ast::ast_type_t::SYMBOL)
         return;
 
-    if (auto binary = std::dynamic_pointer_cast<ast::Binary>(statement))
+    if (statement->ast_type() == ast::ast_type_t::BINARY)
     {
+        auto binary = std::static_pointer_cast<ast::Binary>(statement);
+
         if (binary->type() == lexeme_t::assign
-            ||  binary->type() == lexeme_t::plus_assign
-            ||  binary->type() == lexeme_t::minus_assign
-            ||  binary->type() == lexeme_t::star_assign
-            ||  binary->type() == lexeme_t::slash_assign)
+        ||  binary->type() == lexeme_t::plus_assign
+        ||  binary->type() == lexeme_t::minus_assign
+        ||  binary->type() == lexeme_t::star_assign
+        ||  binary->type() == lexeme_t::slash_assign)
         {
             analyze_assign_statement(binary);
         }
@@ -35,93 +37,58 @@ void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& sta
         }
         return;
     }
-    if (auto array = std::dynamic_pointer_cast<ast::Array>(statement))          { analyze_array_statement(array); return; }
-    if (auto block = std::dynamic_pointer_cast<ast::Block>(statement))          { analyze_block_statement(block); return; }
-    if (auto if_ = std::dynamic_pointer_cast<ast::If>(statement))               { analyze_if_statement(if_); return; }
-    if (auto while_ = std::dynamic_pointer_cast<ast::While>(statement))         { analyze_while_statement(while_); return; }
-    if (auto for_ = std::dynamic_pointer_cast<ast::For>(statement))             { analyze_for_statement(for_); return; }
-    if (auto function = std::dynamic_pointer_cast<ast::Function>(statement))    { analyze_function_statement(function); return; }
-    if (std::dynamic_pointer_cast<ast::TypeDefinition>(statement))              { /* Actually nothing to analyze. */ return; }
-    if (auto array_subscript = std::dynamic_pointer_cast<ast::ArraySubscriptOperator>(statement)) { analyze_array_subscript_statement(array_subscript); return; }
-    if (auto function_call = std::dynamic_pointer_cast<ast::FunctionCall>(statement)) { analyze_function_call_statement(function_call); return; }
+
+    if (statement->ast_type() == ast::ast_type_t::BLOCK) {
+        analyze_block_statement(std::static_pointer_cast<ast::Block>(statement));
+        return;
+    }
+    if (statement->ast_type() == ast::ast_type_t::TYPE_DEFINITION) {
+        /* Actually nothing to analyze. */
+        return;
+    }
+    if (statement->ast_type() == ast::ast_type_t::ARRAY) {
+        analyze_array_statement(std::static_pointer_cast<ast::Array>(statement));
+        return;
+    }
+    if (statement->ast_type() == ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR) {
+        analyze_array_subscript_statement(std::static_pointer_cast<ast::ArraySubscriptOperator>(statement));
+        return;
+    }
+    if (statement->ast_type() == ast::ast_type_t::FUNCTION) {
+        analyze_function_statement(std::static_pointer_cast<ast::Function>(statement));
+        return;
+    }
+    if (statement->ast_type() == ast::ast_type_t::FUNCTION_CALL) {
+        analyze_function_call_statement(std::static_pointer_cast<ast::FunctionCall>(statement));
+        return;
+    }
+    if (statement->ast_type() == ast::ast_type_t::IF) {
+        analyze_if_statement(std::static_pointer_cast<ast::If>(statement));
+        return;
+    }
+    if (statement->ast_type() == ast::ast_type_t::WHILE) {
+        analyze_while_statement(std::static_pointer_cast<ast::While>(statement));
+        return;
+    }
+    if (statement->ast_type() == ast::ast_type_t::FOR) {
+        analyze_for_statement(std::static_pointer_cast<ast::For>(statement));
+        return;
+    }
 
     throw SemanticError("Unexpected statement");
-
-//    auto string = std::dynamic_pointer_cast<ast::String>(statement);
-//    auto number = std::dynamic_pointer_cast<ast::Integer>(statement);
-//    auto binary = std::dynamic_pointer_cast<ast::Binary>(statement);
-//    auto floating_point = std::dynamic_pointer_cast<ast::Float>(statement);
-//    auto symbol = std::dynamic_pointer_cast<ast::Symbol>(statement);
-//    auto array = std::dynamic_pointer_cast<ast::Array>(statement);
-//    auto array_subscript = std::dynamic_pointer_cast<ast::ArraySubscriptOperator>(statement);
-//    auto block = std::dynamic_pointer_cast<ast::Block>(statement);
-//    auto if_ = std::dynamic_pointer_cast<ast::If>(statement);
-//    auto while_ = std::dynamic_pointer_cast<ast::While>(statement);
-//    auto for_ = std::dynamic_pointer_cast<ast::For>(statement);
-//    auto function = std::dynamic_pointer_cast<ast::Function>(statement);
-//    auto function_call = std::dynamic_pointer_cast<ast::FunctionCall>(statement);
-//    auto type_definition = std::dynamic_pointer_cast<ast::TypeDefinition>(statement);
-//
-//    if (string || number || floating_point || symbol)
-//        return;
-//
-//    else if (array)
-//        analyze_array_statement(array);
-//
-//    else if (array_subscript)
-//        analyze_array_subscript_statement(array_subscript);
-//
-//    else if (block)
-//        analyze_block_statement(block);
-//
-//    else if (if_)
-//        analyze_if_statement(if_);
-//
-//    else if (while_)
-//        analyze_while_statement(while_);
-//
-//    else if (for_)
-//        analyze_for_statement(for_);
-//
-//    else if (function)
-//        analyze_function_statement(function);
-//
-//    else if (function_call)
-//        analyze_function_call_statement(function_call);
-//
-//    else if (type_definition)
-//    { /* Actually nothing to analyze. */ }
-//
-//    else if (binary)
-//    {
-//        if (binary->type() == lexeme_t::assign
-//        ||  binary->type() == lexeme_t::plus_assign
-//        ||  binary->type() == lexeme_t::minus_assign
-//        ||  binary->type() == lexeme_t::star_assign
-//        ||  binary->type() == lexeme_t::slash_assign)
-//        {
-//            analyze_assign_statement(binary);
-//        }
-//        else {
-//            analyze_binary_statement(binary);
-//        }
-//    }
-//    else {
-//        throw SemanticError("Unexpected statement");
-//    }
 }
 
 void SemanticAnalyzer::analyze_array_statement(const std::shared_ptr<ast::Array>& statement)
 {
     for (const auto& element : statement->elements())
     {
-        if (!std::dynamic_pointer_cast<ast::Symbol>(element)
-        &&  !std::dynamic_pointer_cast<ast::Integer>(element)
-        &&  !std::dynamic_pointer_cast<ast::Float>(element)
-        &&  !std::dynamic_pointer_cast<ast::String>(element)
-        &&  !std::dynamic_pointer_cast<ast::Binary>(element)
-        &&  !std::dynamic_pointer_cast<ast::FunctionCall>(element)
-        &&  !std::dynamic_pointer_cast<ast::Array>(element))
+        if (element->ast_type() != ast::ast_type_t::SYMBOL
+        &&  element->ast_type() != ast::ast_type_t::INTEGER
+        &&  element->ast_type() != ast::ast_type_t::FLOAT
+        &&  element->ast_type() != ast::ast_type_t::STRING
+        &&  element->ast_type() != ast::ast_type_t::BINARY
+        &&  element->ast_type() != ast::ast_type_t::FUNCTION_CALL
+        &&  element->ast_type() != ast::ast_type_t::ARRAY)
         {
             throw SemanticError("Array expects object don't statement");
         }
@@ -130,26 +97,26 @@ void SemanticAnalyzer::analyze_array_statement(const std::shared_ptr<ast::Array>
 
 void SemanticAnalyzer::analyze_assign_statement(const std::shared_ptr<ast::Binary>& statement)
 {
-    if (!std::dynamic_pointer_cast<ast::Symbol>(statement->lhs()))
+    if (statement->lhs()->ast_type() != ast::ast_type_t::SYMBOL)
     {
         throw SemanticError("Expression is not assignable");
     }
 
-    if (!std::dynamic_pointer_cast<ast::Symbol>(statement->rhs())
-    &&  !std::dynamic_pointer_cast<ast::Integer>(statement->rhs())
-    &&  !std::dynamic_pointer_cast<ast::Float>(statement->rhs())
-    &&  !std::dynamic_pointer_cast<ast::String>(statement->rhs())
-    &&  !std::dynamic_pointer_cast<ast::Binary>(statement->rhs())
-    &&  !std::dynamic_pointer_cast<ast::FunctionCall>(statement->rhs())
-    &&  !std::dynamic_pointer_cast<ast::Array>(statement->rhs())
-    &&  !std::dynamic_pointer_cast<ast::ArraySubscriptOperator>(statement->rhs()))
+    if (statement->ast_type() != ast::ast_type_t::SYMBOL
+    &&  statement->ast_type() != ast::ast_type_t::INTEGER
+    &&  statement->ast_type() != ast::ast_type_t::FLOAT
+    &&  statement->ast_type() != ast::ast_type_t::STRING
+    &&  statement->ast_type() != ast::ast_type_t::BINARY
+    &&  statement->ast_type() != ast::ast_type_t::FUNCTION_CALL
+    &&  statement->ast_type() != ast::ast_type_t::ARRAY
+    &&  statement->ast_type() != ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR)
     {
         throw SemanticError("Expression is not assignable");
     }
 
-    if (auto binary = std::dynamic_pointer_cast<ast::Binary>(statement->rhs()))
+    if (statement->rhs()->ast_type() == ast::ast_type_t::BINARY)
     {
-        analyze_binary_statement(binary);
+        analyze_statement(std::static_pointer_cast<ast::Binary>(statement->rhs()));
     }
 }
 
@@ -188,14 +155,14 @@ void SemanticAnalyzer::analyze_function_call_statement(const std::shared_ptr<ast
 {
     for (const auto& argument : function_statement->arguments())
     {
-        if (!std::dynamic_pointer_cast<ast::Integer>(argument)
-        &&  !std::dynamic_pointer_cast<ast::Float>(argument)
-        &&  !std::dynamic_pointer_cast<ast::String>(argument)
-        &&  !std::dynamic_pointer_cast<ast::Symbol>(argument)
-        &&  !std::dynamic_pointer_cast<ast::Binary>(argument)
-        &&  !std::dynamic_pointer_cast<ast::FunctionCall>(argument)
-        &&  !std::dynamic_pointer_cast<ast::Array>(argument)
-        &&  !std::dynamic_pointer_cast<ast::ArraySubscriptOperator>(argument))
+        if (argument->ast_type() != ast::ast_type_t::INTEGER
+        &&  argument->ast_type() != ast::ast_type_t::FLOAT
+        &&  argument->ast_type() != ast::ast_type_t::STRING
+        &&  argument->ast_type() != ast::ast_type_t::SYMBOL
+        &&  argument->ast_type() != ast::ast_type_t::BINARY
+        &&  argument->ast_type() != ast::ast_type_t::FUNCTION_CALL
+        &&  argument->ast_type() != ast::ast_type_t::ARRAY
+        &&  argument->ast_type() != ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR)
         {
             throw SemanticError("Wrong function call argument");
         }
@@ -274,8 +241,8 @@ void SemanticAnalyzer::analyze_for_statement(const std::shared_ptr<ast::For>& fo
 
     if (for_statement->increment())
     {
-        if (!std::dynamic_pointer_cast<ast::Unary>(for_statement->increment())
-        &&  !std::dynamic_pointer_cast<ast::Binary>(for_statement->increment()))
+        if (for_statement->increment()->ast_type() != ast::ast_type_t::UNARY
+        &&  for_statement->increment()->ast_type() != ast::ast_type_t::BINARY)
         {
             throw SemanticError("Bad for increment part");
         }
@@ -325,7 +292,7 @@ bool SemanticAnalyzer::to_integral_convertible(const std::shared_ptr<ast::Object
         {
             analyze_binary_statement(binary_expression);
 
-        } catch (SemanticError&) {
+        } catch (SemanticError& err) {
 
             return false;
         }
@@ -339,5 +306,5 @@ bool SemanticAnalyzer::to_integral_convertible(const std::shared_ptr<ast::Object
 
 bool SemanticAnalyzer::to_number_convertible(const std::shared_ptr<ast::Object>& statement)
 {
-    return to_integral_convertible(statement) || std::dynamic_pointer_cast<ast::Float>(statement);
+    return to_integral_convertible(statement) || statement->ast_type() == ast::ast_type_t::FLOAT;
 }

@@ -31,6 +31,18 @@ const std::unordered_map<std::string, builtin_function_t> builtins
 
         return default_typecheck<ast::Array>("array?", arguments);
     }},
+    {"procedure?", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
+
+        return default_typecheck<ast::Function>("procedure?", arguments);
+    }},
+    {"procedure-arity", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
+
+        if (arguments.size() != 1) { throw EvalError("procedure-arity: 1 argument required, got " + std::to_string(arguments.size())); }
+
+        if (arguments[0]->ast_type() != ast::ast_type_t::FUNCTION) { throw EvalError("procedure-arity: function as argument required"); }
+
+        return std::make_shared<ast::Integer>(std::static_pointer_cast<ast::Function>(arguments[0])->arguments().size());
+    }},
     {"print", [](const std::vector<std::shared_ptr<ast::Object>>& arguments) {
         for (std::size_t i = 0; i < arguments.size(); i++)
         {

@@ -83,6 +83,7 @@ void run_eval_tests()
 {
     std::cout << "Running eval tests...\n====\n";
 
+    eval_detail::run_test("fun main() {}", "");
     eval_detail::run_test("fun main() { print(1); }", "1");
 //    eval_detail::run_test("fun main() { print(2 + 2 * 2 * 2); }", "10");
 //    eval_detail::run_test("fun main() { print(2 * 2 * 2 + 2); }", "10");
@@ -158,6 +159,30 @@ void run_eval_tests()
             }
         }
     )__", "1024");
+
+    eval_detail::run_test(R"__(
+        fun _mm256_set_epi8(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16) {
+                           [e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16];
+        }
+
+        fun dispatch-argument(argument) {
+            if (procedure?(argument)) {
+                procedure-arity(argument);
+            }
+            if (array?(argument)) {
+                "Array";
+            }
+            if (integer?(argument)) {
+                "Integer";
+            }
+        }
+
+        fun main() {
+            dispatch-argument(_mm256_set_epi8);
+            dispatch-argument([1, 2, 3]);
+            dispatch-argument(0);
+        }
+    )__", "");
 
     eval_detail::expect_error("fun simple() { { var = 2; } var; } fun main() { simple(); }");
     eval_detail::expect_error("fun main() { for (var = 0; var != 10; var = var + 1) { } print(var); }");
