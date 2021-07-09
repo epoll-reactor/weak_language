@@ -5,6 +5,8 @@
 
 #include <unordered_map>
 
+#include <boost/intrusive_ptr.hpp>
+
 #include "crc32.hpp"
 
 #include "../parser/ast.hpp"
@@ -17,7 +19,7 @@ class Storage
         std::size_t hash;
         std::size_t depth;
         std::string name;
-        std::shared_ptr<ast::Object> payload;
+        boost::intrusive_ptr<ast::Object> payload;
     };
 
 public:
@@ -26,13 +28,13 @@ public:
         m_inner_scopes.rehash(50);
     }
 
-    void push(std::string_view name, const std::shared_ptr<ast::Object>& value)
+    void push(std::string_view name, const boost::intrusive_ptr<ast::Object>& value)
     {
         unsigned long hash = crc32::create(name.data());
         m_inner_scopes[hash] = StorageRecord{hash, m_scope_depth, std::string(name.data()), value};
     }
 
-    void overwrite(std::string_view name, const std::shared_ptr<ast::Object>& value)
+    void overwrite(std::string_view name, const boost::intrusive_ptr<ast::Object>& value)
     {
         try {
             find(name)->payload = value;
@@ -43,7 +45,7 @@ public:
         }
     }
 
-    std::shared_ptr<ast::Object> lookup(std::string_view name) const
+    boost::intrusive_ptr<ast::Object> lookup(std::string_view name) const
     {
         return find(name)->payload;
     }

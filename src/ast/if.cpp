@@ -2,28 +2,28 @@
 
 namespace ast {
 
-If::If(std::weak_ptr<Object> exit_condition, std::weak_ptr<Block> body)
+If::If(boost::intrusive_ptr<Object> exit_condition, boost::intrusive_ptr<Block> body)
     : m_exit_condition(exit_condition)
     , m_body(body)
 { }
 
-If::If(std::weak_ptr<Object> exit_condition, std::weak_ptr<Block> body, std::weak_ptr<Block> else_body)
+If::If(boost::intrusive_ptr<Object> exit_condition, boost::intrusive_ptr<Block> body, boost::intrusive_ptr<Block> else_body)
     : m_exit_condition(exit_condition)
     , m_body(body)
     , m_else_body(else_body)
 { }
 
-const std::shared_ptr<Object>& If::condition() const noexcept
+const boost::intrusive_ptr<Object>& If::condition() const noexcept
 {
     return m_exit_condition;
 }
 
-const std::shared_ptr<Block>& If::body() const noexcept
+const boost::intrusive_ptr<Block>& If::body() const noexcept
 {
     return m_body;
 }
 
-const std::shared_ptr<Block>& If::else_body() const noexcept
+const boost::intrusive_ptr<Block>& If::else_body() const noexcept
 {
     return m_else_body;
 }

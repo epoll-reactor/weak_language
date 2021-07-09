@@ -2,7 +2,7 @@
 
 namespace ast {
 
-ArraySubscriptOperator::ArraySubscriptOperator(std::string_view name, std::weak_ptr<Object> index)
+ArraySubscriptOperator::ArraySubscriptOperator(std::string_view name, boost::intrusive_ptr<Object> index)
     : m_name(name)
     , m_index(index)
 { }
@@ -12,7 +12,7 @@ const std::string& ArraySubscriptOperator::symbol_name() const noexcept
     return m_name;
 }
 
-const std::shared_ptr<Object>& ArraySubscriptOperator::index() const noexcept
+const boost::intrusive_ptr<Object>& ArraySubscriptOperator::index() const noexcept
 {
     return m_index;
 }

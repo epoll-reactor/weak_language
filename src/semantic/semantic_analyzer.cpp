@@ -1,8 +1,12 @@
 #include "../../include/semantic/semantic_analyzer.hpp"
 
 SemanticAnalyzer::SemanticAnalyzer(const std::shared_ptr<ast::RootObject>& input)
-    : m_input(input->get())
-{ }
+{
+    for (const auto& expr : input->get())
+    {
+        m_input.emplace_back(expr.get());
+    }
+}
 
 void SemanticAnalyzer::analyze()
 {
@@ -12,7 +16,7 @@ void SemanticAnalyzer::analyze()
     }
 }
 
-void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& statement)
+void SemanticAnalyzer::analyze_statement(const boost::intrusive_ptr<ast::Object>& statement)
 {
     if (statement->ast_type() == ast::ast_type_t::STRING
     ||  statement->ast_type() == ast::ast_type_t::INTEGER
@@ -22,7 +26,7 @@ void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& sta
 
     if (statement->ast_type() == ast::ast_type_t::BINARY)
     {
-        auto binary = std::static_pointer_cast<ast::Binary>(statement);
+        auto binary = boost::static_pointer_cast<ast::Binary>(statement);
 
         if (binary->type() == lexeme_t::assign
         ||  binary->type() == lexeme_t::plus_assign
@@ -39,7 +43,7 @@ void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& sta
     }
 
     if (statement->ast_type() == ast::ast_type_t::BLOCK) {
-        analyze_block_statement(std::static_pointer_cast<ast::Block>(statement));
+        analyze_block_statement(boost::static_pointer_cast<ast::Block>(statement));
         return;
     }
     if (statement->ast_type() == ast::ast_type_t::TYPE_DEFINITION) {
@@ -47,38 +51,38 @@ void SemanticAnalyzer::analyze_statement(const std::shared_ptr<ast::Object>& sta
         return;
     }
     if (statement->ast_type() == ast::ast_type_t::ARRAY) {
-        analyze_array_statement(std::static_pointer_cast<ast::Array>(statement));
+        analyze_array_statement(boost::static_pointer_cast<ast::Array>(statement));
         return;
     }
     if (statement->ast_type() == ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR) {
-        analyze_array_subscript_statement(std::static_pointer_cast<ast::ArraySubscriptOperator>(statement));
+        analyze_array_subscript_statement(boost::static_pointer_cast<ast::ArraySubscriptOperator>(statement));
         return;
     }
     if (statement->ast_type() == ast::ast_type_t::FUNCTION) {
-        analyze_function_statement(std::static_pointer_cast<ast::Function>(statement));
+        analyze_function_statement(boost::static_pointer_cast<ast::Function>(statement));
         return;
     }
     if (statement->ast_type() == ast::ast_type_t::FUNCTION_CALL) {
-        analyze_function_call_statement(std::static_pointer_cast<ast::FunctionCall>(statement));
+        analyze_function_call_statement(boost::static_pointer_cast<ast::FunctionCall>(statement));
         return;
     }
     if (statement->ast_type() == ast::ast_type_t::IF) {
-        analyze_if_statement(std::static_pointer_cast<ast::If>(statement));
+        analyze_if_statement(boost::static_pointer_cast<ast::If>(statement));
         return;
     }
     if (statement->ast_type() == ast::ast_type_t::WHILE) {
-        analyze_while_statement(std::static_pointer_cast<ast::While>(statement));
+        analyze_while_statement(boost::static_pointer_cast<ast::While>(statement));
         return;
     }
     if (statement->ast_type() == ast::ast_type_t::FOR) {
-        analyze_for_statement(std::static_pointer_cast<ast::For>(statement));
+        analyze_for_statement(boost::static_pointer_cast<ast::For>(statement));
         return;
     }
 
     throw SemanticError("Unexpected statement");
 }
 
-void SemanticAnalyzer::analyze_array_statement(const std::shared_ptr<ast::Array>& statement)
+void SemanticAnalyzer::analyze_array_statement(const boost::intrusive_ptr<ast::Array>& statement)
 {
     for (const auto& element : statement->elements())
     {
@@ -95,7 +99,7 @@ void SemanticAnalyzer::analyze_array_statement(const std::shared_ptr<ast::Array>
     }
 }
 
-void SemanticAnalyzer::analyze_assign_statement(const std::shared_ptr<ast::Binary>& statement)
+void SemanticAnalyzer::analyze_assign_statement(const boost::intrusive_ptr<ast::Binary>& statement)
 {
     if (statement->lhs()->ast_type() != ast::ast_type_t::SYMBOL)
     {
@@ -116,11 +120,11 @@ void SemanticAnalyzer::analyze_assign_statement(const std::shared_ptr<ast::Binar
 
     if (statement->rhs()->ast_type() == ast::ast_type_t::BINARY)
     {
-        analyze_statement(std::static_pointer_cast<ast::Binary>(statement->rhs()));
+        analyze_statement(boost::static_pointer_cast<ast::Binary>(statement->rhs()));
     }
 }
 
-void SemanticAnalyzer::analyze_binary_statement(const std::shared_ptr<ast::Binary>& statement)
+void SemanticAnalyzer::analyze_binary_statement(const boost::intrusive_ptr<ast::Binary>& statement)
 {
     switch (statement->type())
     {
@@ -141,17 +145,17 @@ void SemanticAnalyzer::analyze_binary_statement(const std::shared_ptr<ast::Binar
             throw SemanticError("Incorrect binary expression operator");
     }
 
-    if (auto lhs = std::dynamic_pointer_cast<ast::Binary>(statement->lhs()))
+    if (auto lhs = boost::dynamic_pointer_cast<ast::Binary>(statement->lhs()))
     {
         analyze_binary_statement(lhs);
     }
-    else if (auto rhs = std::dynamic_pointer_cast<ast::Binary>(statement->rhs())) {
+    else if (auto rhs = boost::dynamic_pointer_cast<ast::Binary>(statement->rhs())) {
 
         analyze_binary_statement(rhs);
     }
 }
 
-void SemanticAnalyzer::analyze_function_call_statement(const std::shared_ptr<ast::FunctionCall>& function_statement)
+void SemanticAnalyzer::analyze_function_call_statement(const boost::intrusive_ptr<ast::FunctionCall>& function_statement)
 {
     for (const auto& argument : function_statement->arguments())
     {
@@ -169,22 +173,22 @@ void SemanticAnalyzer::analyze_function_call_statement(const std::shared_ptr<ast
     }
 }
 
-void SemanticAnalyzer::analyze_function_statement(const std::shared_ptr<ast::Function>& function_statement)
+void SemanticAnalyzer::analyze_function_statement(const boost::intrusive_ptr<ast::Function>& function_statement)
 {
     /// Function arguments are easily checked in parser.
     analyze_block_statement(function_statement->body());
 }
 
-void SemanticAnalyzer::analyze_if_statement(const std::shared_ptr<ast::If>& if_statement)
+void SemanticAnalyzer::analyze_if_statement(const boost::intrusive_ptr<ast::If>& if_statement)
 {
     if (!to_integral_convertible(if_statement->condition()))
     {
         throw SemanticError("If condition requires convertible to bool expression");
     }
 
-    auto if_body = std::dynamic_pointer_cast<ast::Block>(if_statement->body());
+    auto if_body = boost::dynamic_pointer_cast<ast::Block>(if_statement->body());
 
-    auto else_body = std::dynamic_pointer_cast<ast::Block>(if_statement->else_body());
+    auto else_body = boost::dynamic_pointer_cast<ast::Block>(if_statement->else_body());
 
     for (const auto& if_instruction : if_body->statements())
     {
@@ -200,14 +204,14 @@ void SemanticAnalyzer::analyze_if_statement(const std::shared_ptr<ast::If>& if_s
     }
 }
 
-void SemanticAnalyzer::analyze_while_statement(const std::shared_ptr<ast::While>& while_statement)
+void SemanticAnalyzer::analyze_while_statement(const boost::intrusive_ptr<ast::While>& while_statement)
 {
     if (!to_number_convertible(while_statement->exit_condition()))
     {
         throw SemanticError("While condition requires convertible to bool expression");
     }
 
-    auto body = std::dynamic_pointer_cast<ast::Block>(while_statement->body());
+    auto body = boost::dynamic_pointer_cast<ast::Block>(while_statement->body());
 
     for (const auto& while_instruction : body->statements())
     {
@@ -215,11 +219,11 @@ void SemanticAnalyzer::analyze_while_statement(const std::shared_ptr<ast::While>
     }
 }
 
-void SemanticAnalyzer::analyze_for_statement(const std::shared_ptr<ast::For>& for_statement)
+void SemanticAnalyzer::analyze_for_statement(const boost::intrusive_ptr<ast::For>& for_statement)
 {
     if (for_statement->loop_init())
     {
-        if (auto for_init = std::dynamic_pointer_cast<ast::Binary>(for_statement->loop_init()))
+        if (auto for_init = boost::dynamic_pointer_cast<ast::Binary>(for_statement->loop_init()))
         {
             if (for_init->type() != lexeme_t::assign)
             {
@@ -256,7 +260,7 @@ void SemanticAnalyzer::analyze_for_statement(const std::shared_ptr<ast::For>& fo
     }
 }
 
-void SemanticAnalyzer::analyze_array_subscript_statement(const std::shared_ptr<ast::ArraySubscriptOperator>& statement)
+void SemanticAnalyzer::analyze_array_subscript_statement(const boost::intrusive_ptr<ast::ArraySubscriptOperator>& statement)
 {
     if (!to_integral_convertible(statement->index()))
     {
@@ -264,7 +268,7 @@ void SemanticAnalyzer::analyze_array_subscript_statement(const std::shared_ptr<a
     }
 }
 
-void SemanticAnalyzer::analyze_block_statement(const std::shared_ptr<ast::Block>& block_statement)
+void SemanticAnalyzer::analyze_block_statement(const boost::intrusive_ptr<ast::Block>& block_statement)
 {
     for (const auto& statement : block_statement->statements())
     {
@@ -272,21 +276,21 @@ void SemanticAnalyzer::analyze_block_statement(const std::shared_ptr<ast::Block>
     }
 }
 
-bool SemanticAnalyzer::to_integral_convertible(const std::shared_ptr<ast::Object>& statement)
+bool SemanticAnalyzer::to_integral_convertible(const boost::intrusive_ptr<ast::Object>& statement)
 {
-    if (std::dynamic_pointer_cast<ast::Integer>(statement))
+    if (boost::dynamic_pointer_cast<ast::Integer>(statement))
     {
         return true;
     }
-    else if (std::dynamic_pointer_cast<ast::Symbol>(statement)) {
+    else if (boost::dynamic_pointer_cast<ast::Symbol>(statement)) {
 
         return true;
     }
-    else if (std::dynamic_pointer_cast<ast::FunctionCall>(statement)) {
+    else if (boost::dynamic_pointer_cast<ast::FunctionCall>(statement)) {
 
         return true;
     }
-    else if (auto binary_expression = std::dynamic_pointer_cast<ast::Binary>(statement)) {
+    else if (auto binary_expression = boost::dynamic_pointer_cast<ast::Binary>(statement)) {
 
         try
         {
@@ -304,7 +308,7 @@ bool SemanticAnalyzer::to_integral_convertible(const std::shared_ptr<ast::Object
     }
 }
 
-bool SemanticAnalyzer::to_number_convertible(const std::shared_ptr<ast::Object>& statement)
+bool SemanticAnalyzer::to_number_convertible(const boost::intrusive_ptr<ast::Object>& statement)
 {
     return to_integral_convertible(statement) || statement->ast_type() == ast::ast_type_t::FLOAT;
 }

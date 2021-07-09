@@ -2,17 +2,17 @@
 
 namespace ast {
 
-While::While(std::weak_ptr<Object> exit_condition, std::weak_ptr<Block> block)
+While::While(boost::intrusive_ptr<Object> exit_condition, boost::intrusive_ptr<Block> block)
     : m_exit_condition(exit_condition)
     , m_block(block)
 { }
 
-const std::shared_ptr<Object>& While::exit_condition() const noexcept
+const boost::intrusive_ptr<Object>& While::exit_condition() const noexcept
 {
     return m_exit_condition;
 }
 
-const std::shared_ptr<Block>& While::body() const noexcept
+const boost::intrusive_ptr<Block>& While::body() const noexcept
 {
     return m_block;
 }
