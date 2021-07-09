@@ -3,7 +3,6 @@
 #include "../include/lexer/preprocessor.hpp"
 
 #include "../include/tests/lexer_tests.hpp"
-#include "../include/tests/ast_test.hpp"
 #include "../include/tests/semantic_analyzer_tests.hpp"
 #include "../include/tests/storage_tests.hpp"
 #include "../include/tests/eval_tests.hpp"
@@ -65,7 +64,6 @@ float run_tests()
     auto start = std::chrono::high_resolution_clock::now();
 
     run_lexer_tests();
-    run_ast_tests();
     run_semantic_analyzer_tests();
     run_storage_tests();
     run_eval_tests();
@@ -85,14 +83,14 @@ int main(int argc, char* argv[])
     {
         if (strcmp(argv[1], "test") == 0)
         {
-            run_tests();
-//            std::array<float, 10> times;
-//
-//            for (int i = 0; i < 10; ++i)
-//                times[i] = run_tests();
-//
-//            for (int i = 0; i < 10; ++i)
-//                std::cout << "Test " << i << ": " << times[i] << " s.\n";
+//            run_tests();
+            std::array<float, 10> times;
+
+            for (int i = 0; i < 10; ++i)
+                times[i] = run_tests();
+
+            for (int i = 0; i < 10; ++i)
+                std::cout << "Test " << i << ": " << times[i] << " s.\n";
         }
         else {
             eval_file(argv[1]);
