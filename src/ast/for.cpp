@@ -22,22 +22,22 @@ void For::set_body(std::shared_ptr<Block> block)
     m_block = std::move(block);
 }
 
-std::shared_ptr<Object> For::loop_init() const noexcept
+const std::shared_ptr<Object>& For::loop_init() const noexcept
 {
     return m_for_init;
 }
 
-std::shared_ptr<Object> For::exit_condition() const noexcept
+const std::shared_ptr<Object>& For::exit_condition() const noexcept
 {
     return m_for_exit_condition;
 }
 
-std::shared_ptr<Object> For::increment() const noexcept
+const std::shared_ptr<Object>& For::increment() const noexcept
 {
     return m_for_increment;
 }
 
-std::shared_ptr<Block> For::body() const noexcept
+const std::shared_ptr<Block>& For::body() const noexcept
 {
     return m_block;
 }

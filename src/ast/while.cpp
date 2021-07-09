@@ -7,12 +7,12 @@ While::While(std::weak_ptr<Object> exit_condition, std::weak_ptr<Block> block)
     , m_block(block)
 { }
 
-std::shared_ptr<Object> While::exit_condition() const noexcept
+const std::shared_ptr<Object>& While::exit_condition() const noexcept
 {
     return m_exit_condition;
 }
 
-std::shared_ptr<Block> While::body() const noexcept
+const std::shared_ptr<Block>& While::body() const noexcept
 {
     return m_block;
 }

@@ -12,7 +12,7 @@ const std::string& ArraySubscriptOperator::symbol_name() const noexcept
     return m_name;
 }
 
-std::shared_ptr<Object> ArraySubscriptOperator::index() const noexcept
+const std::shared_ptr<Object>& ArraySubscriptOperator::index() const noexcept
 {
     return m_index;
 }

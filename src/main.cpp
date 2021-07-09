@@ -87,10 +87,10 @@ int main(int argc, char* argv[])
         {
             run_tests();
 //            std::array<float, 10> times;
-
+//
 //            for (int i = 0; i < 10; ++i)
 //                times[i] = run_tests();
-
+//
 //            for (int i = 0; i < 10; ++i)
 //                std::cout << "Test " << i << ": " << times[i] << " s.\n";
         }

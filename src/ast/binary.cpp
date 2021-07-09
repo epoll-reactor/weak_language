@@ -8,12 +8,12 @@ Binary::Binary(lexeme_t type, std::weak_ptr<Object> lhs, std::weak_ptr<Object> r
     , m_rhs(rhs)
 { }
 
-std::shared_ptr<Object> Binary::lhs() const noexcept
+const std::shared_ptr<Object>& Binary::lhs() const noexcept
 {
     return m_lhs;
 }
 
-std::shared_ptr<Object> Binary::rhs() const noexcept
+const std::shared_ptr<Object>& Binary::rhs() const noexcept
 {
     return m_rhs;
 }

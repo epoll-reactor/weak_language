@@ -18,7 +18,7 @@ const std::vector<std::shared_ptr<Object>>& Function::arguments() const noexcept
     return m_arguments;
 }
 
-std::shared_ptr<Block> Function::body() const noexcept
+const std::shared_ptr<Block>& Function::body() const noexcept
 {
     return m_body;
 }

@@ -56,6 +56,7 @@ void semantic_analyzer_test_syntax()
     semantic_detail::assert_correct("Symbol = 1 + 1;");
 
     semantic_detail::expect_error("while (1 = 1) {}");
+    semantic_detail::expect_error("while (12.34) {}");
     semantic_detail::assert_correct("if (1 + 2 + 3) {}");
     semantic_detail::expect_error("if (1 + 2 = 3) {}");
 

@@ -202,7 +202,7 @@ void SemanticAnalyzer::analyze_if_statement(const std::shared_ptr<ast::If>& if_s
 
 void SemanticAnalyzer::analyze_while_statement(const std::shared_ptr<ast::While>& while_statement)
 {
-    if (!to_integral_convertible(while_statement->exit_condition()))
+    if (!to_number_convertible(while_statement->exit_condition()))
     {
         throw SemanticError("While condition requires convertible to bool expression");
     }

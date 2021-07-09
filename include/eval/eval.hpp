@@ -4,6 +4,7 @@
 #include "../parser/ast.hpp"
 #include "../storage/storage.hpp"
 
+#include <boost/pool/pool_alloc.hpp>
 
 class Evaluator
 {
@@ -33,6 +34,19 @@ private:
 
     std::shared_ptr<ast::Object> eval_expression(const std::shared_ptr<ast::Object>& expression);
 
+    template <typename T, typename... Args>
+    std::shared_ptr<T> pool_allocate(Args&&... args)
+    {
+        return std::allocate_shared<T, decltype(m_pool_allocator)>(m_pool_allocator, std::forward<Args>(args)...);
+    }
+
+    boost::pool_allocator<
+        ast::Object,
+        boost::default_user_allocator_new_delete,
+        boost::details::pool::default_mutex,
+        16,
+        std::numeric_limits<int>::max()
+    > m_pool_allocator;
     std::vector<std::shared_ptr<ast::Object>> m_expressions;
     Storage m_storage;
 };

@@ -13,17 +13,17 @@ If::If(std::weak_ptr<Object> exit_condition, std::weak_ptr<Block> body, std::wea
     , m_else_body(else_body)
 { }
 
-std::shared_ptr<Object> If::condition() const noexcept
+const std::shared_ptr<Object>& If::condition() const noexcept
 {
     return m_exit_condition;
 }
 
-std::shared_ptr<Object> If::body() const noexcept
+const std::shared_ptr<Block>& If::body() const noexcept
 {
     return m_body;
 }
 
-std::shared_ptr<Object> If::else_body() const noexcept
+const std::shared_ptr<Block>& If::else_body() const noexcept
 {
     return m_else_body;
 }

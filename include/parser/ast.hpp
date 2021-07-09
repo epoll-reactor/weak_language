@@ -104,7 +104,7 @@ public:
 
     const std::string& symbol_name() const noexcept;
 
-    std::shared_ptr<Object> index() const noexcept;
+    const std::shared_ptr<Object>& index() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
@@ -134,9 +134,9 @@ class Binary : public Object
 public:
     Binary(lexeme_t type, std::weak_ptr<Object> lhs, std::weak_ptr<Object> rhs);
 
-    std::shared_ptr<Object> lhs() const noexcept;
+    const std::shared_ptr<Object>& lhs() const noexcept;
 
-    std::shared_ptr<Object> rhs() const noexcept;
+    const std::shared_ptr<Object>& rhs() const noexcept;
 
     lexeme_t type() const noexcept;
 
@@ -166,9 +166,9 @@ class While : public Object
 public:
     While(std::weak_ptr<Object> exit_condition, std::weak_ptr<Block> block);
 
-    std::shared_ptr<Object> exit_condition() const noexcept;
+    const std::shared_ptr<Object>& exit_condition() const noexcept;
 
-    std::shared_ptr<Block> body() const noexcept;
+    const std::shared_ptr<Block>& body() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
@@ -190,13 +190,13 @@ public:
 
     void set_body(std::shared_ptr<Block> block);
 
-    std::shared_ptr<Object> loop_init() const noexcept;
+    const std::shared_ptr<Object>& loop_init() const noexcept;
 
-    std::shared_ptr<Object> exit_condition() const noexcept;
+    const std::shared_ptr<Object>& exit_condition() const noexcept;
 
-    std::shared_ptr<Object> increment() const noexcept;
+    const std::shared_ptr<Object>& increment() const noexcept;
 
-    std::shared_ptr<Block> body() const noexcept;
+    const std::shared_ptr<Block>& body() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
@@ -214,11 +214,11 @@ public:
 
     If(std::weak_ptr<Object> exit_condition, std::weak_ptr<Block> body, std::weak_ptr<Block> else_body);
 
-    std::shared_ptr<Object> condition() const noexcept;
+    const std::shared_ptr<Object>& condition() const noexcept;
 
-    std::shared_ptr<Object> body() const noexcept;
+    const std::shared_ptr<Block>& body() const noexcept;
 
-    std::shared_ptr<Object> else_body() const noexcept;
+    const std::shared_ptr<Block>& else_body() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
@@ -237,7 +237,7 @@ public:
 
     const std::vector<std::shared_ptr<Object>>& arguments() const noexcept;
 
-    std::shared_ptr<Block> body() const noexcept;
+    const std::shared_ptr<Block>& body() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
