@@ -1,10 +1,11 @@
 #ifndef EVAL_HPP
 #define EVAL_HPP
 
+#include "../memory/pool.hpp"
 #include "../parser/ast.hpp"
 #include "../storage/storage.hpp"
 
-#include <boost/pool/pool_alloc.hpp>
+extern MemoryPool memory_pool;
 
 class Evaluator
 {
@@ -34,19 +35,11 @@ private:
 
     boost::intrusive_ptr<ast::Object> eval_expression(const boost::intrusive_ptr<ast::Object>& expression);
 
-//    template <typename T, typename... Args>
-//    std::shared_ptr<T> pool_allocate(Args&&... args)
-//    {
-//        return std::allocate_shared<T, decltype(m_pool_allocator)>(m_pool_allocator, std::forward<Args>(args)...);
-//    }
-
-    boost::pool_allocator<
-        ast::Object,
-        boost::default_user_allocator_new_delete,
-        boost::details::pool::default_mutex,
-        16,
-        std::numeric_limits<int>::max()
-    > m_pool_allocator;
+    template <typename T, typename... Args>
+    T* pool_allocate(Args&&... args)
+    {
+        return memory_pool.allocate<T>(std::forward<Args>(args)...);
+    }
 
     std::vector<boost::intrusive_ptr<ast::Object>> m_expressions;
     Storage m_storage;

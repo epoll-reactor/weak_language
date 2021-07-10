@@ -286,7 +286,7 @@ private:
 
 inline void intrusive_ptr_release(Object* o) noexcept
 {
-    if (--o->reference_count() == 0) { delete o; }
+    --o->reference_count();
 }
 
 inline void intrusive_ptr_add_ref(Object* o) noexcept

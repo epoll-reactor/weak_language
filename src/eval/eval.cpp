@@ -1,8 +1,8 @@
 #include <variant>
 #include <array>
 
-#include "../../include/eval/builtins.hpp"
 #include "../../include/eval/eval.hpp"
+#include "../../include/eval/builtins.hpp"
 
 
 static bool is_datatype(const ast::Object* object) noexcept
@@ -192,10 +192,10 @@ boost::intrusive_ptr<ast::Object> Evaluator::eval_binary(const boost::intrusive_
     ast::ast_type_t lhs_binary_type = lhs->ast_type();
     ast::ast_type_t rhs_binary_type = rhs->ast_type();
 
-    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::INTEGER) { return new ast::Integer(i_i_arithmetic(binary->type(), lhs.get(), rhs.get())); }
-    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::FLOAT)   { return new ast::Float  (i_f_arithmetic(binary->type(), lhs.get(), rhs.get())); }
-    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::INTEGER) { return new ast::Float  (f_i_arithmetic(binary->type(), lhs.get(), rhs.get())); }
-    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::FLOAT)   { return new ast::Float  (f_f_arithmetic(binary->type(), lhs.get(), rhs.get())); }
+    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::INTEGER) { return pool_allocate<ast::Integer>(i_i_arithmetic(binary->type(), lhs.get(), rhs.get())); }
+    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::FLOAT)   { return pool_allocate<ast::Float>  (i_f_arithmetic(binary->type(), lhs.get(), rhs.get())); }
+    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::INTEGER) { return pool_allocate<ast::Float>  (f_i_arithmetic(binary->type(), lhs.get(), rhs.get())); }
+    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::FLOAT)   { return pool_allocate<ast::Float>  (f_f_arithmetic(binary->type(), lhs.get(), rhs.get())); }
 
     throw EvalError("Unknown binary expr");
 }
