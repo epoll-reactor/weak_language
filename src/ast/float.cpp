@@ -11,7 +11,12 @@ Float::Float(double data)
     : m_data(data)
 { }
 
-double Float::value() const noexcept
+double& Float::value() noexcept
+{
+    return m_data;
+}
+
+const double& Float::value() const noexcept
 {
     return m_data;
 }

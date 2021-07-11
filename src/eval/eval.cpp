@@ -16,7 +16,6 @@ static bool is_datatype(const ast::Object* object) noexcept
 }
 
 Evaluator::Evaluator(const std::shared_ptr<ast::RootObject>& program)
-//    : m_expressions(program->get())
 {
     for (const auto& stmt : program->get())
     {
@@ -42,21 +41,22 @@ void Evaluator::eval()
 
 boost::intrusive_ptr<ast::Object> Evaluator::call_function(std::string_view name, const std::vector<boost::intrusive_ptr<ast::Object>>& evaluated_args)
 {
-    auto stored_function = boost::dynamic_pointer_cast<ast::Function>(m_storage.lookup(name.data()));
-    if (!stored_function) { throw EvalError("Try to call not a function"); }
+    auto stored_function = m_storage.lookup(name.data());
+    if (stored_function->ast_type() != ast::ast_type_t::FUNCTION) { throw EvalError("Try to call not a function"); }
 
-    if (stored_function->arguments().size() != evaluated_args.size())
+    auto function = boost::static_pointer_cast<ast::Function>(stored_function);
+
+    if (function->arguments().size() != evaluated_args.size())
         throw EvalError("Wrong arguments size");
 
     boost::intrusive_ptr<ast::Object> last_statement;
 
     m_storage.scope_begin();
 
-    /// Load function arguments to local scope
     for (std::size_t i = 0; i < evaluated_args.size(); ++i)
-        m_storage.push(boost::static_pointer_cast<ast::Symbol>(stored_function->arguments()[i])->name().data(), evaluated_args[i]);
+        m_storage.push(boost::static_pointer_cast<ast::Symbol>(function->arguments()[i])->name().data(), evaluated_args[i]);
 
-    for (const auto& arg : stored_function->body()->statements())
+    for (const auto& arg : function->body()->statements())
         last_statement = eval_expression(arg);
 
     m_storage.scope_end();
@@ -69,7 +69,7 @@ boost::intrusive_ptr<ast::Object> Evaluator::call_function(std::string_view name
 
 boost::intrusive_ptr<ast::Object> Evaluator::eval_function_call(const boost::intrusive_ptr<ast::FunctionCall>& function_call)
 {
-    std::vector<boost::intrusive_ptr<ast::Object>> arguments = function_call->arguments();
+    auto arguments = function_call->arguments();
 
     for (auto& arg : arguments)
         arg = eval_expression(arg);
@@ -99,7 +99,7 @@ void Evaluator::eval_block(const boost::intrusive_ptr<ast::Block>& block)
 }
 
 template <typename LeftOperand, typename RightOperand>
-[[gnu::always_inline]] static bool comparison_impl(lexeme_t type, LeftOperand l, RightOperand r)
+[[gnu::always_inline]] static bool comparison_implementation(lexeme_t type, LeftOperand l, RightOperand r)
 {
     switch (type)
     {
@@ -115,7 +115,7 @@ template <typename LeftOperand, typename RightOperand>
 }
 
 template <typename LeftFloatingPoint, typename RightFloatingPoint>
-[[gnu::always_inline]] static double floating_point_arithmetic_impl(lexeme_t type, LeftFloatingPoint l, RightFloatingPoint r)
+[[gnu::always_inline]] static double floating_point_arithmetic_implementation(lexeme_t type, LeftFloatingPoint l, RightFloatingPoint r)
 {
     switch (type)
     {
@@ -124,12 +124,12 @@ template <typename LeftFloatingPoint, typename RightFloatingPoint>
         case lexeme_t::star:    return l * r;
         case lexeme_t::slash:   return l / r;
         default:
-            return comparison_impl<LeftFloatingPoint, RightFloatingPoint>(type, l, r);
+            return comparison_implementation<LeftFloatingPoint, RightFloatingPoint>(type, l, r);
     }
 }
 
 template <typename LeftIntegral, typename RightIntegral>
-[[gnu::always_inline]] static constexpr int32_t integral_arithmetic_impl(lexeme_t type, LeftIntegral l, RightIntegral r)
+[[gnu::always_inline]] static constexpr int32_t integral_arithmetic_implementation(lexeme_t type, LeftIntegral l, RightIntegral r)
 {
     switch (type)
     {
@@ -141,43 +141,42 @@ template <typename LeftIntegral, typename RightIntegral>
         case lexeme_t::slli:    return l << r;
         case lexeme_t::srli:    return l >> r;
         default:
-            return comparison_impl<LeftIntegral, RightIntegral>(type, l, r);
+            return comparison_implementation<LeftIntegral, RightIntegral>(type, l, r);
     }
 }
 
-template <typename LeftOperand, typename RightOperand>
+template <typename LeftAST, typename RightAST>
 [[gnu::always_inline]] static constexpr std::variant<int32_t, double> arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs)
 {
-    if constexpr (std::is_same_v<ast::Integer, LeftOperand> && std::is_same_v<ast::Integer, RightOperand>)
-        return integral_arithmetic_impl(
+    if constexpr (std::is_same_v<ast::Integer, LeftAST> && std::is_same_v<ast::Integer, RightAST>)
+        return integral_arithmetic_implementation(
             type,
             static_cast<const ast::Integer*>(lhs)->value(),
             static_cast<const ast::Integer*>(rhs)->value()
         );
 
-    return floating_point_arithmetic_impl(
+    return floating_point_arithmetic_implementation(
         type,
-        static_cast<const LeftOperand*>(lhs)->value(),
-        static_cast<const RightOperand*>(rhs)->value()
+        static_cast<const LeftAST*>(lhs)->value(),
+        static_cast<const RightAST*>(rhs)->value()
     );
 }
 
-[[gnu::always_inline]] constexpr int32_t i_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
+[[gnu::always_inline]] static constexpr int32_t i_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(type, lhs, rhs));
 }
-[[gnu::always_inline]] constexpr double i_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
+[[gnu::always_inline]] static constexpr double i_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<double>(arithmetic<ast::Integer, ast::Float>(type, lhs, rhs));
 }
-[[gnu::always_inline]] constexpr double f_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
+[[gnu::always_inline]] static constexpr double f_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<double>(arithmetic<ast::Float, ast::Integer>(type, lhs, rhs));
 }
-[[gnu::always_inline]] constexpr double f_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
+[[gnu::always_inline]] static constexpr double f_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<double>(arithmetic<ast::Float, ast::Float>(type, lhs, rhs));
 }
 
 boost::intrusive_ptr<ast::Object> Evaluator::eval_binary(const boost::intrusive_ptr<ast::Binary>& binary)
 {
-
     if (binary->type() == lexeme_t::assign)
     {
         auto variable = boost::static_pointer_cast<ast::Symbol>(binary->lhs());
@@ -198,6 +197,65 @@ boost::intrusive_ptr<ast::Object> Evaluator::eval_binary(const boost::intrusive_
     if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::FLOAT)   { return pool_allocate<ast::Float>  (f_f_arithmetic(binary->type(), lhs.get(), rhs.get())); }
 
     throw EvalError("Unknown binary expr");
+}
+
+static int32_t integral_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
+{
+    if (type == lexeme_t::inc) { return boost::static_pointer_cast<ast::Integer>(unary)->value() + 1; }
+    if (type == lexeme_t::dec) { return boost::static_pointer_cast<ast::Integer>(unary)->value() - 1; }
+    throw EvalError("Unknown unary operator");
+}
+
+static double floating_point_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
+{
+    if (type == lexeme_t::inc) { return boost::static_pointer_cast<ast::Float>(unary)->value() + 1; }
+    if (type == lexeme_t::dec) { return boost::static_pointer_cast<ast::Float>(unary)->value() - 1; }
+    throw EvalError("Unknown unary operator");
+}
+
+static boost::intrusive_ptr<ast::Object> unary_implementation(lexeme_t unary_type, ast::ast_type_t ast_type, const boost::intrusive_ptr<ast::Object>& unary)
+{
+    if (ast_type == ast::ast_type_t::INTEGER)
+    {
+        int& value = boost::static_pointer_cast<ast::Integer>(unary)->value();
+        value = integral_unary_implementation(unary_type, unary);
+
+        return unary;
+
+    }
+
+    if (ast_type == ast::ast_type_t::FLOAT)
+    {
+        double& value = boost::static_pointer_cast<ast::Float>(unary)->value();
+        value = floating_point_unary_implementation(unary_type, unary);
+
+        return unary;
+    }
+
+    return nullptr;
+}
+
+boost::intrusive_ptr<ast::Object> Evaluator::eval_unary(const boost::intrusive_ptr<ast::Unary>& unary)
+{
+    ast::ast_type_t ast_type = unary->operand()->ast_type();
+
+    if (auto result = unary_implementation(unary->type(), ast_type, unary->operand()))
+    {
+        return result;
+    }
+
+    if (ast_type == ast::ast_type_t::SYMBOL)
+    {
+        std::string name = boost::static_pointer_cast<ast::Symbol>(unary->operand())->name();
+
+        auto symbol = m_storage.lookup(name);
+        m_storage.overwrite(name,
+            unary_implementation(unary->type(), symbol->ast_type(), symbol));
+
+        return symbol;
+    }
+
+    throw EvalError("Unknown unary operand type");
 }
 
 void Evaluator::eval_array(const boost::intrusive_ptr<ast::Array>& array)
@@ -230,15 +288,18 @@ void Evaluator::eval_for(const boost::intrusive_ptr<ast::For>& for_stmt)
 
     auto init = boost::static_pointer_cast<ast::Binary>(eval_expression(for_stmt->loop_init()));
 
-    auto boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval_expression(for_stmt->exit_condition()));
+    auto exit_cond = for_stmt->exit_condition();
+    auto increment = for_stmt->increment();
+    auto body = for_stmt->body();
+    auto boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval_expression(exit_cond));
 
-    while (static_cast<bool>(boolean_exit_condition->value()))
+    while (__builtin_expect(!!boolean_exit_condition->value(), 1))
     {
-        eval_expression(for_stmt->body());
+        eval_expression(body);
 
-        eval_expression(for_stmt->increment());
+        eval_expression(increment);
 
-        boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval_expression(for_stmt->exit_condition()));
+        boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval_expression(exit_cond));
     }
 
     m_storage.scope_end();
@@ -246,29 +307,29 @@ void Evaluator::eval_for(const boost::intrusive_ptr<ast::For>& for_stmt)
 
 void Evaluator::eval_while(const boost::intrusive_ptr<ast::While>& while_stmt)
 {
-    auto exit_condition = eval_expression(while_stmt->exit_condition());
+    auto initial_exit_condition = eval_expression(while_stmt->exit_condition());
+    ast::ast_type_t exit_condition_type = initial_exit_condition->ast_type();
 
-    ast::ast_type_t exit_condition_type = exit_condition->ast_type();
+    auto while_implementation = [this, &while_stmt, initial_exit_condition = std::move(initial_exit_condition)]<typename IntegralType>{
+        auto body = while_stmt->body();
+        auto exit_cond = boost::static_pointer_cast<IntegralType>(initial_exit_condition);
+
+        while (__builtin_expect(!!exit_cond->value(), 1))
+        {
+            eval_expression(body);
+            exit_cond = boost::static_pointer_cast<IntegralType>(eval_expression(while_stmt->exit_condition()));
+        }
+    };
 
     if (exit_condition_type == ast::ast_type_t::INTEGER)
     {
-       auto integral_exit_cond = boost::static_pointer_cast<ast::Integer>(exit_condition);
-        while (static_cast<bool>(integral_exit_cond->value()))
-        {
-            eval_expression(while_stmt->body());
-            integral_exit_cond = boost::static_pointer_cast<ast::Integer>(eval_expression(while_stmt->exit_condition()));
-        }
+        while_implementation.template operator()<ast::Integer>();
         return;
     }
 
     if (exit_condition_type == ast::ast_type_t::FLOAT)
     {
-        boost::intrusive_ptr<ast::Float> float_exit_cond = boost::static_pointer_cast<ast::Float>(exit_condition);
-        while (static_cast<bool>(float_exit_cond->value()))
-        {
-            eval_expression(while_stmt->body());
-            float_exit_cond = boost::static_pointer_cast<ast::Float>(eval_expression(while_stmt->exit_condition()));
-        }
+        while_implementation.template operator()<ast::Integer>();
         return;
     }
 }
@@ -277,7 +338,7 @@ void Evaluator::eval_if(const boost::intrusive_ptr<ast::If>& if_stmt)
 {
     auto if_condition = eval_expression(if_stmt->condition());
 
-    if (static_cast<bool>(boost::static_pointer_cast<ast::Integer>(if_condition)->value()))
+    if (boost::static_pointer_cast<ast::Integer>(if_condition)->value())
     {
         eval_expression(if_stmt->body());
     }
@@ -291,18 +352,23 @@ boost::intrusive_ptr<ast::Object> Evaluator::eval_expression(const boost::intrus
 {
     ast::ast_type_t expr_type = expression->ast_type();
 
-    if (expr_type == ast::ast_type_t::INTEGER)      { return expression; }
-    if (expr_type == ast::ast_type_t::FLOAT)        { return expression; }
-    if (expr_type == ast::ast_type_t::STRING)       { return expression; }
-    if (expr_type == ast::ast_type_t::SYMBOL)       { return m_storage.lookup(boost::static_pointer_cast<ast::Symbol>(expression)->name()); }
-    if (expr_type == ast::ast_type_t::BINARY)       { return eval_binary(boost::static_pointer_cast<ast::Binary>(expression)); }
-    if (expr_type == ast::ast_type_t::FUNCTION_CALL) { return eval_function_call(boost::static_pointer_cast<ast::FunctionCall>(expression)); }
-    if (expr_type == ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR) { return eval_array_subscript(boost::static_pointer_cast<ast::ArraySubscriptOperator>(expression)); }
-    if (expr_type == ast::ast_type_t::ARRAY)        { eval_array(boost::static_pointer_cast<ast::Array>(expression)); return expression; }
-    if (expr_type == ast::ast_type_t::BLOCK)        { eval_block(boost::static_pointer_cast<ast::Block>(expression)); return expression; }
-    if (expr_type == ast::ast_type_t::WHILE)        { eval_while(boost::static_pointer_cast<ast::While>(expression)); return expression; }
-    if (expr_type == ast::ast_type_t::FOR)          { eval_for(boost::static_pointer_cast<ast::For>(expression)); return expression; }
-    if (expr_type == ast::ast_type_t::IF)           { eval_if(boost::static_pointer_cast<ast::If>(expression)); return expression; }
-
-    throw EvalError("Unknown expression");
+    switch (expr_type)
+    {
+        case ast::ast_type_t::INTEGER:
+        case ast::ast_type_t::FLOAT:
+        case ast::ast_type_t::STRING:
+            return expression;
+        case ast::ast_type_t::SYMBOL:           return m_storage.lookup(boost::static_pointer_cast<ast::Symbol>(expression)->name());
+        case ast::ast_type_t::ARRAY:            eval_array(boost::static_pointer_cast<ast::Array>(expression)); return expression;
+        case ast::ast_type_t::FUNCTION_CALL:    return eval_function_call(boost::static_pointer_cast<ast::FunctionCall>(expression));
+        case ast::ast_type_t::BINARY:           return eval_binary(boost::static_pointer_cast<ast::Binary>(expression));
+        case ast::ast_type_t::UNARY:            return eval_unary(boost::static_pointer_cast<ast::Unary>(expression));
+        case ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR: return eval_array_subscript(boost::static_pointer_cast<ast::ArraySubscriptOperator>(expression));
+        case ast::ast_type_t::BLOCK:            eval_block(boost::static_pointer_cast<ast::Block>(expression)); return expression;
+        case ast::ast_type_t::WHILE:            eval_while(boost::static_pointer_cast<ast::While>(expression)); return expression;
+        case ast::ast_type_t::FOR:              eval_for(boost::static_pointer_cast<ast::For>(expression)); return expression;
+        case ast::ast_type_t::IF:               eval_if(boost::static_pointer_cast<ast::If>(expression)); return expression;
+        default:
+            throw EvalError("Unknown expression");
+    }
 }

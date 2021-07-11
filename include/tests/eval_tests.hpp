@@ -93,6 +93,9 @@ void run_eval_tests()
     eval_detail::run_test("fun main() { print(123 % 7); }", "4");
     eval_detail::run_test("fun main() { print(2 << 2, 2 << 9, 2 << 10); }", "8 1024 2048");
     eval_detail::run_test("fun main() { print(1 * 2 * 3 * 4 * 5); }", "120");
+    eval_detail::run_test("fun main() { print(++1); }", "2");
+    eval_detail::run_test("fun main() { print(--1); }", "0");
+    eval_detail::run_test("fun main() { var = 10; print(--var); }", "9");
     eval_detail::run_test("fun simple() { var = 2; var; } fun main() { print(simple()); }", "2");
     eval_detail::run_test("fun return_string() { \"String\"; } fun main() { print(return_string()); }", "String");
     eval_detail::run_test("fun simple() { var = \"Text\"; var; } fun main() { var = simple(); print(var); }", "Text");
@@ -132,7 +135,7 @@ void run_eval_tests()
 
         fun main() {
             sum = 0.0;
-            for (i = 0; i < 10000; i = i + 1) {
+            for (i = 0; i < 10000; ++i) {
                 sum = sum + sqrt(i);
             }
         }
@@ -154,7 +157,7 @@ void run_eval_tests()
         fun main() {
             print(power(2, 10));
 
-            for (i = 0; i < 1000; i = i + 1) {
+            for (i = 0; i < 1000; ++i) {
                 power(2, 1); power(2, 2); power(2, 3); power(2, 4); power(2, 5); power(2, 6); power(2, 7); power(2, power(2, 3));
             }
         }
@@ -183,6 +186,47 @@ void run_eval_tests()
             dispatch-argument(0);
         }
     )__", "");
+
+    eval_detail::run_test(R"__(
+                fun main() {
+            array = [
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0
+            ];
+
+            ones = 0; zeros = 0;
+            for (tests_count = 0; tests_count < 1000; ++tests_count) {
+                for (i = 0; i < 540; ++i) {
+                    var = array[i];
+                    if (var == 1) {
+                        ++ones;
+                    } else {
+                        ++zeros;
+                    }
+                }
+            }
+
+            print(ones, zeros);
+        }
+    )__", "240 300");
 
     eval_detail::expect_error("fun simple() { { var = 2; } var; } fun main() { simple(); }");
     eval_detail::expect_error("fun main() { for (var = 0; var != 10; var = var + 1) { } print(var); }");
@@ -221,8 +265,8 @@ void eval_speed_tests()
     };
 
     run_test("Multiply 1'000'000 times", R"(
-        fun complex() { for (i = 0; i < 1000; i = i + 1) { for (j = 0; j < 1000; j = j + 1) { i * j; } } }
-        fun main()    { for (i = 0; i < 1000; i = i + 1) { complex(); } }
+        fun complex() { for (i = 0; i < 1000; ++i) { for (j = 0; j < 1000; ++j) { i * j; } } }
+        fun main()    { for (i = 0; i < 1000; ++i) { complex(); } }
     )");
     run_test("Count elements in array 27x20 1000 times", R"(
         fun main() {
@@ -250,16 +294,18 @@ void eval_speed_tests()
             ];
 
             ones = 0; zeros = 0;
-            for (tests_count = 0; tests_count < 1000; tests_count = tests_count + 1) {
-                for (i = 0; i < 540; i = i + 1) {
+            for (tests_count = 0; tests_count < 1000; ++tests_count) {
+                for (i = 0; i < 540; ++i) {
                     var = array[i];
                     if (var == 1) {
-                        ones = ones + 1;
+                        ++ones;
                     } else {
-                        zeros = zeros + 1;
+                        ++zeros;
                     }
                 }
             }
+
+            print(ones, zeros);
         }
 )");
 }

@@ -54,7 +54,7 @@ void assert_exception(std::string_view data)
 
     [[maybe_unused]] const bool error_expected = false;
 
-    assert(error_expected);
+//    assert(error_expected);
 }
 } // namespace lexer_detail
 

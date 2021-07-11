@@ -1,11 +1,10 @@
 #ifndef EVAL_HPP
 #define EVAL_HPP
 
-#include "../memory/pool.hpp"
+#include <boost/pool/pool_alloc.hpp>
+
 #include "../parser/ast.hpp"
 #include "../storage/storage.hpp"
-
-extern MemoryPool memory_pool;
 
 class Evaluator
 {
@@ -23,6 +22,8 @@ private:
 
     boost::intrusive_ptr<ast::Object> eval_binary(const boost::intrusive_ptr<ast::Binary>& binary);
 
+    boost::intrusive_ptr<ast::Object> eval_unary(const boost::intrusive_ptr<ast::Unary>& unary);
+
     boost::intrusive_ptr<ast::Object> eval_array_subscript(const boost::intrusive_ptr<ast::ArraySubscriptOperator>& argument);
 
     void eval_array(const boost::intrusive_ptr<ast::Array>& array);
@@ -38,7 +39,7 @@ private:
     template <typename T, typename... Args>
     T* pool_allocate(Args&&... args)
     {
-        return memory_pool.allocate<T>(std::forward<Args>(args)...);
+        return new T(std::forward<Args>(args)...);
     }
 
     std::vector<boost::intrusive_ptr<ast::Object>> m_expressions;

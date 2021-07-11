@@ -41,7 +41,9 @@ public:
 
     Integer(int32_t data);
 
-    int32_t value() const noexcept;
+    int32_t& value() noexcept;
+
+    const int32_t& value() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
@@ -56,7 +58,9 @@ public:
 
     Float(double data);
 
-    double value() const noexcept;
+    double& value() noexcept;
+
+    const double& value() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 

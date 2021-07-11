@@ -7,17 +7,17 @@ Lexer::Lexer(std::istringstream data)
 
 char Lexer::current() const
 {
-    return m_input.at(m_current_index);
+    return m_input[m_current_index];
 }
 
 char Lexer::previous() const
 {
-    return m_input.at(m_current_index - 1);
+    return m_input[m_current_index - 1];
 }
 
 char Lexer::peek()
 {
-    return m_input.at(m_current_index++);
+    return m_input[m_current_index++];
 }
 
 bool Lexer::has_next() const noexcept

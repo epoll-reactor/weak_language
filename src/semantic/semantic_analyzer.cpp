@@ -42,6 +42,18 @@ void SemanticAnalyzer::analyze_statement(const boost::intrusive_ptr<ast::Object>
         return;
     }
 
+    if (statement->ast_type() == ast::ast_type_t::UNARY) {
+        auto unary = boost::static_pointer_cast<ast::Unary>(statement);
+
+        if (unary->operand()->ast_type() != ast::ast_type_t::INTEGER
+        &&  unary->operand()->ast_type() != ast::ast_type_t::FLOAT
+        &&  unary->operand()->ast_type() != ast::ast_type_t::SYMBOL)
+        {
+            throw SemanticError("Invalid unary operands");
+        }
+        return;
+    }
+
     if (statement->ast_type() == ast::ast_type_t::BLOCK) {
         analyze_block_statement(boost::static_pointer_cast<ast::Block>(statement));
         return;
@@ -111,6 +123,7 @@ void SemanticAnalyzer::analyze_assign_statement(const boost::intrusive_ptr<ast::
     &&  statement->ast_type() != ast::ast_type_t::FLOAT
     &&  statement->ast_type() != ast::ast_type_t::STRING
     &&  statement->ast_type() != ast::ast_type_t::BINARY
+    &&  statement->ast_type() != ast::ast_type_t::UNARY
     &&  statement->ast_type() != ast::ast_type_t::FUNCTION_CALL
     &&  statement->ast_type() != ast::ast_type_t::ARRAY
     &&  statement->ast_type() != ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR)
@@ -164,6 +177,7 @@ void SemanticAnalyzer::analyze_function_call_statement(const boost::intrusive_pt
         &&  argument->ast_type() != ast::ast_type_t::STRING
         &&  argument->ast_type() != ast::ast_type_t::SYMBOL
         &&  argument->ast_type() != ast::ast_type_t::BINARY
+        &&  argument->ast_type() != ast::ast_type_t::UNARY
         &&  argument->ast_type() != ast::ast_type_t::FUNCTION_CALL
         &&  argument->ast_type() != ast::ast_type_t::ARRAY
         &&  argument->ast_type() != ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR)

@@ -1,7 +1,5 @@
 #include <iostream>
 
-#include "../include/memory/pool.hpp"
-
 #include "../include/lexer/preprocessor.hpp"
 
 #include "../include/tests/lexer_tests.hpp"
@@ -11,9 +9,6 @@
 
 std::ostringstream ostream_buffer;
 std::ostream& default_stdout = ostream_buffer;
-
-/// Fails if realloc needed...
-MemoryPool memory_pool(8192 * 1000 * 100);
 
 void eval(std::string_view program)
 {
@@ -76,7 +71,6 @@ float run_tests()
 
     auto time_spent = std::chrono::high_resolution_clock::now() - start;
     return std::chrono::duration_cast<std::chrono::duration<float>>(time_spent).count();
-    return 0;
 }
 
 int main(int argc, char* argv[])
@@ -89,7 +83,6 @@ int main(int argc, char* argv[])
     {
         if (strcmp(argv[1], "test") == 0)
         {
-            /// Also memory pool fails on big iteration count
             run_tests();
 //            std::array<float, 10> times;
 
