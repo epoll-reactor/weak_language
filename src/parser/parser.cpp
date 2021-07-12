@@ -8,9 +8,9 @@ Parser::Parser(std::vector<Lexeme> lexemes)
     , m_current_index(0)
 { }
 
-std::shared_ptr<ast::RootObject> Parser::parse()
+boost::local_shared_ptr<ast::RootObject> Parser::parse()
 {
-    std::shared_ptr<ast::RootObject> root = pool_allocate<ast::RootObject>();
+    boost::local_shared_ptr<ast::RootObject> root = pool_allocate<ast::RootObject>();
 
     while (has_next())
     {
@@ -31,7 +31,7 @@ std::shared_ptr<ast::RootObject> Parser::parse()
     return root;
 }
 
-boost::intrusive_ptr<ast::Object> Parser::primary()
+boost::local_shared_ptr<ast::Object> Parser::primary()
 {
     peek();
 
@@ -59,13 +59,13 @@ boost::intrusive_ptr<ast::Object> Parser::primary()
             return array();
 
         case lexeme_t::num:
-            return binary(new ast::Integer(previous().data));
+            return binary(boost::make_local_shared<ast::Integer>(previous().data));
 
         case lexeme_t::floating_point:
-            return binary(new ast::Float(previous().data));
+            return binary(boost::make_local_shared<ast::Float>(previous().data));
 
         case lexeme_t::string_literal:
-            return new ast::String(previous().data);
+            return boost::make_local_shared<ast::String>(previous().data);
 
         case lexeme_t::symbol:
             return resolve_symbol();
@@ -110,12 +110,12 @@ bool Parser::has_next() const noexcept
     return m_current_index < m_input.size() && current().type != lexeme_t::end_of_data;
 }
 
-bool Parser::is_block(const boost::intrusive_ptr<ast::Object>& statement) noexcept
+bool Parser::is_block(const boost::local_shared_ptr<ast::Object>& statement) noexcept
 {
     return statement->ast_type() == ast::ast_type_t::BLOCK;
 }
 
-bool Parser::is_block_statement(const boost::intrusive_ptr<ast::Object>& statement) noexcept
+bool Parser::is_block_statement(const boost::local_shared_ptr<ast::Object>& statement) noexcept
 {
     return statement->ast_type() == ast::ast_type_t::IF
         || statement->ast_type() == ast::ast_type_t::WHILE
@@ -151,7 +151,7 @@ Lexeme Parser::require(const std::vector<lexeme_t>& expected_types)
     }
 }
 
-boost::intrusive_ptr<ast::Object> Parser::additive()
+boost::local_shared_ptr<ast::Object> Parser::additive()
 {
     auto expr = multiplicative();
 
@@ -159,13 +159,13 @@ boost::intrusive_ptr<ast::Object> Parser::additive()
     {
         if (previous().type == lexeme_t::plus)
         {
-            expr = new ast::Binary(lexeme_t::plus, expr, multiplicative());
+            expr = boost::make_local_shared<ast::Binary>(lexeme_t::plus, expr, multiplicative());
             continue;
         }
 
         if (previous().type == lexeme_t::minus)
         {
-            expr = new ast::Binary(lexeme_t::minus, expr, multiplicative());
+            expr = boost::make_local_shared<ast::Binary>(lexeme_t::minus, expr, multiplicative());
             continue;
         }
 
@@ -175,7 +175,7 @@ boost::intrusive_ptr<ast::Object> Parser::additive()
     return expr;
 }
 
-boost::intrusive_ptr<ast::Object> Parser::multiplicative()
+boost::local_shared_ptr<ast::Object> Parser::multiplicative()
 {
     auto expr = primary();
 
@@ -183,19 +183,19 @@ boost::intrusive_ptr<ast::Object> Parser::multiplicative()
     {
         if (previous().type == lexeme_t::star)
         {
-            expr = new ast::Binary(lexeme_t::star, expr, multiplicative());
+            expr = boost::make_local_shared<ast::Binary>(lexeme_t::star, expr, multiplicative());
             continue;
         }
 
         if (previous().type == lexeme_t::slash)
         {
-            expr = new ast::Binary(lexeme_t::slash, expr, multiplicative());
+            expr = boost::make_local_shared<ast::Binary>(lexeme_t::slash, expr, multiplicative());
             continue;
         }
 
         if (previous().type == lexeme_t::mod)
         {
-            expr = new ast::Binary(lexeme_t::mod, expr, multiplicative());
+            expr = boost::make_local_shared<ast::Binary>(lexeme_t::mod, expr, multiplicative());
             continue;
         }
 
@@ -205,7 +205,7 @@ boost::intrusive_ptr<ast::Object> Parser::multiplicative()
     return expr;
 }
 
-boost::intrusive_ptr<ast::Object> Parser::binary(const boost::intrusive_ptr<ast::Object>& ptr)
+boost::local_shared_ptr<ast::Object> Parser::binary(const boost::local_shared_ptr<ast::Object>& ptr)
 {
     if (end_of_expression()) { return ptr; }
 
@@ -213,19 +213,21 @@ boost::intrusive_ptr<ast::Object> Parser::binary(const boost::intrusive_ptr<ast:
 
     lexeme_t op = previous().type;
 
-    return new ast::Binary(op, ptr, additive());
+    return boost::make_local_shared<ast::Binary>(op, ptr, additive());
 }
 
-boost::intrusive_ptr<ast::Object> Parser::unary()
+boost::local_shared_ptr<ast::Object> Parser::unary()
 {
-    return new ast::Unary(previous().type, primary());
+    lexeme_t op = previous().type;
+
+    return boost::make_local_shared<ast::Unary>(op, primary());
 }
 
-boost::intrusive_ptr<ast::Block> Parser::block()
+boost::local_shared_ptr<ast::Block> Parser::block()
 {
     require({lexeme_t::left_brace});
 
-    std::vector<boost::intrusive_ptr<ast::Object>> stmts;
+    std::vector<boost::local_shared_ptr<ast::Object>> stmts;
 
     while (current().type != lexeme_t::right_brace)
     {
@@ -245,12 +247,12 @@ boost::intrusive_ptr<ast::Block> Parser::block()
 
     require({lexeme_t::right_brace});
 
-    return new ast::Block(std::move(stmts));
+    return boost::make_local_shared<ast::Block>(std::move(stmts));
 }
 
-boost::intrusive_ptr<ast::Object> Parser::array()
+boost::local_shared_ptr<ast::Object> Parser::array()
 {
-    std::vector<boost::intrusive_ptr<ast::Object>> objects;
+    std::vector<boost::local_shared_ptr<ast::Object>> objects;
 
     while (true)
     {
@@ -268,10 +270,10 @@ boost::intrusive_ptr<ast::Object> Parser::array()
         }
     }
 
-    return new ast::Array(std::move(objects));
+    return boost::make_local_shared<ast::Array>(std::move(objects));
 }
 
-boost::intrusive_ptr<ast::Object> Parser::if_statement()
+boost::local_shared_ptr<ast::Object> Parser::if_statement()
 {
     require({lexeme_t::left_paren});
 
@@ -285,15 +287,15 @@ boost::intrusive_ptr<ast::Object> Parser::if_statement()
     {
         auto else_body = block();
 
-        return new ast::If(std::move(if_condition), std::move(if_body), std::move(else_body));
+        return boost::make_local_shared<ast::If>(std::move(if_condition), std::move(if_body), std::move(else_body));
     }
     else {
 
-        return new ast::If(std::move(if_condition), std::move(if_body));
+        return boost::make_local_shared<ast::If>(std::move(if_condition), std::move(if_body));
     }
 }
 
-boost::intrusive_ptr<ast::Object> Parser::while_statement()
+boost::local_shared_ptr<ast::Object> Parser::while_statement()
 {
     require({lexeme_t::left_paren});
 
@@ -303,16 +305,16 @@ boost::intrusive_ptr<ast::Object> Parser::while_statement()
 
     auto while_body = block();
 
-    return new ast::While(std::move(while_condition), std::move(while_body));
+    return boost::make_local_shared<ast::While>(std::move(while_condition), std::move(while_body));
 }
 
-boost::intrusive_ptr<ast::Object> Parser::for_statement()
+boost::local_shared_ptr<ast::Object> Parser::for_statement()
 {
     require({lexeme_t::left_paren});
 
-    boost::intrusive_ptr<ast::Object> for_init;
-    boost::intrusive_ptr<ast::Object> for_exit_condition;
-    boost::intrusive_ptr<ast::Object> for_increment;
+    boost::local_shared_ptr<ast::Object> for_init;
+    boost::local_shared_ptr<ast::Object> for_exit_condition;
+    boost::local_shared_ptr<ast::Object> for_increment;
 
     if (!match({lexeme_t::semicolon}))
     {
@@ -334,7 +336,7 @@ boost::intrusive_ptr<ast::Object> Parser::for_statement()
 
     auto for_body = block();
 
-    auto for_statement = new ast::For();
+    auto for_statement = boost::make_local_shared<ast::For>();
 
     if (for_init)           { for_statement->set_init(std::move(for_init)); }
     if (for_exit_condition) { for_statement->set_exit_condition(std::move(for_exit_condition)); }
@@ -345,7 +347,7 @@ boost::intrusive_ptr<ast::Object> Parser::for_statement()
     return for_statement;
 };
 
-boost::intrusive_ptr<ast::Object> Parser::function_declare_statement()
+boost::local_shared_ptr<ast::Object> Parser::function_declare_statement()
 {
     const Lexeme symbol = require({lexeme_t::symbol});
 
@@ -353,7 +355,7 @@ boost::intrusive_ptr<ast::Object> Parser::function_declare_statement()
 
     require({lexeme_t::left_paren});
 
-    std::vector<boost::intrusive_ptr<ast::Object>> arguments;
+    std::vector<boost::local_shared_ptr<ast::Object>> arguments;
 
     if (!match({lexeme_t::right_paren}))
     {
@@ -364,7 +366,7 @@ boost::intrusive_ptr<ast::Object> Parser::function_declare_statement()
                 throw ParseError("Symbol as function parameter expected");
             }
             else {
-                arguments.push_back(new ast::Symbol(current().data));
+                arguments.emplace_back(boost::make_local_shared<ast::Symbol>(current().data));
             }
 
             peek();
@@ -384,10 +386,10 @@ boost::intrusive_ptr<ast::Object> Parser::function_declare_statement()
 
     auto function_body = block();
 
-    return new ast::Function(function_name, std::move(arguments), std::move(function_body));
+    return boost::make_local_shared<ast::Function>(function_name, std::move(arguments), std::move(function_body));
 }
 
-boost::intrusive_ptr<ast::Object> Parser::define_type_statement()
+boost::local_shared_ptr<ast::Object> Parser::define_type_statement()
 {
     std::string name = require({lexeme_t::symbol}).data;
 
@@ -419,17 +421,17 @@ boost::intrusive_ptr<ast::Object> Parser::define_type_statement()
         }
     }
 
-    return new ast::TypeDefinition(name, std::move(fields));
+    return boost::make_local_shared<ast::TypeDefinition>(name, std::move(fields));
 }
 
-std::vector<boost::intrusive_ptr<ast::Object>> Parser::resolve_function_arguments()
+std::vector<boost::local_shared_ptr<ast::Object>> Parser::resolve_function_arguments()
 {
     require({lexeme_t::left_paren});
 
     if (match({lexeme_t::right_paren}))
         return {};
 
-    std::vector<boost::intrusive_ptr<ast::Object>> arguments;
+    std::vector<boost::local_shared_ptr<ast::Object>> arguments;
 
     while (true)
     {
@@ -450,7 +452,7 @@ std::vector<boost::intrusive_ptr<ast::Object>> Parser::resolve_function_argument
     return arguments;
 }
 
-boost::intrusive_ptr<ast::Object> Parser::resolve_array_subscript()
+boost::local_shared_ptr<ast::Object> Parser::resolve_array_subscript()
 {
     std::string symbol_name = previous().data;
 
@@ -460,21 +462,21 @@ boost::intrusive_ptr<ast::Object> Parser::resolve_array_subscript()
 
     require({lexeme_t::right_box_brace});
 
-    return new ast::ArraySubscriptOperator(symbol_name, std::move(term));
+    return boost::make_local_shared<ast::ArraySubscriptOperator>(symbol_name, std::move(term));
 }
 
-boost::intrusive_ptr<ast::Object> Parser::resolve_symbol()
+boost::local_shared_ptr<ast::Object> Parser::resolve_symbol()
 {
     if (current().type == lexeme_t::left_paren)
     {
         std::string data = previous().data;
-        return new ast::FunctionCall(std::move(data), resolve_function_arguments());
+        return boost::make_local_shared<ast::FunctionCall>(std::move(data), resolve_function_arguments());
     }
     else if (current().type == lexeme_t::left_box_brace) {
 
         return resolve_array_subscript();
     }
     else {
-        return binary(new ast::Symbol(previous().data));
+        return binary(boost::make_local_shared<ast::Symbol>(previous().data));
     }
 }

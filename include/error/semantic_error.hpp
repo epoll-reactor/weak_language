@@ -1,5 +1,5 @@
-#ifndef SEMANTIC_ERROR_HPP
-#define SEMANTIC_ERROR_HPP
+#ifndef WEAK_ERROR_SEMANTIC_ERROR_HPP
+#define WEAK_ERROR_SEMANTIC_ERROR_HPP
 
 #include <stdexcept>
 
@@ -11,4 +11,4 @@ struct SemanticError : public std::runtime_error
 };
 
 
-#endif // SEMANTIC_ERROR_HPP
+#endif // WEAK_ERROR_SEMANTIC_ERROR_HPP

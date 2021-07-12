@@ -1,13 +1,15 @@
+#include <utility>
+
 #include "../../include/ast/ast.hpp"
 
 namespace ast {
 
-Unary::Unary(lexeme_t type, boost::intrusive_ptr<Object> operation)
+Unary::Unary(lexeme_t type, boost::local_shared_ptr<Object> operation)
     : m_type(type)
-    , m_operation(operation)
+    , m_operation(std::move(operation))
 { }
 
-boost::intrusive_ptr<Object> Unary::operand() const noexcept
+boost::local_shared_ptr<Object> Unary::operand() const noexcept
 {
     return m_operation;
 }

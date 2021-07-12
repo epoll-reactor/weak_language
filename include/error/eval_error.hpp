@@ -1,5 +1,5 @@
-#ifndef EVAL_ERROR_HPP
-#define EVAL_ERROR_HPP
+#ifndef WEAK_ERROR_EVAL_ERROR_HPP
+#define WEAK_ERROR_EVAL_ERROR_HPP
 
 #include <stdexcept>
 
@@ -25,4 +25,4 @@ struct TypeError : public EvalError
 };
 
 
-#endif // EVAL_ERROR_HPP
+#endif // WEAK_ERROR_EVAL_ERROR_HPP

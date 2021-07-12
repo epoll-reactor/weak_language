@@ -1,5 +1,5 @@
-#ifndef CRC32_HPP
-#define CRC32_HPP
+#ifndef WEAK_CRC32_HPP
+#define WEAK_CRC32_HPP
 
 #include <functional>
 
@@ -51,4 +51,4 @@ inline unsigned long create(const char* buffer) noexcept
 }
 } // namespace crc32
 
-#endif // CRC32_HPP
+#endif // WEAK_CRC32_HPP

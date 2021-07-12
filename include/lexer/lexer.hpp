@@ -1,5 +1,5 @@
-#ifndef LEXER_HPP
-#define LEXER_HPP
+#ifndef WEAK_LEXER_HPP
+#define WEAK_LEXER_HPP
 
 #include <vector>
 #include <unordered_map>
@@ -71,4 +71,4 @@ private:
     std::vector<char> m_input;
 };
 
-#endif // LEXER_HPP
+#endif // WEAK_LEXER_HPP

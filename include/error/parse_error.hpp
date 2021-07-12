@@ -1,5 +1,5 @@
-#ifndef PARSE_ERROR_HPP
-#define PARSE_ERROR_HPP
+#ifndef WEAK_ERROR_PARSE_ERROR_HPP
+#define WEAK_ERROR_PARSE_ERROR_HPP
 
 #include <stdexcept>
 
@@ -10,4 +10,4 @@ struct ParseError : public std::runtime_error
     { }
 };
 
-#endif // PARSE_ERROR_HPP
+#endif // WEAK_ERROR_PARSE_ERROR_HPP

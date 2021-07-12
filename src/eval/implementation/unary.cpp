@@ -16,7 +16,7 @@ ALWAYS_INLINE static void floating_point_unary_implementation(lexeme_t type, dou
     throw EvalError("Unknown unary operator");
 }
 
-boost::intrusive_ptr<ast::Object> internal::unary_implementation(ast::ast_type_t ast_type, lexeme_t unary_type, const boost::intrusive_ptr<ast::Object>& expression)  noexcept(false)
+boost::local_shared_ptr<ast::Object> internal::unary_implementation(ast::ast_type_t ast_type, lexeme_t unary_type, const boost::local_shared_ptr<ast::Object>& expression)  noexcept(false)
 {
     if (ast_type == ast::ast_type_t::INTEGER)
     {

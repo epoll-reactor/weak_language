@@ -1,5 +1,5 @@
-#ifndef TEST_UTILITY_HPP
-#define TEST_UTILITY_HPP
+#ifndef WEAK_TESTS_TEST_UTILITY_HPP
+#define WEAK_TESTS_TEST_UTILITY_HPP
 
 #include <chrono>
 #include <iostream>
@@ -80,4 +80,4 @@ void speed_benchmark(uint64_t iterations, Function function, Args&&... args)
     std::cout << info << std::endl;
 }
 
-#endif // TEST_UTILITY_HPP
+#endif // WEAK_TESTS_TEST_UTILITY_HPP

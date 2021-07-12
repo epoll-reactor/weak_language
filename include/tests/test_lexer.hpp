@@ -1,5 +1,5 @@
-#ifndef LEXER_TESTS_HPP
-#define LEXER_TESTS_HPP
+#ifndef WEAK_TESTS_LEXER_HPP
+#define WEAK_TESTS_LEXER_HPP
 
 #include <sstream>
 #include <iomanip>
@@ -389,4 +389,4 @@ void run_lexer_tests()
     std::cout << "Lexer tests passed successfully\n";
 }
 
-#endif // LEXER_TESTS_HPP
+#endif // WEAK_TESTS_LEXER_HPP

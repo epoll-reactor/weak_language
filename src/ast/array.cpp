@@ -2,11 +2,11 @@
 
 namespace ast {
 
-Array::Array(std::vector<boost::intrusive_ptr<Object>> elements)
+Array::Array(std::vector<boost::local_shared_ptr<Object>> elements)
     : m_elements(std::move(elements))
 { }
 
-std::vector<boost::intrusive_ptr<Object>>& Array::elements() noexcept
+std::vector<boost::local_shared_ptr<Object>>& Array::elements() noexcept
 {
     return m_elements;
 }

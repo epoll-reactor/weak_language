@@ -1,7 +1,8 @@
-#ifndef PARSE_OBJECT_HPP
-#define PARSE_OBJECT_HPP
+#ifndef WEAK_AST_HPP
+#define WEAK_AST_HPP
 
-#include <boost/intrusive_ptr.hpp>
+#include <boost/smart_ptr/local_shared_ptr.hpp>
+#include <boost/smart_ptr/make_local_shared.hpp>
 #include <memory>
 #include <vector>
 
@@ -26,12 +27,12 @@ private:
 class RootObject
 {
 public:
-    const std::vector<boost::intrusive_ptr<Object>>& get();
+    const std::vector<boost::local_shared_ptr<Object>>& get();
 
-    void add(boost::intrusive_ptr<Object> expression);
+    void add(boost::local_shared_ptr<Object> expression);
 
 private:
-    std::vector<boost::intrusive_ptr<Object>> m_expressions;
+    std::vector<boost::local_shared_ptr<Object>> m_expressions;
 };
 
 class Integer : public Object
@@ -97,38 +98,38 @@ private:
 class Array : public Object
 {
 public:
-    Array(std::vector<boost::intrusive_ptr<Object>> elements);
+    Array(std::vector<boost::local_shared_ptr<Object>> elements);
 
-    std::vector<boost::intrusive_ptr<Object>>& elements() noexcept;
+    std::vector<boost::local_shared_ptr<Object>>& elements() noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
 private:
-    std::vector<boost::intrusive_ptr<Object>> m_elements;
+    std::vector<boost::local_shared_ptr<Object>> m_elements;
 };
 
 class ArraySubscriptOperator : public Object
 {
 public:
-    ArraySubscriptOperator(std::string_view name, boost::intrusive_ptr<Object> index);
+    ArraySubscriptOperator(std::string_view name, boost::local_shared_ptr<Object> index);
 
     const std::string& symbol_name() const noexcept;
 
-    const boost::intrusive_ptr<Object>& index() const noexcept;
+    const boost::local_shared_ptr<Object>& index() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
 private:
     std::string m_name;
-    boost::intrusive_ptr<Object> m_index;
+    boost::local_shared_ptr<Object> m_index;
 };
 
 class Unary : public Object
 {
 public:
-    Unary(lexeme_t type, boost::intrusive_ptr<Object> operation);
+    Unary(lexeme_t type, boost::local_shared_ptr<Object> operation);
 
-    boost::intrusive_ptr<Object> operand() const noexcept;
+    boost::local_shared_ptr<Object> operand() const noexcept;
 
     lexeme_t type() const noexcept;
 
@@ -136,17 +137,17 @@ public:
 
 private:
     lexeme_t m_type;
-    boost::intrusive_ptr<Object> m_operation;
+    boost::local_shared_ptr<Object> m_operation;
 };
 
 class Binary : public Object
 {
 public:
-    Binary(lexeme_t type, boost::intrusive_ptr<Object> lhs, boost::intrusive_ptr<Object> rhs);
+    Binary(lexeme_t type, boost::local_shared_ptr<Object> lhs, boost::local_shared_ptr<Object> rhs);
 
-    const boost::intrusive_ptr<Object>& lhs() const noexcept;
+    const boost::local_shared_ptr<Object>& lhs() const noexcept;
 
-    const boost::intrusive_ptr<Object>& rhs() const noexcept;
+    const boost::local_shared_ptr<Object>& rhs() const noexcept;
 
     lexeme_t type() const noexcept;
 
@@ -154,37 +155,37 @@ public:
 
 private:
     lexeme_t m_type;
-    boost::intrusive_ptr<Object> m_lhs;
-    boost::intrusive_ptr<Object> m_rhs;
+    boost::local_shared_ptr<Object> m_lhs;
+    boost::local_shared_ptr<Object> m_rhs;
 };
 
 class Block : public Object
 {
 public:
-    Block(std::vector<boost::intrusive_ptr<Object>> statements);
+    Block(std::vector<boost::local_shared_ptr<Object>> statements);
 
-    const std::vector<boost::intrusive_ptr<Object>>& statements();
+    const std::vector<boost::local_shared_ptr<Object>>& statements();
 
     ast_type_t ast_type() const noexcept override final;
 
 private:
-    std::vector<boost::intrusive_ptr<Object>> m_statements;
+    std::vector<boost::local_shared_ptr<Object>> m_statements;
 };
 
 class While : public Object
 {
 public:
-    While(boost::intrusive_ptr<Object> exit_condition, boost::intrusive_ptr<Block> block);
+    While(boost::local_shared_ptr<Object> exit_condition, boost::local_shared_ptr<Block> block);
 
-    const boost::intrusive_ptr<Object>& exit_condition() const noexcept;
+    const boost::local_shared_ptr<Object>& exit_condition() const noexcept;
 
-    const boost::intrusive_ptr<Block>& body() const noexcept;
+    const boost::local_shared_ptr<Block>& body() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
 private:
-    boost::intrusive_ptr<Object> m_exit_condition;
-    boost::intrusive_ptr<Block> m_block;
+    boost::local_shared_ptr<Object> m_exit_condition;
+    boost::local_shared_ptr<Block> m_block;
 };
 
 class For : public Object
@@ -192,85 +193,85 @@ class For : public Object
 public:
     For() = default;
 
-    void set_init(boost::intrusive_ptr<Object> init);
+    void set_init(boost::local_shared_ptr<Object> init);
 
-    void set_exit_condition(boost::intrusive_ptr<Object> exit_condition);
+    void set_exit_condition(boost::local_shared_ptr<Object> exit_condition);
 
-    void set_increment(boost::intrusive_ptr<Object> increment);
+    void set_increment(boost::local_shared_ptr<Object> increment);
 
-    void set_body(boost::intrusive_ptr<Block> block);
+    void set_body(boost::local_shared_ptr<Block> block);
 
-    const boost::intrusive_ptr<Object>& loop_init() const noexcept;
+    const boost::local_shared_ptr<Object>& loop_init() const noexcept;
 
-    const boost::intrusive_ptr<Object>& exit_condition() const noexcept;
+    const boost::local_shared_ptr<Object>& exit_condition() const noexcept;
 
-    const boost::intrusive_ptr<Object>& increment() const noexcept;
+    const boost::local_shared_ptr<Object>& increment() const noexcept;
 
-    const boost::intrusive_ptr<Block>& body() const noexcept;
+    const boost::local_shared_ptr<Block>& body() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
 private:
-    boost::intrusive_ptr<Object> m_for_init;
-    boost::intrusive_ptr<Object> m_for_exit_condition;
-    boost::intrusive_ptr<Object> m_for_increment;
-    boost::intrusive_ptr<Block> m_block;
+    boost::local_shared_ptr<Object> m_for_init;
+    boost::local_shared_ptr<Object> m_for_exit_condition;
+    boost::local_shared_ptr<Object> m_for_increment;
+    boost::local_shared_ptr<Block> m_block;
 };
 
 class If : public Object
 {
 public:
-    If(boost::intrusive_ptr<Object> exit_condition, boost::intrusive_ptr<Block> body);
+    If(boost::local_shared_ptr<Object> exit_condition, boost::local_shared_ptr<Block> body);
 
-    If(boost::intrusive_ptr<Object> exit_condition, boost::intrusive_ptr<Block> body, boost::intrusive_ptr<Block> else_body);
+    If(boost::local_shared_ptr<Object> exit_condition, boost::local_shared_ptr<Block> body, boost::local_shared_ptr<Block> else_body);
 
-    const boost::intrusive_ptr<Object>& condition() const noexcept;
+    const boost::local_shared_ptr<Object>& condition() const noexcept;
 
-    const boost::intrusive_ptr<Block>& body() const noexcept;
+    const boost::local_shared_ptr<Block>& body() const noexcept;
 
-    const boost::intrusive_ptr<Block>& else_body() const noexcept;
+    const boost::local_shared_ptr<Block>& else_body() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
 private:
-    boost::intrusive_ptr<Object> m_exit_condition;
-    boost::intrusive_ptr<Block> m_body;
-    boost::intrusive_ptr<Block> m_else_body;
+    boost::local_shared_ptr<Object> m_exit_condition;
+    boost::local_shared_ptr<Block> m_body;
+    boost::local_shared_ptr<Block> m_else_body;
 };
 
 class Function : public Object
 {
 public:
-    Function(std::string_view name, std::vector<boost::intrusive_ptr<Object>> arguments, boost::intrusive_ptr<Block> body);
+    Function(std::string_view name, std::vector<boost::local_shared_ptr<Object>> arguments, boost::local_shared_ptr<Block> body);
 
     std::string name() const noexcept;
 
-    const std::vector<boost::intrusive_ptr<Object>>& arguments() const noexcept;
+    const std::vector<boost::local_shared_ptr<Object>>& arguments() const noexcept;
 
-    const boost::intrusive_ptr<Block>& body() const noexcept;
+    const boost::local_shared_ptr<Block>& body() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
 private:
     std::string m_name;
-    std::vector<boost::intrusive_ptr<Object>> m_arguments;
-    boost::intrusive_ptr<Block> m_body;
+    std::vector<boost::local_shared_ptr<Object>> m_arguments;
+    boost::local_shared_ptr<Block> m_body;
 };
 
 class FunctionCall : public Object
 {
 public:
-    FunctionCall(std::string name, std::vector<boost::intrusive_ptr<Object>> arguments);
+    FunctionCall(std::string name, std::vector<boost::local_shared_ptr<Object>> arguments);
 
     const std::string& name() const noexcept;
 
-    const std::vector<boost::intrusive_ptr<Object>>& arguments() const noexcept;
+    const std::vector<boost::local_shared_ptr<Object>>& arguments() const noexcept;
 
     ast_type_t ast_type() const noexcept override final;
 
 private:
     std::string m_name;
-    std::vector<boost::intrusive_ptr<Object>> m_arguments;
+    std::vector<boost::local_shared_ptr<Object>> m_arguments;
 };
 
 class TypeDefinition : public Object
@@ -288,16 +289,16 @@ private:
     std::vector<std::string> m_fields;
 };
 
-inline void intrusive_ptr_release(Object* o) noexcept
+inline void local_shared_ptr_release(Object* o) noexcept
 {
     if (--o->reference_count() == 0) { delete o; }
 }
 
-inline void intrusive_ptr_add_ref(Object* o) noexcept
+inline void local_shared_ptr_add_ref(Object* o) noexcept
 {
     ++o->reference_count();
 }
 
 } // namespace ast
 
-#endif // PARSE_OBJECT_HPP
+#endif // WEAK_AST_HPP

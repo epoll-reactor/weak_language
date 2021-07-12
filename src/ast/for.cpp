@@ -2,42 +2,42 @@
 
 namespace ast {
 
-void For::set_init(boost::intrusive_ptr<Object> init)
+void For::set_init(boost::local_shared_ptr<Object> init)
 {
     m_for_init = std::move(init);
 }
 
-void For::set_exit_condition(boost::intrusive_ptr<Object> exit_condition)
+void For::set_exit_condition(boost::local_shared_ptr<Object> exit_condition)
 {
     m_for_exit_condition = std::move(exit_condition);
 }
 
-void For::set_increment(boost::intrusive_ptr<Object> increment)
+void For::set_increment(boost::local_shared_ptr<Object> increment)
 {
     m_for_increment = std::move(increment);
 }
 
-void For::set_body(boost::intrusive_ptr<Block> block)
+void For::set_body(boost::local_shared_ptr<Block> block)
 {
     m_block = std::move(block);
 }
 
-const boost::intrusive_ptr<Object>& For::loop_init() const noexcept
+const boost::local_shared_ptr<Object>& For::loop_init() const noexcept
 {
     return m_for_init;
 }
 
-const boost::intrusive_ptr<Object>& For::exit_condition() const noexcept
+const boost::local_shared_ptr<Object>& For::exit_condition() const noexcept
 {
     return m_for_exit_condition;
 }
 
-const boost::intrusive_ptr<Object>& For::increment() const noexcept
+const boost::local_shared_ptr<Object>& For::increment() const noexcept
 {
     return m_for_increment;
 }
 
-const boost::intrusive_ptr<Block>& For::body() const noexcept
+const boost::local_shared_ptr<Block>& For::body() const noexcept
 {
     return m_block;
 }

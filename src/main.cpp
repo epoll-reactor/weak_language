@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
     {
         if (strcmp(argv[1], "test") == 0)
         {
-            #define tests_to_run 10
+            #define tests_to_run 1
             std::array<float, tests_to_run> times;
 
             for (int i = 0; i < tests_to_run; ++i)

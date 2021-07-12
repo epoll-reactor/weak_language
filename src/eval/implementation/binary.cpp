@@ -69,15 +69,15 @@ ALWAYS_INLINE static constexpr std::variant<int32_t, double> arithmetic(lexeme_t
     );
 }
 
-ast::Object* internal::i_i_binary_implementation(lexeme_t binary_type, const ast::Object* lhs, const ast::Object* rhs) noexcept(false) {
-    return new ast::Integer(std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(binary_type, lhs, rhs)));
+boost::local_shared_ptr<ast::Object> internal::i_i_binary_implementation(lexeme_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+    return boost::make_local_shared<ast::Integer>(std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(binary_type, lhs.get(), rhs.get())));
 }
-ast::Object* internal::i_f_binary_implementation(lexeme_t binary_type, const ast::Object* lhs, const ast::Object* rhs) noexcept(false) {
-    return new ast::Float(std::get<double>(arithmetic<ast::Integer, ast::Float>(binary_type, lhs, rhs)));
+boost::local_shared_ptr<ast::Object> internal::i_f_binary_implementation(lexeme_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+    return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Integer, ast::Float>(binary_type, lhs.get(), rhs.get())));
 }
-ast::Object* internal::f_i_binary_implementation(lexeme_t binary_type, const ast::Object* lhs, const ast::Object* rhs) noexcept(false) {
-    return new ast::Float(std::get<double>(arithmetic<ast::Float, ast::Integer>(binary_type, lhs, rhs)));
+boost::local_shared_ptr<ast::Object> internal::f_i_binary_implementation(lexeme_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+    return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Float, ast::Integer>(binary_type, lhs.get(), rhs.get())));
 }
-ast::Object* internal::f_f_binary_implementation(lexeme_t binary_type, const ast::Object* lhs, const ast::Object* rhs) noexcept(false) {
-    return new ast::Float(std::get<double>(arithmetic<ast::Float, ast::Float>(binary_type, lhs, rhs)));
+boost::local_shared_ptr<ast::Object> internal::f_f_binary_implementation(lexeme_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+    return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Float, ast::Float>(binary_type, lhs.get(), rhs.get())));
 }

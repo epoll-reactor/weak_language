@@ -1,5 +1,5 @@
-#ifndef SYMBOL_TABLE_TESTS_HPP
-#define SYMBOL_TABLE_TESTS_HPP
+#ifndef WEAK_TESTS_STORAGE_HPP
+#define WEAK_TESTS_STORAGE_HPP
 
 #include "../storage/storage.hpp"
 
@@ -34,8 +34,8 @@ void symbol_table_basic_test()
 {
     Storage env;
 
-    env.push("var1", new ast::Symbol("1"));
-    env.push("var2", new ast::Symbol("2"));
+    env.push("var1", boost::make_local_shared<ast::Symbol>("1"));
+    env.push("var2", boost::make_local_shared<ast::Symbol>("2"));
 
     test_found(env, "var1", true);
     test_found(env, "var2", true);
@@ -45,12 +45,12 @@ void symbol_table_flat_test()
 {
     Storage env;
 
-    env.push("var1", new ast::Symbol("1"));
-    env.push("var2", new ast::Symbol("2"));
+    env.push("var1", boost::make_local_shared<ast::Symbol>("1"));
+    env.push("var2", boost::make_local_shared<ast::Symbol>("2"));
 
     env.scope_begin();
 
-        env.push("var3", new ast::Symbol("3"));
+        env.push("var3", boost::make_local_shared<ast::Symbol>("3"));
 
         test_found(env, "var1", true);
         test_found(env, "var2", true);
@@ -67,18 +67,18 @@ void symbol_table_nested_test()
 {
     Storage env;
 
-    env.push("var1", new ast::Symbol("1"));
+    env.push("var1", boost::make_local_shared<ast::Symbol>("1"));
 
     env.scope_begin();
 
-        env.push("var2", new ast::Symbol("2"));
+        env.push("var2", boost::make_local_shared<ast::Symbol>("2"));
 
         test_found(env, "var1", true);
         test_found(env, "var2", true);
 
         env.scope_begin();
 
-            env.push("var3", new ast::Symbol("3"));
+            env.push("var3", boost::make_local_shared<ast::Symbol>("3"));
 
             test_found(env, "var1", true);
             test_found(env, "var2", true);
@@ -108,4 +108,4 @@ void run_storage_tests()
     std::cout << "Symbol table tests passed successfully\n";
 }
 
-#endif // SYMBOL_TABLE_TESTS_HPP
+#endif // WEAK_TESTS_STORAGE_HPP

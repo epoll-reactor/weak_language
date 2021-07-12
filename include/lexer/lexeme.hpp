@@ -1,5 +1,5 @@
-#ifndef LEXEME_HPP
-#define LEXEME_HPP
+#ifndef WEAK_LEXER_LEXEME_HPP
+#define WEAK_LEXER_LEXEME_HPP
 
 #include <string>
 
@@ -131,4 +131,4 @@ struct Lexeme
     lexeme_t type = lexeme_t::none;
 };
 
-#endif // LEXEME_HPP
+#endif // WEAK_LEXER_LEXEME_HPP

@@ -1,5 +1,5 @@
-#ifndef PARSER_HPP
-#define PARSER_HPP
+#ifndef WEAK_PARSER_HPP
+#define WEAK_PARSER_HPP
 
 #include <optional>
 
@@ -16,7 +16,7 @@ class Parser
 public:
     explicit Parser(std::vector<Lexeme> lexemes);
 
-    std::shared_ptr<ast::RootObject> parse();
+    boost::local_shared_ptr<ast::RootObject> parse();
 
 private:
     /// @throws std::out_of_range
@@ -36,10 +36,10 @@ private:
     bool has_next() const noexcept;
 
     /// @return true if statement is raw block
-    static bool is_block(const boost::intrusive_ptr<ast::Object>& statement) noexcept;
+    static bool is_block(const boost::local_shared_ptr<ast::Object>& statement) noexcept;
 
     /// @return true if statement is block-based statement, but not block
-    static bool is_block_statement(const boost::intrusive_ptr<ast::Object>& statement) noexcept;
+    static bool is_block_statement(const boost::local_shared_ptr<ast::Object>& statement) noexcept;
 
     /// @brief  get current token and match with one of samples
     /// @return correct lexeme, std::nullopt if input find no more tokens
@@ -50,88 +50,81 @@ private:
     Lexeme require(const std::vector<lexeme_t>& expected_types);
 
     /// @brief main parse function
-    boost::intrusive_ptr<ast::Object> primary();
+    boost::local_shared_ptr<ast::Object> primary();
 
     /// @return array parse tree
-    boost::intrusive_ptr<ast::Object> array();
+    boost::local_shared_ptr<ast::Object> array();
 
     /// @return parse tree if ptr is additive operation, unchanged ptr otherwise
-    boost::intrusive_ptr<ast::Object> additive();
+    boost::local_shared_ptr<ast::Object> additive();
 
     /// @return parse tree if ptr is multiplicative operation, unchanged ptr otherwise
-    boost::intrusive_ptr<ast::Object> multiplicative();
+    boost::local_shared_ptr<ast::Object> multiplicative();
 
     /// @note   this function does not check operation types
     /// @pre    previous() returns number or symbol lexeme
     /// @post   previous() returns first lexeme after parsed binary expression
     /// @return binary parse tree
-    boost::intrusive_ptr<ast::Object> binary(const boost::intrusive_ptr<ast::Object>& ptr);
+    boost::local_shared_ptr<ast::Object> binary(const boost::local_shared_ptr<ast::Object>& ptr);
 
     /// @pre    previous() returns unary operator
     /// @post   previous() returns first lexeme after parsed unary expression
-    boost::intrusive_ptr<ast::Object> unary();
+    boost::local_shared_ptr<ast::Object> unary();
 
     /// @pre    previous() returns '{' lexeme
     /// @post   current() returns '}' lexeme
     /// @return block parse tree of recursively parsed expressions
-    boost::intrusive_ptr<ast::Block> block();
+    boost::local_shared_ptr<ast::Block> block();
 
     /// @pre    previous() returns 'if' lexeme
     /// @post   previous() returns first lexeme after parsed if
     /// @return if parse tree with or without else block
-    boost::intrusive_ptr<ast::Object> if_statement();
+    boost::local_shared_ptr<ast::Object> if_statement();
 
     /// @pre    previous() returns 'while' lexeme
     /// @post   previous() returns first lexeme after parsed while
     /// @return while parse tree
-    boost::intrusive_ptr<ast::Object> while_statement();
+    boost::local_shared_ptr<ast::Object> while_statement();
 
     /// @note   any number of C-style for blocks (for ( 1 ; 2 ; 3 )) can be empty
     /// @pre    previous() returns 'for' lexeme
     /// @post   previous() returns first lexeme after parsed for
     /// @return for parse tree
-    boost::intrusive_ptr<ast::Object> for_statement();
+    boost::local_shared_ptr<ast::Object> for_statement();
 
     /// @pre    previous() returns 'fun' lexeme
     /// @post   previous() returns first lexeme after function declaration
     /// @return function parse tree that contains function name, argument list and body (block)
-    boost::intrusive_ptr<ast::Object> function_declare_statement();
+    boost::local_shared_ptr<ast::Object> function_declare_statement();
 
     /// @pre    previous() returns 'define-type' lexeme
     /// @post   previous() returns first lexeme after type definition
     /// @return parsed type definition with only field names
-    boost::intrusive_ptr<ast::Object> define_type_statement();
+    boost::local_shared_ptr<ast::Object> define_type_statement();
 
     /// @pre    previous() returns '(' lexeme
     /// @post   previous() returns ')' lexeme
     /// @return correct function argument list
-    std::vector<boost::intrusive_ptr<ast::Object>> resolve_function_arguments();
+    std::vector<boost::local_shared_ptr<ast::Object>> resolve_function_arguments();
 
     /// @pre    previous() returns symbol lexeme
     /// @post   previous() returns ')' lexeme if function call argument processed, symbol lexeme otherwise
     /// @return symbol object, function call object if '(' token placed after symbol
-    boost::intrusive_ptr<ast::Object> resolve_symbol();
+    boost::local_shared_ptr<ast::Object> resolve_symbol();
 
     /// @pre    previous() returns symbol lexeme
     /// @post   previous() returns ']' lexeme
     /// @return array subscript parse tree
-    boost::intrusive_ptr<ast::Object> resolve_array_subscript();
+    boost::local_shared_ptr<ast::Object> resolve_array_subscript();
 
     template <typename T, typename... Args>
-    auto pool_allocate(Args&&... args)
+    boost::local_shared_ptr<T> pool_allocate(Args&&... args)
     {
-        return std::allocate_shared<T, decltype(m_pool_allocator)>(m_pool_allocator, std::forward<Args>(args)...);
+        return boost::make_local_shared<T>(std::forward<Args>(args)...);
     }
 
-    boost::pool_allocator<
-        ast::Object,
-        boost::default_user_allocator_new_delete,
-        boost::details::pool::default_mutex,
-        16,
-        std::numeric_limits<int>::max() /// I don't know how it works
-    > m_pool_allocator;
     std::vector<Lexeme> m_input;
     std::size_t m_current_index;
 };
 
-#endif // PARSER_HPP
+#endif // WEAK_PARSER_HPP

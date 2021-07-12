@@ -1,5 +1,5 @@
-#ifndef EVAL_TESTS_HPP
-#define EVAL_TESTS_HPP
+#ifndef WEAK_TESTS_INTERPRETER_HPP
+#define WEAK_TESTS_INTERPRETER_HPP
 
 #include "../parser/parser.hpp"
 #include "../eval/eval.hpp"
@@ -309,4 +309,4 @@ void eval_speed_tests()
 )");
 }
 
-#endif // EVAL_TESTS_HPP
+#endif // WEAK_TESTS_INTERPRETER_HPP

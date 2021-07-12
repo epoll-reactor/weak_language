@@ -1,5 +1,5 @@
-#ifndef TEST_GRAMMAR_HPP
-#define TEST_GRAMMAR_HPP
+#ifndef  WEAK_GRAMMAR_HPP
+#define  WEAK_GRAMMAR_HPP
 
 #include <unordered_map>
 
@@ -68,4 +68,4 @@ static inline const std::unordered_map<std::string, lexeme_t> test_operators {
     {"]", lexeme_t::right_box_brace},
 };
 
-#endif //TEST_GRAMMAR_HPP
+#endif // WEAK_GRAMMAR_HPP

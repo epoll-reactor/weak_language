@@ -1,29 +1,31 @@
+#include <utility>
+
 #include "../../include/ast/ast.hpp"
 
 namespace ast {
 
-If::If(boost::intrusive_ptr<Object> exit_condition, boost::intrusive_ptr<Block> body)
-    : m_exit_condition(exit_condition)
-    , m_body(body)
+If::If(boost::local_shared_ptr<Object> exit_condition, boost::local_shared_ptr<Block> body)
+    : m_exit_condition(std::move(exit_condition))
+    , m_body(std::move(body))
 { }
 
-If::If(boost::intrusive_ptr<Object> exit_condition, boost::intrusive_ptr<Block> body, boost::intrusive_ptr<Block> else_body)
-    : m_exit_condition(exit_condition)
-    , m_body(body)
-    , m_else_body(else_body)
+If::If(boost::local_shared_ptr<Object> exit_condition, boost::local_shared_ptr<Block> body, boost::local_shared_ptr<Block> else_body)
+    : m_exit_condition(std::move(exit_condition))
+    , m_body(std::move(body))
+    , m_else_body(std::move(else_body))
 { }
 
-const boost::intrusive_ptr<Object>& If::condition() const noexcept
+const boost::local_shared_ptr<Object>& If::condition() const noexcept
 {
     return m_exit_condition;
 }
 
-const boost::intrusive_ptr<Block>& If::body() const noexcept
+const boost::local_shared_ptr<Block>& If::body() const noexcept
 {
     return m_body;
 }
 
-const boost::intrusive_ptr<Block>& If::else_body() const noexcept
+const boost::local_shared_ptr<Block>& If::else_body() const noexcept
 {
     return m_else_body;
 }

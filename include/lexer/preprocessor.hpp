@@ -1,5 +1,5 @@
-#ifndef PREPROCESSOR_HPP
-#define PREPROCESSOR_HPP
+#ifndef WEAK_LEXER_PREPROCESSOR_HPP
+#define WEAK_LEXER_PREPROCESSOR_HPP
 
 #include <string>
 
@@ -7,4 +7,4 @@
 /// @return recursively expanded file contents
 std::string preprocess_file(std::string_view filename);
 
-#endif // PREPROCESSOR_HPP
+#endif // WEAK_LEXER_PREPROCESSOR_HPP

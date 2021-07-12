@@ -1,10 +1,12 @@
+#include <utility>
+
 #include "../../include/ast/ast.hpp"
 
 namespace ast {
 
-ArraySubscriptOperator::ArraySubscriptOperator(std::string_view name, boost::intrusive_ptr<Object> index)
+ArraySubscriptOperator::ArraySubscriptOperator(std::string_view name, boost::local_shared_ptr<Object> index)
     : m_name(name)
-    , m_index(index)
+    , m_index(std::move(index))
 { }
 
 const std::string& ArraySubscriptOperator::symbol_name() const noexcept
@@ -12,7 +14,7 @@ const std::string& ArraySubscriptOperator::symbol_name() const noexcept
     return m_name;
 }
 
-const boost::intrusive_ptr<Object>& ArraySubscriptOperator::index() const noexcept
+const boost::local_shared_ptr<Object>& ArraySubscriptOperator::index() const noexcept
 {
     return m_index;
 }

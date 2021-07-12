@@ -1,13 +1,17 @@
-#ifndef SEMANTIC_ANALYZER_TESTS_HPP
-#define SEMANTIC_ANALYZER_TESTS_HPP
+#ifndef WEAK_TESTS_SEMANTIC_HPP
+#define WEAK_TESTS_SEMANTIC_HPP
 
 #include "../lexer/lexer.hpp"
 #include "../semantic/semantic_analyzer.hpp"
 #include "../parser/parser.hpp"
 
+#include "../tests/test_utility.hpp"
+
+#include <sstream>
+
 namespace semantic_detail {
 
-std::shared_ptr<ast::RootObject> create_parse_tree(std::string_view data)
+boost::local_shared_ptr<ast::RootObject> create_parse_tree(std::string_view data)
 {
     Lexer lexer(std::istringstream{data.data()});
 
@@ -19,7 +23,7 @@ std::shared_ptr<ast::RootObject> create_parse_tree(std::string_view data)
 void expect_error(std::string_view data)
 {
     trace_error(data, [&data]{
-        const std::shared_ptr<ast::RootObject> parsed_trees = create_parse_tree(data);
+        const boost::local_shared_ptr<ast::RootObject> parsed_trees = create_parse_tree(data);
 
         SemanticAnalyzer analyzer(parsed_trees);
 
@@ -32,7 +36,7 @@ void expect_error(std::string_view data)
 
 void assert_correct(std::string_view data)
 {
-    const std::shared_ptr<ast::RootObject> parsed_trees = create_parse_tree(data);
+    const boost::local_shared_ptr<ast::RootObject> parsed_trees = create_parse_tree(data);
 
     SemanticAnalyzer analyzer(parsed_trees);
     analyzer.analyze();
@@ -101,4 +105,4 @@ void run_semantic_analyzer_tests()
     std::cout << "Semantic analyzer tests passed successfully\n";
 }
 
-#endif // SEMANTIC_ANALYZER_TESTS_HPP
+#endif // WEAK_TESTS_SEMANTIC_HPP

@@ -1,5 +1,5 @@
-#ifndef LEXICAL_ERROR_HPP
-#define LEXICAL_ERROR_HPP
+#ifndef WEAK_ERROR_LEXICAL_ERROR_HPP
+#define WEAK_ERROR_LEXICAL_ERROR_HPP
 
 #include <stdexcept>
 
@@ -10,4 +10,4 @@ struct LexicalError : public std::runtime_error
     { }
 };
 
-#endif //LEXICAL_ERROR_HPP
+#endif //WEAK_ERROR_LEXICAL_ERROR_HPP

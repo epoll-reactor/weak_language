@@ -20,11 +20,11 @@ ALWAYS_INLINE static bool is_datatype(const ast::Object* object) noexcept
         || object->ast_type() == ast::ast_type_t::ARRAY;
 }
 
-Evaluator::Evaluator(const std::shared_ptr<ast::RootObject>& program)
+Evaluator::Evaluator(const boost::local_shared_ptr<ast::RootObject>& program)
 {
     for (const auto& stmt : program->get())
     {
-        m_expressions.emplace_back(stmt.get());
+        m_expressions.emplace_back(stmt);
     }
 }
 
@@ -44,7 +44,7 @@ void Evaluator::eval()
     call_function("main", {});
 }
 
-boost::intrusive_ptr<ast::Object> Evaluator::call_function(std::string_view name, const std::vector<boost::intrusive_ptr<ast::Object>>& evaluated_args)
+boost::local_shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, const std::vector<boost::local_shared_ptr<ast::Object>>& evaluated_args)
 {
     auto stored_function = m_storage.lookup(name.data());
     if (stored_function->ast_type() != ast::ast_type_t::FUNCTION) { throw EvalError("Try to call not a function"); }
@@ -54,7 +54,7 @@ boost::intrusive_ptr<ast::Object> Evaluator::call_function(std::string_view name
     if (UNLIKELY(function->arguments().size() != evaluated_args.size()))
         throw EvalError("Wrong arguments size");
 
-    boost::intrusive_ptr<ast::Object> last_statement;
+    boost::local_shared_ptr<ast::Object> last_statement;
 
     m_storage.scope_begin();
 
@@ -72,7 +72,7 @@ boost::intrusive_ptr<ast::Object> Evaluator::call_function(std::string_view name
         return {};
 }
 
-boost::intrusive_ptr<ast::Object> Evaluator::eval_function_call(const boost::intrusive_ptr<ast::FunctionCall>& function_call)
+boost::local_shared_ptr<ast::Object> Evaluator::eval_function_call(const boost::local_shared_ptr<ast::FunctionCall>& function_call)
 {
     auto arguments = function_call->arguments();
 
@@ -93,7 +93,7 @@ boost::intrusive_ptr<ast::Object> Evaluator::eval_function_call(const boost::int
     return call_function(function_call->name(), arguments);
 }
 
-void Evaluator::eval_block(const boost::intrusive_ptr<ast::Block>& block)
+void Evaluator::eval_block(const boost::local_shared_ptr<ast::Block>& block)
 {
     m_storage.scope_begin();
 
@@ -103,7 +103,7 @@ void Evaluator::eval_block(const boost::intrusive_ptr<ast::Block>& block)
     m_storage.scope_end();
 }
 
-boost::intrusive_ptr<ast::Object> Evaluator::eval_binary(const boost::intrusive_ptr<ast::Binary>& binary)
+boost::local_shared_ptr<ast::Object> Evaluator::eval_binary(const boost::local_shared_ptr<ast::Binary>& binary)
 {
     if (binary->type() == lexeme_t::assign)
     {
@@ -119,17 +119,17 @@ boost::intrusive_ptr<ast::Object> Evaluator::eval_binary(const boost::intrusive_
     ast::ast_type_t lhs_binary_type = lhs->ast_type();
     ast::ast_type_t rhs_binary_type = rhs->ast_type();
 
-    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::INTEGER) { return internal::i_i_binary_implementation(binary->type(), lhs.get(), rhs.get()); }
-    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::FLOAT)   { return internal::i_f_binary_implementation(binary->type(), lhs.get(), rhs.get()); }
-    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::INTEGER) { return internal::f_i_binary_implementation(binary->type(), lhs.get(), rhs.get()); }
-    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::FLOAT)   { return internal::f_f_binary_implementation(binary->type(), lhs.get(), rhs.get()); }
+    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::INTEGER) { return internal::i_i_binary_implementation(binary->type(), lhs, rhs); }
+    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::FLOAT)   { return internal::i_f_binary_implementation(binary->type(), lhs, rhs); }
+    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::INTEGER) { return internal::f_i_binary_implementation(binary->type(), lhs, rhs); }
+    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::FLOAT)   { return internal::f_f_binary_implementation(binary->type(), lhs, rhs); }
 
     throw EvalError("Unknown binary expr");
 }
 
-boost::intrusive_ptr<ast::Object> Evaluator::eval_unary(const boost::intrusive_ptr<ast::Unary>& unary)
+boost::local_shared_ptr<ast::Object> Evaluator::eval_unary(const boost::local_shared_ptr<ast::Unary>& unary)
 {
-    auto operand = unary->operand();
+    boost::local_shared_ptr<ast::Object> operand = unary->operand();
     lexeme_t type = unary->type();
     ast::ast_type_t ast_type = operand->ast_type();
 
@@ -137,20 +137,20 @@ boost::intrusive_ptr<ast::Object> Evaluator::eval_unary(const boost::intrusive_p
     if (unary_result) { return unary_result; }
 
     if (ast_type != ast::ast_type_t::SYMBOL) { throw EvalError("Unknown unary operand type"); }
-    std::string name = boost::static_pointer_cast<ast::Symbol>(operand)->name();
-    auto symbol = m_storage.lookup(name);
-    m_storage.overwrite(name, internal::unary_implementation(symbol->ast_type(), type, symbol));
+    auto variable = boost::static_pointer_cast<ast::Symbol>(operand);
+    auto symbol = m_storage.lookup(variable->name());
+    m_storage.overwrite(variable->name(), internal::unary_implementation(symbol->ast_type(), type, symbol));
 
     return symbol;
 }
 
-void Evaluator::eval_array(const boost::intrusive_ptr<ast::Array>& array)
+void Evaluator::eval_array(const boost::local_shared_ptr<ast::Array>& array)
 {
     for (auto& element : array->elements())
         element = eval_expression(element);
 }
 
-boost::intrusive_ptr<ast::Object> Evaluator::eval_array_subscript(const boost::intrusive_ptr<ast::ArraySubscriptOperator>& argument)
+boost::local_shared_ptr<ast::Object> Evaluator::eval_array_subscript(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& argument)
 {
     auto array_object = m_storage.lookup(argument->symbol_name());
     if (array_object->ast_type() != ast::ast_type_t::ARRAY) { throw EvalError("Try to subscript non-array expression"); }
@@ -168,7 +168,7 @@ boost::intrusive_ptr<ast::Object> Evaluator::eval_array_subscript(const boost::i
     return casted_array->elements().at(numeric_index);
 }
 
-void Evaluator::eval_for(const boost::intrusive_ptr<ast::For>& for_stmt)
+void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& for_stmt)
 {
     m_storage.scope_begin();
 
@@ -191,7 +191,7 @@ void Evaluator::eval_for(const boost::intrusive_ptr<ast::For>& for_stmt)
     m_storage.scope_end();
 }
 
-void Evaluator::eval_while(const boost::intrusive_ptr<ast::While>& while_stmt)
+void Evaluator::eval_while(const boost::local_shared_ptr<ast::While>& while_stmt)
 {
     auto initial_exit_condition = eval_expression(while_stmt->exit_condition());
     ast::ast_type_t exit_condition_type = initial_exit_condition->ast_type();
@@ -220,7 +220,7 @@ void Evaluator::eval_while(const boost::intrusive_ptr<ast::While>& while_stmt)
     }
 }
 
-void Evaluator::eval_if(const boost::intrusive_ptr<ast::If>& if_stmt)
+void Evaluator::eval_if(const boost::local_shared_ptr<ast::If>& if_stmt)
 {
     auto if_condition = eval_expression(if_stmt->condition());
 
@@ -234,7 +234,7 @@ void Evaluator::eval_if(const boost::intrusive_ptr<ast::If>& if_stmt)
     }
 }
 
-boost::intrusive_ptr<ast::Object> Evaluator::eval_expression(const boost::intrusive_ptr<ast::Object>& expression)
+boost::local_shared_ptr<ast::Object> Evaluator::eval_expression(const boost::local_shared_ptr<ast::Object>& expression)
 {
     ast::ast_type_t expr_type = expression->ast_type();
 
