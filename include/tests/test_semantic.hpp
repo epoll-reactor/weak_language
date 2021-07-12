@@ -4,7 +4,6 @@
 #include "../lexer/lexer.hpp"
 #include "../semantic/semantic_analyzer.hpp"
 #include "../parser/parser.hpp"
-#include "../tests/test_utility.hpp"
 
 namespace semantic_detail {
 

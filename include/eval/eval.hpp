@@ -3,7 +3,7 @@
 
 #include <boost/pool/pool_alloc.hpp>
 
-#include "../parser/ast.hpp"
+#include "../ast/ast.hpp"
 #include "../storage/storage.hpp"
 
 class Evaluator

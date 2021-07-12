@@ -1,8 +1,8 @@
 #ifndef SEMANTIC_ANALYZER_HPP
 #define SEMANTIC_ANALYZER_HPP
 
-#include "../parser/ast.hpp"
-#include "../semantic/semantic_error.hpp"
+#include "../ast/ast.hpp"
+#include "../error/semantic_error.hpp"
 #include "../storage/storage.hpp"
 
 class SemanticAnalyzer

@@ -4,8 +4,7 @@
 #include <functional>
 #include <optional>
 
-#include "../parser/ast.hpp"
-#include "../eval/eval_error.hpp"
+#include "../ast/ast.hpp"
 
 using builtin_function_t = std::function<std::optional<boost::intrusive_ptr<ast::Object>>(const std::vector<boost::intrusive_ptr<ast::Object>>&)>;
 

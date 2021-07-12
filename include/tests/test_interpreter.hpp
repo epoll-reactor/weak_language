@@ -1,10 +1,9 @@
 #ifndef EVAL_TESTS_HPP
 #define EVAL_TESTS_HPP
 
-#include "../lexer/lexer_builder.hpp"
 #include "../parser/parser.hpp"
 #include "../eval/eval.hpp"
-#include "../eval/eval_error.hpp"
+#include "../error/eval_error.hpp"
 
 extern std::ostream& default_stdout;
 

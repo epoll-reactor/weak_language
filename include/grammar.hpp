@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 
-#include "../lexer/lexeme.hpp"
+#include "lexer/lexeme.hpp"
 
 static inline const std::unordered_map<std::string, lexeme_t> test_keywords {
     {"for", lexeme_t::kw_for},

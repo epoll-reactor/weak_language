@@ -1,18 +1,13 @@
 #ifndef LEXER_TESTS_HPP
 #define LEXER_TESTS_HPP
 
-#include <cassert>
+#include <sstream>
 #include <iomanip>
-#include <cstring>
-#include <iterator>
 #include <random>
-#include <chrono>
 
 #include "../lexer/lexer.hpp"
-#include "../lexer/lexer_builder.hpp"
-#include "../tests/grammar.hpp"
+#include "../grammar.hpp"
 #include "../tests/test_utility.hpp"
-
 
 namespace lexer_detail {
 

@@ -1,8 +1,12 @@
-#include "../../include/lexer/lexer_builder.hpp"
+#include <sstream>
+
+#include "../../include/grammar.hpp"
 #include "../../include/lexer/lexer.hpp"
 
 Lexer::Lexer(std::istringstream data)
     : m_input(std::istreambuf_iterator<char>(data), std::istreambuf_iterator<char>())
+    , m_operators(test_operators)
+    , m_keywords(test_keywords)
 { }
 
 char Lexer::current() const

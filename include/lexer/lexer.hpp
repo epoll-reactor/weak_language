@@ -1,13 +1,11 @@
 #ifndef LEXER_HPP
 #define LEXER_HPP
 
-#include <sstream>
 #include <vector>
 #include <unordered_map>
 
 #include "lexeme.hpp"
-#include "lexical_error.hpp"
-#include "../../include/tests/grammar.hpp"
+#include "../error/lexical_error.hpp"
 
 /// Lexical analyzer. Keywords and accepted operators configured by user.
 ///
@@ -66,8 +64,8 @@ private:
     /// @return the longest parsed operator
     Lexeme process_operator();
 
-    const std::unordered_map<std::string, lexeme_t>& m_keywords = test_keywords;
-    const std::unordered_map<std::string, lexeme_t>& m_operators = test_operators;
+    const std::unordered_map<std::string, lexeme_t>& m_keywords;
+    const std::unordered_map<std::string, lexeme_t>& m_operators;
 
     std::size_t m_current_index{0};
     std::vector<char> m_input;

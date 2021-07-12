@@ -7,10 +7,9 @@
 
 #include <boost/intrusive_ptr.hpp>
 
-#include "crc32.hpp"
-
-#include "../parser/ast.hpp"
-#include "../semantic/semantic_error.hpp"
+#include "../crc32.hpp"
+#include "../ast/ast.hpp"
+#include "../error/semantic_error.hpp"
 
 class Storage
 {

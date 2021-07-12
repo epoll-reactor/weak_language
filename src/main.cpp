@@ -1,11 +1,12 @@
 #include <iostream>
+#include <cstring>
 
 #include "../include/lexer/preprocessor.hpp"
 
-#include "../include/tests/lexer_tests.hpp"
-#include "../include/tests/semantic_analyzer_tests.hpp"
-#include "../include/tests/storage_tests.hpp"
-#include "../include/tests/eval_tests.hpp"
+#include "../include/tests/test_lexer.hpp"
+#include "../include/tests/test_semantic.hpp"
+#include "../include/tests/test_storage.hpp"
+#include "../include/tests/test_interpreter.hpp"
 
 std::ostringstream ostream_buffer;
 std::ostream& default_stdout = ostream_buffer;
@@ -83,7 +84,7 @@ int main(int argc, char* argv[])
     {
         if (strcmp(argv[1], "test") == 0)
         {
-            #define tests_to_run 1
+            #define tests_to_run 10
             std::array<float, tests_to_run> times;
 
             for (int i = 0; i < tests_to_run; ++i)

@@ -1,4 +1,4 @@
-#include "../../include/parser/ast.hpp"
+#include "../../include/ast/ast.hpp"
 
 namespace ast {
 

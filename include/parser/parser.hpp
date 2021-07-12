@@ -6,8 +6,8 @@
 #include <boost/pool/pool_alloc.hpp>
 
 #include "../lexer/lexeme.hpp"
-#include "../parser/ast.hpp"
-#include "../parser/parse_error.hpp"
+#include "../ast/ast.hpp"
+#include "../error/parse_error.hpp"
 
 
 /// LL Syntax analyzer.

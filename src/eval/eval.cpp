@@ -1,11 +1,14 @@
 #include <variant>
 #include <array>
 
+#include "../../include/eval/implementation/unary.hpp"
+#include "../../include/eval/implementation/binary.hpp"
+
 #include "../../include/common_defs.hpp"
 
 #include "../../include/eval/eval.hpp"
-#include "../../include/eval/builtins.hpp"
-
+#include "../../include/error/eval_error.hpp"
+#include "../../include/std/builtins.hpp"
 
 ALWAYS_INLINE static bool is_datatype(const ast::Object* object) noexcept
 {
@@ -100,83 +103,6 @@ void Evaluator::eval_block(const boost::intrusive_ptr<ast::Block>& block)
     m_storage.scope_end();
 }
 
-template <typename LeftOperand, typename RightOperand>
-ALWAYS_INLINE static bool comparison_implementation(lexeme_t type, LeftOperand l, RightOperand r)
-{
-    switch (type)
-    {
-        case lexeme_t::eq:      return l == r;
-        case lexeme_t::neq:     return l != r;
-        case lexeme_t::ge:      return l >= r;
-        case lexeme_t::gt:      return l > r;
-        case lexeme_t::le:      return l <= r;
-        case lexeme_t::lt:      return l < r;
-        default:
-            throw EvalError("Incorrect binary expression");
-    }
-}
-
-template <typename LeftFloatingPoint, typename RightFloatingPoint>
-ALWAYS_INLINE static double floating_point_arithmetic_implementation(lexeme_t type, LeftFloatingPoint l, RightFloatingPoint r)
-{
-    switch (type)
-    {
-        case lexeme_t::plus:    return l + r;
-        case lexeme_t::minus:   return l - r;
-        case lexeme_t::star:    return l * r;
-        case lexeme_t::slash:   return l / r;
-        default:
-            return comparison_implementation<LeftFloatingPoint, RightFloatingPoint>(type, l, r);
-    }
-}
-
-template <typename LeftIntegral, typename RightIntegral>
-ALWAYS_INLINE static constexpr int32_t integral_arithmetic_implementation(lexeme_t type, LeftIntegral l, RightIntegral r)
-{
-    switch (type)
-    {
-        case lexeme_t::plus:    return l + r;
-        case lexeme_t::minus:   return l - r;
-        case lexeme_t::star:    return l * r;
-        case lexeme_t::slash:   return l / r;
-        case lexeme_t::mod:     return l % r;
-        case lexeme_t::slli:    return l << r;
-        case lexeme_t::srli:    return l >> r;
-        default:
-            return comparison_implementation<LeftIntegral, RightIntegral>(type, l, r);
-    }
-}
-
-template <typename LeftAST, typename RightAST>
-ALWAYS_INLINE static constexpr std::variant<int32_t, double> arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs)
-{
-    if constexpr (std::is_same_v<ast::Integer, LeftAST> && std::is_same_v<ast::Integer, RightAST>)
-        return integral_arithmetic_implementation(
-            type,
-            static_cast<const ast::Integer*>(lhs)->value(),
-            static_cast<const ast::Integer*>(rhs)->value()
-        );
-
-    return floating_point_arithmetic_implementation(
-        type,
-        static_cast<const LeftAST*>(lhs)->value(),
-        static_cast<const RightAST*>(rhs)->value()
-    );
-}
-
-ALWAYS_INLINE static constexpr int32_t i_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
-    return std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(type, lhs, rhs));
-}
-ALWAYS_INLINE static constexpr double i_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
-    return std::get<double>(arithmetic<ast::Integer, ast::Float>(type, lhs, rhs));
-}
-ALWAYS_INLINE static constexpr double f_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
-    return std::get<double>(arithmetic<ast::Float, ast::Integer>(type, lhs, rhs));
-}
-ALWAYS_INLINE static constexpr double f_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
-    return std::get<double>(arithmetic<ast::Float, ast::Float>(type, lhs, rhs));
-}
-
 boost::intrusive_ptr<ast::Object> Evaluator::eval_binary(const boost::intrusive_ptr<ast::Binary>& binary)
 {
     if (binary->type() == lexeme_t::assign)
@@ -193,72 +119,29 @@ boost::intrusive_ptr<ast::Object> Evaluator::eval_binary(const boost::intrusive_
     ast::ast_type_t lhs_binary_type = lhs->ast_type();
     ast::ast_type_t rhs_binary_type = rhs->ast_type();
 
-    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::INTEGER) { return pool_allocate<ast::Integer>(i_i_arithmetic(binary->type(), lhs.get(), rhs.get())); }
-    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::FLOAT)   { return pool_allocate<ast::Float>  (i_f_arithmetic(binary->type(), lhs.get(), rhs.get())); }
-    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::INTEGER) { return pool_allocate<ast::Float>  (f_i_arithmetic(binary->type(), lhs.get(), rhs.get())); }
-    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::FLOAT)   { return pool_allocate<ast::Float>  (f_f_arithmetic(binary->type(), lhs.get(), rhs.get())); }
+    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::INTEGER) { return internal::i_i_binary_implementation(binary->type(), lhs.get(), rhs.get()); }
+    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::FLOAT)   { return internal::i_f_binary_implementation(binary->type(), lhs.get(), rhs.get()); }
+    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::INTEGER) { return internal::f_i_binary_implementation(binary->type(), lhs.get(), rhs.get()); }
+    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::FLOAT)   { return internal::f_f_binary_implementation(binary->type(), lhs.get(), rhs.get()); }
 
     throw EvalError("Unknown binary expr");
-}
-
-ALWAYS_INLINE static void integral_unary_implementation(lexeme_t type, int32_t& unary)
-{
-    if (  LIKELY(type == lexeme_t::inc)) { ++unary; return; }
-    if (UNLIKELY(type == lexeme_t::dec)) { --unary; return; }
-    throw EvalError("Unknown unary operator");
-}
-
-ALWAYS_INLINE static void floating_point_unary_implementation(lexeme_t type, double& unary)
-{
-    if (  LIKELY(type == lexeme_t::inc)) { ++unary; return; }
-    if (UNLIKELY(type == lexeme_t::dec)) { --unary; return; }
-    throw EvalError("Unknown unary operator");
-}
-
-ALWAYS_INLINE static boost::intrusive_ptr<ast::Object> unary_implementation(lexeme_t unary_type, ast::ast_type_t ast_type, const boost::intrusive_ptr<ast::Object>& unary)
-{
-    if (ast_type == ast::ast_type_t::INTEGER)
-    {
-        int& value = boost::static_pointer_cast<ast::Integer>(unary)->value();
-        integral_unary_implementation(unary_type, value);
-
-        return unary;
-    }
-
-    if (ast_type == ast::ast_type_t::FLOAT)
-    {
-        double& value = boost::static_pointer_cast<ast::Float>(unary)->value();
-        floating_point_unary_implementation(unary_type, value);
-
-        return unary;
-    }
-
-    return nullptr;
 }
 
 boost::intrusive_ptr<ast::Object> Evaluator::eval_unary(const boost::intrusive_ptr<ast::Unary>& unary)
 {
     auto operand = unary->operand();
-    auto unary_type = unary->type();
+    lexeme_t type = unary->type();
     ast::ast_type_t ast_type = operand->ast_type();
 
-    if (auto result = unary_implementation(unary_type, ast_type, operand))
-    {
-        return result;
-    }
+    auto unary_result = internal::unary_implementation(ast_type, type, operand);
+    if (unary_result) { return unary_result; }
 
-    if (ast_type == ast::ast_type_t::SYMBOL)
-    {
-        std::string name = boost::static_pointer_cast<ast::Symbol>(operand)->name();
+    if (ast_type != ast::ast_type_t::SYMBOL) { throw EvalError("Unknown unary operand type"); }
+    std::string name = boost::static_pointer_cast<ast::Symbol>(operand)->name();
+    auto symbol = m_storage.lookup(name);
+    m_storage.overwrite(name, internal::unary_implementation(symbol->ast_type(), type, symbol));
 
-        auto symbol = m_storage.lookup(name);
-        m_storage.overwrite(name,
-            unary_implementation(unary_type, symbol->ast_type(), symbol));
-
-        return symbol;
-    }
-
-    throw EvalError("Unknown unary operand type");
+    return symbol;
 }
 
 void Evaluator::eval_array(const boost::intrusive_ptr<ast::Array>& array)
