@@ -1,13 +1,12 @@
 #ifndef WEAK_TESTS_LEXER_HPP
 #define WEAK_TESTS_LEXER_HPP
 
+#include "../lexer/lexer.hpp"
+#include "../tests/test_utility.hpp"
+
 #include <sstream>
 #include <iomanip>
 #include <random>
-
-#include "../lexer/lexer.hpp"
-#include "../grammar.hpp"
-#include "../tests/test_utility.hpp"
 
 namespace lexer_detail {
 

@@ -1,8 +1,6 @@
 #ifndef WEAK_CRC32_HPP
 #define WEAK_CRC32_HPP
 
-#include <functional>
-
 namespace crc32 {
 
 static constexpr unsigned long lookup_table[256] = {

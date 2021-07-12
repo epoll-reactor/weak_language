@@ -1,11 +1,11 @@
 #ifndef WEAK_LEXER_HPP
 #define WEAK_LEXER_HPP
 
+#include "../error/lexical_error.hpp"
+#include "../lexer/lexeme.hpp"
+
 #include <vector>
 #include <unordered_map>
-
-#include "lexeme.hpp"
-#include "../error/lexical_error.hpp"
 
 /// Lexical analyzer. Keywords and accepted operators configured by user.
 ///

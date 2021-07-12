@@ -1,12 +1,12 @@
-#include <iostream>
-#include <cstring>
-
 #include "../include/lexer/preprocessor.hpp"
 
+#include "../include/tests/test_interpreter.hpp"
 #include "../include/tests/test_lexer.hpp"
 #include "../include/tests/test_semantic.hpp"
 #include "../include/tests/test_storage.hpp"
-#include "../include/tests/test_interpreter.hpp"
+
+#include <iostream>
+#include <cstring>
 
 std::ostringstream ostream_buffer;
 std::ostream& default_stdout = ostream_buffer;

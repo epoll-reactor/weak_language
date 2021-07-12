@@ -1,12 +1,13 @@
 #ifndef WEAK_AST_HPP
 #define WEAK_AST_HPP
 
+#include "../lexer/lexeme.hpp"
+
 #include <boost/smart_ptr/local_shared_ptr.hpp>
 #include <boost/smart_ptr/make_local_shared.hpp>
-#include <memory>
-#include <vector>
 
-#include "../lexer/lexeme.hpp"
+#include <vector>
+#include <memory>
 
 namespace ast {
 
@@ -17,11 +18,6 @@ class Object
 public:
     virtual ast_type_t ast_type() const noexcept { return ast_type_t::OBJECT; }
     virtual ~Object() = default;
-
-    size_t& reference_count() noexcept { return m_reference_counter; }
-
-private:
-    size_t m_reference_counter;
 };
 
 class RootObject
@@ -288,16 +284,6 @@ private:
     std::string m_name;
     std::vector<std::string> m_fields;
 };
-
-inline void local_shared_ptr_release(Object* o) noexcept
-{
-    if (--o->reference_count() == 0) { delete o; }
-}
-
-inline void local_shared_ptr_add_ref(Object* o) noexcept
-{
-    ++o->reference_count();
-}
 
 } // namespace ast
 

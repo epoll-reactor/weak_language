@@ -1,10 +1,10 @@
 #ifndef WEAK_EVAL_HPP
 #define WEAK_EVAL_HPP
 
-#include <boost/pool/pool_alloc.hpp>
-
 #include "../ast/ast.hpp"
 #include "../storage/storage.hpp"
+
+#include <boost/pool/pool_alloc.hpp>
 
 class Evaluator
 {

@@ -32,4 +32,4 @@ set(CMAKE_CXX_FLAGS "${common_flags} ${find_leaks_flags} ${extra_warnings_flags}
 
 
 file(GLOB_RECURSE SRC include/*.hpp src/*.cpp)
-add_executable(WeakLanguage ${SRC} include/eval/implementation/binary.hpp include/eval/implementation/unary.hpp src/eval/implementation/unary.cpp src/eval/implementation/binary.cpp)
+add_executable(WeakLanguage ${SRC} include/eval/implementation/binary.hpp include/eval/implementation/unary.hpp src/eval/implementation/unary.cpp src/eval/implementation/binary.cpp src/storage/storage.cpp)

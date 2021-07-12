@@ -3,7 +3,6 @@
 
 #include <string>
 
-
 enum struct lexeme_t
 {
     dot,            // .

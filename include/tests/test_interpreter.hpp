@@ -1,9 +1,16 @@
 #ifndef WEAK_TESTS_INTERPRETER_HPP
 #define WEAK_TESTS_INTERPRETER_HPP
 
-#include "../parser/parser.hpp"
-#include "../eval/eval.hpp"
 #include "../error/eval_error.hpp"
+#include "../eval/eval.hpp"
+#include "../lexer/lexer.hpp"
+#include "../parser/parser.hpp"
+#include "../semantic/semantic_analyzer.hpp"
+
+#include "../tests/test_utility.hpp"
+
+#include <sstream>
+#include <iostream>
 
 extern std::ostream& default_stdout;
 

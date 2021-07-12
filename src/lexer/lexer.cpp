@@ -1,7 +1,8 @@
-#include <sstream>
+#include "../../include/lexer/lexer.hpp"
 
 #include "../../include/grammar.hpp"
-#include "../../include/lexer/lexer.hpp"
+
+#include <sstream>
 
 Lexer::Lexer(std::istringstream data)
     : m_input(std::istreambuf_iterator<char>(data), std::istreambuf_iterator<char>())

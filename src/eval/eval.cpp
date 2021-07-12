@@ -1,12 +1,9 @@
-#include <variant>
-#include <array>
+#include "../../include/eval/eval.hpp"
 
-#include "../../include/eval/implementation/unary.hpp"
 #include "../../include/eval/implementation/binary.hpp"
+#include "../../include/eval/implementation/unary.hpp"
 
 #include "../../include/common_defs.hpp"
-
-#include "../../include/eval/eval.hpp"
 #include "../../include/error/eval_error.hpp"
 #include "../../include/std/builtins.hpp"
 

@@ -1,9 +1,10 @@
-#include <variant>
+#include "../../../include/eval/implementation/binary.hpp"
 
 #include "../../../include/ast/ast.hpp"
-#include "../../../include/common_defs.hpp"
 #include "../../../include/error/eval_error.hpp"
-#include "../../../include/eval/implementation/binary.hpp"
+#include "../../../include/common_defs.hpp"
+
+#include <variant>
 
 template <typename LeftOperand, typename RightOperand>
 ALWAYS_INLINE static bool comparison_implementation(lexeme_t type, LeftOperand l, RightOperand r) noexcept(false)

@@ -1,15 +1,15 @@
 #ifndef WEAK_TESTS_TEST_UTILITY_HPP
 #define WEAK_TESTS_TEST_UTILITY_HPP
 
-#include <chrono>
-#include <iostream>
-
 #include "../ast/ast.hpp"
-
+#include "../error/eval_error.hpp"
 #include "../error/lexical_error.hpp"
 #include "../error/parse_error.hpp"
 #include "../error/semantic_error.hpp"
-#include "../error/eval_error.hpp"
+
+#include <chrono>
+#include <iostream>
+#include <iomanip>
 
 extern std::ostream& default_stdout;
 

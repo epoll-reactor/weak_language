@@ -1,14 +1,13 @@
 #ifndef WEAK_PARSER_HPP
 #define WEAK_PARSER_HPP
 
-#include <optional>
-
-#include <boost/pool/pool_alloc.hpp>
-
 #include "../lexer/lexeme.hpp"
 #include "../ast/ast.hpp"
 #include "../error/parse_error.hpp"
 
+#include <boost/pool/pool_alloc.hpp>
+
+#include <optional>
 
 /// LL Syntax analyzer.
 class Parser

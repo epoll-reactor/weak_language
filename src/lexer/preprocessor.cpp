@@ -1,10 +1,10 @@
+#include "../../include/lexer/preprocessor.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <vector>
 #include <regex>
 #include <cstring>
-
-#include "../../include/lexer/preprocessor.hpp"
 
 namespace {
 

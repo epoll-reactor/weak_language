@@ -1,9 +1,9 @@
-#ifndef  WEAK_GRAMMAR_HPP
-#define  WEAK_GRAMMAR_HPP
-
-#include <unordered_map>
+#ifndef WEAK_GRAMMAR_HPP
+#define WEAK_GRAMMAR_HPP
 
 #include "lexer/lexeme.hpp"
+
+#include <unordered_map>
 
 static inline const std::unordered_map<std::string, lexeme_t> test_keywords {
     {"for", lexeme_t::kw_for},
