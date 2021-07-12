@@ -264,8 +264,8 @@ void eval_speed_tests()
         });
     };
 
-    run_test("Multiply 1000000 * 1000000 * 1000000 times", R"(
-        fun complex() { for (i = 0; i < 1000000; ++i) { for (j = 0; j < 1000000; ++j) { i * j; } } }
+    run_test("Multiply 1'000'000 * 1'000'000 * 1'000'000 times", R"(
+        fun complex() { for (k = 0; k < 1000000; ++k) { for (j = 0; j < 1000000; ++j) { k * j; } } }
         fun main()    { for (i = 0; i < 1000000; ++i) { complex(); } }
     )");
     run_test("Count elements in array 27x20 1'000'000 times", R"(

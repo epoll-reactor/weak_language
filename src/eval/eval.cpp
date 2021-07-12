@@ -1,11 +1,13 @@
 #include <variant>
 #include <array>
 
+#include "../../include/common_defs.hpp"
+
 #include "../../include/eval/eval.hpp"
 #include "../../include/eval/builtins.hpp"
 
 
-static bool is_datatype(const ast::Object* object) noexcept
+ALWAYS_INLINE static bool is_datatype(const ast::Object* object) noexcept
 {
     if (!object) { return false; }
 
@@ -99,7 +101,7 @@ void Evaluator::eval_block(const boost::intrusive_ptr<ast::Block>& block)
 }
 
 template <typename LeftOperand, typename RightOperand>
-[[gnu::always_inline]] static bool comparison_implementation(lexeme_t type, LeftOperand l, RightOperand r)
+ALWAYS_INLINE static bool comparison_implementation(lexeme_t type, LeftOperand l, RightOperand r)
 {
     switch (type)
     {
@@ -115,7 +117,7 @@ template <typename LeftOperand, typename RightOperand>
 }
 
 template <typename LeftFloatingPoint, typename RightFloatingPoint>
-[[gnu::always_inline]] static double floating_point_arithmetic_implementation(lexeme_t type, LeftFloatingPoint l, RightFloatingPoint r)
+ALWAYS_INLINE static double floating_point_arithmetic_implementation(lexeme_t type, LeftFloatingPoint l, RightFloatingPoint r)
 {
     switch (type)
     {
@@ -129,7 +131,7 @@ template <typename LeftFloatingPoint, typename RightFloatingPoint>
 }
 
 template <typename LeftIntegral, typename RightIntegral>
-[[gnu::always_inline]] static constexpr int32_t integral_arithmetic_implementation(lexeme_t type, LeftIntegral l, RightIntegral r)
+ALWAYS_INLINE static constexpr int32_t integral_arithmetic_implementation(lexeme_t type, LeftIntegral l, RightIntegral r)
 {
     switch (type)
     {
@@ -146,7 +148,7 @@ template <typename LeftIntegral, typename RightIntegral>
 }
 
 template <typename LeftAST, typename RightAST>
-[[gnu::always_inline]] static constexpr std::variant<int32_t, double> arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs)
+ALWAYS_INLINE static constexpr std::variant<int32_t, double> arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs)
 {
     if constexpr (std::is_same_v<ast::Integer, LeftAST> && std::is_same_v<ast::Integer, RightAST>)
         return integral_arithmetic_implementation(
@@ -162,16 +164,16 @@ template <typename LeftAST, typename RightAST>
     );
 }
 
-[[gnu::always_inline]] static constexpr int32_t i_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
+ALWAYS_INLINE static constexpr int32_t i_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(type, lhs, rhs));
 }
-[[gnu::always_inline]] static constexpr double i_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
+ALWAYS_INLINE static constexpr double i_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<double>(arithmetic<ast::Integer, ast::Float>(type, lhs, rhs));
 }
-[[gnu::always_inline]] static constexpr double f_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
+ALWAYS_INLINE static constexpr double f_i_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<double>(arithmetic<ast::Float, ast::Integer>(type, lhs, rhs));
 }
-[[gnu::always_inline]] static constexpr double f_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
+ALWAYS_INLINE static constexpr double f_f_arithmetic(lexeme_t type, const ast::Object* lhs, const ast::Object* rhs) {
     return std::get<double>(arithmetic<ast::Float, ast::Float>(type, lhs, rhs));
 }
 
@@ -199,21 +201,21 @@ boost::intrusive_ptr<ast::Object> Evaluator::eval_binary(const boost::intrusive_
     throw EvalError("Unknown binary expr");
 }
 
-[[gnu::always_inline]] static int32_t integral_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
+ALWAYS_INLINE static int32_t integral_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
 {
     if (type == lexeme_t::inc) { return boost::static_pointer_cast<ast::Integer>(unary)->value() + 1; }
     if (type == lexeme_t::dec) { return boost::static_pointer_cast<ast::Integer>(unary)->value() - 1; }
     throw EvalError("Unknown unary operator");
 }
 
-[[gnu::always_inline]] static double floating_point_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
+ALWAYS_INLINE static double floating_point_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
 {
     if (type == lexeme_t::inc) { return boost::static_pointer_cast<ast::Float>(unary)->value() + 1; }
     if (type == lexeme_t::dec) { return boost::static_pointer_cast<ast::Float>(unary)->value() - 1; }
     throw EvalError("Unknown unary operator");
 }
 
-[[gnu::always_inline]] static boost::intrusive_ptr<ast::Object> unary_implementation(lexeme_t unary_type, ast::ast_type_t ast_type, const boost::intrusive_ptr<ast::Object>& unary)
+ALWAYS_INLINE static boost::intrusive_ptr<ast::Object> unary_implementation(lexeme_t unary_type, ast::ast_type_t ast_type, const boost::intrusive_ptr<ast::Object>& unary)
 {
     if (ast_type == ast::ast_type_t::INTEGER)
     {
