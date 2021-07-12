@@ -264,11 +264,11 @@ void eval_speed_tests()
         });
     };
 
-    run_test("Multiply 1'000'000 times", R"(
-        fun complex() { for (i = 0; i < 1000; ++i) { for (j = 0; j < 1000; ++j) { i * j; } } }
-        fun main()    { for (i = 0; i < 1000; ++i) { complex(); } }
+    run_test("Multiply 1000000 * 1000000 * 1000000 times", R"(
+        fun complex() { for (i = 0; i < 1000000; ++i) { for (j = 0; j < 1000000; ++j) { i * j; } } }
+        fun main()    { for (i = 0; i < 1000000; ++i) { complex(); } }
     )");
-    run_test("Count elements in array 27x20 1000 times", R"(
+    run_test("Count elements in array 27x20 1'000'000 times", R"(
         fun main() {
             array = [
                 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
@@ -294,7 +294,7 @@ void eval_speed_tests()
             ];
 
             ones = 0; zeros = 0;
-            for (tests_count = 0; tests_count < 1000; ++tests_count) {
+            for (tests_count = 0; tests_count < 1000000; ++tests_count) {
                 for (i = 0; i < 540; ++i) {
                     var = array[i];
                     if (var == 1) {

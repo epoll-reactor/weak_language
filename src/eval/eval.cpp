@@ -199,21 +199,21 @@ boost::intrusive_ptr<ast::Object> Evaluator::eval_binary(const boost::intrusive_
     throw EvalError("Unknown binary expr");
 }
 
-static int32_t integral_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
+[[gnu::always_inline]] static int32_t integral_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
 {
     if (type == lexeme_t::inc) { return boost::static_pointer_cast<ast::Integer>(unary)->value() + 1; }
     if (type == lexeme_t::dec) { return boost::static_pointer_cast<ast::Integer>(unary)->value() - 1; }
     throw EvalError("Unknown unary operator");
 }
 
-static double floating_point_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
+[[gnu::always_inline]] static double floating_point_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
 {
     if (type == lexeme_t::inc) { return boost::static_pointer_cast<ast::Float>(unary)->value() + 1; }
     if (type == lexeme_t::dec) { return boost::static_pointer_cast<ast::Float>(unary)->value() - 1; }
     throw EvalError("Unknown unary operator");
 }
 
-static boost::intrusive_ptr<ast::Object> unary_implementation(lexeme_t unary_type, ast::ast_type_t ast_type, const boost::intrusive_ptr<ast::Object>& unary)
+[[gnu::always_inline]] static boost::intrusive_ptr<ast::Object> unary_implementation(lexeme_t unary_type, ast::ast_type_t ast_type, const boost::intrusive_ptr<ast::Object>& unary)
 {
     if (ast_type == ast::ast_type_t::INTEGER)
     {
