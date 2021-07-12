@@ -83,14 +83,15 @@ int main(int argc, char* argv[])
     {
         if (strcmp(argv[1], "test") == 0)
         {
-            run_tests();
-//            std::array<float, 10> times;
+            #define tests_to_run 1
+            std::array<float, tests_to_run> times;
 
-//            for (int i = 0; i < 10; ++i)
-//                times[i] = run_tests();
+            for (int i = 0; i < tests_to_run; ++i)
+                times[i] = run_tests();
 
-//            for (int i = 0; i < 10; ++i)
-//                std::cout << "Test " << i << ": " << times[i] << " s.\n";
+            for (int i = 0; i < tests_to_run; ++i)
+                std::cout << "Test " << i << ": " << times[i] << " s.\n";
+            #undef tests_to_run
         }
         else {
             eval_file(argv[1]);

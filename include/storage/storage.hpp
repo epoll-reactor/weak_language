@@ -36,11 +36,11 @@ public:
 
     void overwrite(std::string_view name, const boost::intrusive_ptr<ast::Object>& value)
     {
-        try {
-            find(name)->payload = value;
-
-        }  catch (SemanticError&) {
-
+        if (auto found = internal_find(name))
+        {
+            found->payload = value;
+        }
+        else {
             push(name, value);
         }
     }
@@ -67,6 +67,16 @@ private:
 
         if (it == m_inner_scopes.end() || it->second.depth > m_scope_depth)
             throw SemanticError("Variable not found: " + std::string(name));
+
+        return &it->second;
+    }
+
+    Storage::StorageRecord* internal_find(std::string_view name) const noexcept
+    {
+        auto it = m_inner_scopes.find(crc32::create(name.data()));
+
+        if (it == m_inner_scopes.end() || it->second.depth > m_scope_depth)
+            return nullptr;
 
         return &it->second;
     }

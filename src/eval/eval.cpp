@@ -46,9 +46,9 @@ boost::intrusive_ptr<ast::Object> Evaluator::call_function(std::string_view name
     auto stored_function = m_storage.lookup(name.data());
     if (stored_function->ast_type() != ast::ast_type_t::FUNCTION) { throw EvalError("Try to call not a function"); }
 
-    auto function = boost::static_pointer_cast<ast::Function>(stored_function);
+    auto function = static_cast<ast::Function*>(stored_function.get());
 
-    if (function->arguments().size() != evaluated_args.size())
+    if (UNLIKELY(function->arguments().size() != evaluated_args.size()))
         throw EvalError("Wrong arguments size");
 
     boost::intrusive_ptr<ast::Object> last_statement;
@@ -56,7 +56,7 @@ boost::intrusive_ptr<ast::Object> Evaluator::call_function(std::string_view name
     m_storage.scope_begin();
 
     for (std::size_t i = 0; i < evaluated_args.size(); ++i)
-        m_storage.push(boost::static_pointer_cast<ast::Symbol>(function->arguments()[i])->name().data(), evaluated_args[i]);
+        m_storage.push(static_cast<ast::Symbol*>(function->arguments()[i].get())->name().data(), evaluated_args[i]);
 
     for (const auto& arg : function->body()->statements())
         last_statement = eval_expression(arg);
@@ -201,17 +201,17 @@ boost::intrusive_ptr<ast::Object> Evaluator::eval_binary(const boost::intrusive_
     throw EvalError("Unknown binary expr");
 }
 
-ALWAYS_INLINE static int32_t integral_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
+ALWAYS_INLINE static void integral_unary_implementation(lexeme_t type, int32_t& unary)
 {
-    if (type == lexeme_t::inc) { return boost::static_pointer_cast<ast::Integer>(unary)->value() + 1; }
-    if (type == lexeme_t::dec) { return boost::static_pointer_cast<ast::Integer>(unary)->value() - 1; }
+    if (  LIKELY(type == lexeme_t::inc)) { ++unary; return; }
+    if (UNLIKELY(type == lexeme_t::dec)) { --unary; return; }
     throw EvalError("Unknown unary operator");
 }
 
-ALWAYS_INLINE static double floating_point_unary_implementation(lexeme_t type, const boost::intrusive_ptr<ast::Object>& unary)
+ALWAYS_INLINE static void floating_point_unary_implementation(lexeme_t type, double& unary)
 {
-    if (type == lexeme_t::inc) { return boost::static_pointer_cast<ast::Float>(unary)->value() + 1; }
-    if (type == lexeme_t::dec) { return boost::static_pointer_cast<ast::Float>(unary)->value() - 1; }
+    if (  LIKELY(type == lexeme_t::inc)) { ++unary; return; }
+    if (UNLIKELY(type == lexeme_t::dec)) { --unary; return; }
     throw EvalError("Unknown unary operator");
 }
 
@@ -220,16 +220,15 @@ ALWAYS_INLINE static boost::intrusive_ptr<ast::Object> unary_implementation(lexe
     if (ast_type == ast::ast_type_t::INTEGER)
     {
         int& value = boost::static_pointer_cast<ast::Integer>(unary)->value();
-        value = integral_unary_implementation(unary_type, unary);
+        integral_unary_implementation(unary_type, value);
 
         return unary;
-
     }
 
     if (ast_type == ast::ast_type_t::FLOAT)
     {
         double& value = boost::static_pointer_cast<ast::Float>(unary)->value();
-        value = floating_point_unary_implementation(unary_type, unary);
+        floating_point_unary_implementation(unary_type, value);
 
         return unary;
     }
@@ -239,20 +238,22 @@ ALWAYS_INLINE static boost::intrusive_ptr<ast::Object> unary_implementation(lexe
 
 boost::intrusive_ptr<ast::Object> Evaluator::eval_unary(const boost::intrusive_ptr<ast::Unary>& unary)
 {
-    ast::ast_type_t ast_type = unary->operand()->ast_type();
+    auto operand = unary->operand();
+    auto unary_type = unary->type();
+    ast::ast_type_t ast_type = operand->ast_type();
 
-    if (auto result = unary_implementation(unary->type(), ast_type, unary->operand()))
+    if (auto result = unary_implementation(unary_type, ast_type, operand))
     {
         return result;
     }
 
     if (ast_type == ast::ast_type_t::SYMBOL)
     {
-        std::string name = boost::static_pointer_cast<ast::Symbol>(unary->operand())->name();
+        std::string name = boost::static_pointer_cast<ast::Symbol>(operand)->name();
 
         auto symbol = m_storage.lookup(name);
         m_storage.overwrite(name,
-            unary_implementation(unary->type(), symbol->ast_type(), symbol));
+            unary_implementation(unary_type, symbol->ast_type(), symbol));
 
         return symbol;
     }
@@ -295,7 +296,7 @@ void Evaluator::eval_for(const boost::intrusive_ptr<ast::For>& for_stmt)
     auto body = for_stmt->body();
     auto boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval_expression(exit_cond));
 
-    while (__builtin_expect(!!boolean_exit_condition->value(), 1))
+    while (LIKELY(boolean_exit_condition->value()))
     {
         eval_expression(body);
 
@@ -316,7 +317,7 @@ void Evaluator::eval_while(const boost::intrusive_ptr<ast::While>& while_stmt)
         auto body = while_stmt->body();
         auto exit_cond = boost::static_pointer_cast<IntegralType>(initial_exit_condition);
 
-        while (__builtin_expect(!!exit_cond->value(), 1))
+        while (LIKELY(exit_cond->value()))
         {
             eval_expression(body);
             exit_cond = boost::static_pointer_cast<IntegralType>(eval_expression(while_stmt->exit_condition()));
