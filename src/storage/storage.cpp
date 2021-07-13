@@ -1,28 +1,30 @@
 #include "../../include/storage/storage.hpp"
+#include "../../include/ast/ast.hpp"
+#include "../../include/crc32.hpp"
 
 Storage::Storage()
 {
     m_inner_scopes.rehash(50);
 }
 
-void Storage::push(std::string_view name, const boost::local_shared_ptr<ast::Object>& value)
+void Storage::push(std::string_view name, boost::local_shared_ptr<ast::Object> value)
 {
     unsigned long hash = crc32::create(name.data());
-    m_inner_scopes[hash] = StorageRecord{hash, m_scope_depth, std::string(name.data()), value};
+    m_inner_scopes[hash] = StorageRecord{hash, m_scope_depth, std::string(name.data()), std::move(value)};
 }
 
-void Storage::overwrite(std::string_view name, const boost::local_shared_ptr<ast::Object>& value)
+void Storage::overwrite(std::string_view name, boost::local_shared_ptr<ast::Object> value)
 {
     if (auto found = internal_find(name))
     {
-        found->payload = value;
+        found->payload = std::move(value);
     }
     else {
-        push(name, value);
+        push(name, std::move(value));
     }
 }
 
-boost::local_shared_ptr<ast::Object> Storage::lookup(std::string_view name) const
+const boost::local_shared_ptr<ast::Object>& Storage::lookup(std::string_view name) const
 {
     return find(name)->payload;
 }
@@ -42,7 +44,7 @@ Storage::StorageRecord* Storage::find(std::string_view name) const
     auto it = m_inner_scopes.find(crc32::create(name.data()));
 
     if (it == m_inner_scopes.end() || it->second.depth > m_scope_depth)
-        throw SemanticError("Variable not found: " + std::string(name));
+        throw EvalError("Variable not found: " + std::string(name));
 
     return &it->second;
 }

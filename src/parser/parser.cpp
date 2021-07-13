@@ -11,7 +11,7 @@ boost::local_shared_ptr<ast::RootObject> Parser::parse()
 
     while (has_next())
     {
-        if (current().type == lexeme_t::left_brace)
+        if (current().type == token_t::left_brace)
         {
             root->add(block());
         }
@@ -19,7 +19,7 @@ boost::local_shared_ptr<ast::RootObject> Parser::parse()
             auto expression = additive();
 
             if (!is_block_statement(expression))
-                require({lexeme_t::semicolon});
+                require({token_t::semicolon});
 
             root->add(std::move(expression));
         }
@@ -34,47 +34,47 @@ boost::local_shared_ptr<ast::Object> Parser::primary()
 
     switch (previous().type)
     {
-        case lexeme_t::kw_if:
+        case token_t::kw_if:
             return if_statement();
 
-        case lexeme_t::kw_while:
+        case token_t::kw_while:
             return while_statement();
 
-        case lexeme_t::kw_for:
+        case token_t::kw_for:
             return for_statement();
 
-        case lexeme_t::kw_function_decl:
+        case token_t::kw_function_decl:
             return function_declare_statement();
 
-        case lexeme_t::kw_define_type:
+        case token_t::kw_define_type:
             return define_type_statement();
 
-        case lexeme_t::left_brace:
+        case token_t::left_brace:
             return block();
 
-        case lexeme_t::left_box_brace:
+        case token_t::left_box_brace:
             return array();
 
-        case lexeme_t::num:
+        case token_t::num:
             return binary(boost::make_local_shared<ast::Integer>(previous().data));
 
-        case lexeme_t::floating_point:
+        case token_t::floating_point:
             return binary(boost::make_local_shared<ast::Float>(previous().data));
 
-        case lexeme_t::string_literal:
+        case token_t::string_literal:
             return boost::make_local_shared<ast::String>(previous().data);
 
-        case lexeme_t::symbol:
+        case token_t::symbol:
             return resolve_symbol();
 
-        case lexeme_t::minus:
-        case lexeme_t::negation:
-        case lexeme_t::inc:
-        case lexeme_t::dec:
+        case token_t::minus:
+        case token_t::negation:
+        case token_t::inc:
+        case token_t::dec:
             return unary();
 
         default:
-            throw ParseError("Unknown expression: " + dispatch_lexeme(previous().type));
+            throw ParseError("Unknown expression: " + dispatch_token(previous().type));
     }
 }
 
@@ -95,16 +95,16 @@ const Lexeme& Parser::peek()
 
 bool Parser::end_of_expression() const noexcept
 {
-    return current().type == lexeme_t::semicolon
-        || current().type == lexeme_t::right_paren
-        || current().type == lexeme_t::comma
-        || current().type == lexeme_t::right_box_brace
+    return current().type == token_t::semicolon
+        || current().type == token_t::right_paren
+        || current().type == token_t::comma
+        || current().type == token_t::right_box_brace
         || !has_next();
 }
 
 bool Parser::has_next() const noexcept
 {
-    return m_current_index < m_input.size() && current().type != lexeme_t::end_of_data;
+    return m_current_index < m_input.size() && current().type != token_t::end_of_data;
 }
 
 bool Parser::is_block(const boost::local_shared_ptr<ast::Object>& statement) noexcept
@@ -120,7 +120,7 @@ bool Parser::is_block_statement(const boost::local_shared_ptr<ast::Object>& stat
         || statement->ast_type() == ast::ast_type_t::FOR;
 }
 
-std::optional<Lexeme> Parser::match(const std::vector<lexeme_t>& expected_types)
+std::optional<Lexeme> Parser::match(const std::vector<token_t>& expected_types)
 {
     if (has_next())
     {
@@ -137,14 +137,14 @@ std::optional<Lexeme> Parser::match(const std::vector<lexeme_t>& expected_types)
     return std::nullopt;
 }
 
-Lexeme Parser::require(const std::vector<lexeme_t>& expected_types)
+Lexeme Parser::require(const std::vector<token_t>& expected_types)
 {
     if (const std::optional<Lexeme> lexeme = match(expected_types))
     {
         return lexeme.value();
     }
     else {
-        throw ParseError(dispatch_lexeme(expected_types[0]) + " expected, got " + dispatch_lexeme(current().type));
+        throw ParseError(dispatch_token(expected_types[0]) + " expected, got " + dispatch_token(current().type));
     }
 }
 
@@ -154,15 +154,15 @@ boost::local_shared_ptr<ast::Object> Parser::additive()
 
     while (true)
     {
-        if (previous().type == lexeme_t::plus)
+        if (previous().type == token_t::plus)
         {
-            expr = boost::make_local_shared<ast::Binary>(lexeme_t::plus, expr, multiplicative());
+            expr = boost::make_local_shared<ast::Binary>(token_t::plus, expr, multiplicative());
             continue;
         }
 
-        if (previous().type == lexeme_t::minus)
+        if (previous().type == token_t::minus)
         {
-            expr = boost::make_local_shared<ast::Binary>(lexeme_t::minus, expr, multiplicative());
+            expr = boost::make_local_shared<ast::Binary>(token_t::minus, expr, multiplicative());
             continue;
         }
 
@@ -178,21 +178,21 @@ boost::local_shared_ptr<ast::Object> Parser::multiplicative()
 
     while (true)
     {
-        if (previous().type == lexeme_t::star)
+        if (previous().type == token_t::star)
         {
-            expr = boost::make_local_shared<ast::Binary>(lexeme_t::star, expr, multiplicative());
+            expr = boost::make_local_shared<ast::Binary>(token_t::star, expr, multiplicative());
             continue;
         }
 
-        if (previous().type == lexeme_t::slash)
+        if (previous().type == token_t::slash)
         {
-            expr = boost::make_local_shared<ast::Binary>(lexeme_t::slash, expr, multiplicative());
+            expr = boost::make_local_shared<ast::Binary>(token_t::slash, expr, multiplicative());
             continue;
         }
 
-        if (previous().type == lexeme_t::mod)
+        if (previous().type == token_t::mod)
         {
-            expr = boost::make_local_shared<ast::Binary>(lexeme_t::mod, expr, multiplicative());
+            expr = boost::make_local_shared<ast::Binary>(token_t::mod, expr, multiplicative());
             continue;
         }
 
@@ -208,25 +208,25 @@ boost::local_shared_ptr<ast::Object> Parser::binary(const boost::local_shared_pt
 
     peek();
 
-    lexeme_t op = previous().type;
+    token_t op = previous().type;
 
     return boost::make_local_shared<ast::Binary>(op, ptr, additive());
 }
 
 boost::local_shared_ptr<ast::Object> Parser::unary()
 {
-    lexeme_t op = previous().type;
+    token_t op = previous().type;
 
     return boost::make_local_shared<ast::Unary>(op, primary());
 }
 
 boost::local_shared_ptr<ast::Block> Parser::block()
 {
-    require({lexeme_t::left_brace});
+    require({token_t::left_brace});
 
     std::vector<boost::local_shared_ptr<ast::Object>> stmts;
 
-    while (current().type != lexeme_t::right_brace)
+    while (current().type != token_t::right_brace)
     {
         auto stmt = additive();
 
@@ -234,15 +234,15 @@ boost::local_shared_ptr<ast::Block> Parser::block()
 
         if (is_block(stmt))
         {
-            require({lexeme_t::right_brace});
+            require({token_t::right_brace});
         }
         else if (!is_block_statement(stmt)) {
 
-            require({lexeme_t::semicolon});
+            require({token_t::semicolon});
         }
     }
 
-    require({lexeme_t::right_brace});
+    require({token_t::right_brace});
 
     return boost::make_local_shared<ast::Block>(std::move(stmts));
 }
@@ -255,13 +255,13 @@ boost::local_shared_ptr<ast::Object> Parser::array()
     {
         objects.emplace_back(primary());
 
-        auto term = require({lexeme_t::right_box_brace, lexeme_t::comma});
+        auto term = require({token_t::right_box_brace, token_t::comma});
 
-        if (term.type == lexeme_t::comma)
+        if (term.type == token_t::comma)
         {
             continue;
         }
-        else if (term.type == lexeme_t::right_box_brace) {
+        else if (term.type == token_t::right_box_brace) {
 
             break;
         }
@@ -272,15 +272,15 @@ boost::local_shared_ptr<ast::Object> Parser::array()
 
 boost::local_shared_ptr<ast::Object> Parser::if_statement()
 {
-    require({lexeme_t::left_paren});
+    require({token_t::left_paren});
 
     auto if_condition = primary();
 
-    require({lexeme_t::right_paren});
+    require({token_t::right_paren});
 
     auto if_body = block();
 
-    if (match({lexeme_t::kw_else}))
+    if (match({token_t::kw_else}))
     {
         auto else_body = block();
 
@@ -294,11 +294,11 @@ boost::local_shared_ptr<ast::Object> Parser::if_statement()
 
 boost::local_shared_ptr<ast::Object> Parser::while_statement()
 {
-    require({lexeme_t::left_paren});
+    require({token_t::left_paren});
 
     auto while_condition = primary();
 
-    require({lexeme_t::right_paren});
+    require({token_t::right_paren});
 
     auto while_body = block();
 
@@ -307,28 +307,28 @@ boost::local_shared_ptr<ast::Object> Parser::while_statement()
 
 boost::local_shared_ptr<ast::Object> Parser::for_statement()
 {
-    require({lexeme_t::left_paren});
+    require({token_t::left_paren});
 
     boost::local_shared_ptr<ast::Object> for_init;
     boost::local_shared_ptr<ast::Object> for_exit_condition;
     boost::local_shared_ptr<ast::Object> for_increment;
 
-    if (!match({lexeme_t::semicolon}))
+    if (!match({token_t::semicolon}))
     {
         for_init = primary();
-        require({lexeme_t::semicolon});
+        require({token_t::semicolon});
     }
 
-    if (!match({lexeme_t::semicolon}))
+    if (!match({token_t::semicolon}))
     {
         for_exit_condition = primary();
-        require({lexeme_t::semicolon});
+        require({token_t::semicolon});
     }
 
-    if (!match({lexeme_t::right_paren}))
+    if (!match({token_t::right_paren}))
     {
         for_increment = primary();
-        require({lexeme_t::right_paren});
+        require({token_t::right_paren});
     }
 
     auto for_body = block();
@@ -346,19 +346,19 @@ boost::local_shared_ptr<ast::Object> Parser::for_statement()
 
 boost::local_shared_ptr<ast::Object> Parser::function_declare_statement()
 {
-    const Lexeme symbol = require({lexeme_t::symbol});
+    const Lexeme symbol = require({token_t::symbol});
 
     std::string function_name = symbol.data;
 
-    require({lexeme_t::left_paren});
+    require({token_t::left_paren});
 
     std::vector<boost::local_shared_ptr<ast::Object>> arguments;
 
-    if (!match({lexeme_t::right_paren}))
+    if (!match({token_t::right_paren}))
     {
         while (true)
         {
-            if (current().type != lexeme_t::symbol)
+            if (current().type != token_t::symbol)
             {
                 throw ParseError("Symbol as function parameter expected");
             }
@@ -368,13 +368,13 @@ boost::local_shared_ptr<ast::Object> Parser::function_declare_statement()
 
             peek();
 
-            auto term = require({lexeme_t::right_paren, lexeme_t::comma});
+            auto term = require({token_t::right_paren, token_t::comma});
 
-            if (term.type == lexeme_t::comma)
+            if (term.type == token_t::comma)
             {
                 continue;
             }
-            else if (term.type == lexeme_t::right_paren) {
+            else if (term.type == token_t::right_paren) {
 
                 break;
             }
@@ -388,15 +388,15 @@ boost::local_shared_ptr<ast::Object> Parser::function_declare_statement()
 
 boost::local_shared_ptr<ast::Object> Parser::define_type_statement()
 {
-    std::string name = require({lexeme_t::symbol}).data;
+    std::string name = require({token_t::symbol}).data;
 
-    require({lexeme_t::left_paren});
+    require({token_t::left_paren});
 
     std::vector<std::string> fields;
 
     while (true)
     {
-        if (current().type != lexeme_t::symbol)
+        if (current().type != token_t::symbol)
         {
             throw ParseError("Symbol as type field expected");
         }
@@ -406,13 +406,13 @@ boost::local_shared_ptr<ast::Object> Parser::define_type_statement()
 
         peek();
 
-        auto term = require({lexeme_t::right_paren, lexeme_t::comma});
+        auto term = require({token_t::right_paren, token_t::comma});
 
-        if (term.type == lexeme_t::comma)
+        if (term.type == token_t::comma)
         {
             continue;
         }
-        else if (term.type == lexeme_t::right_paren) {
+        else if (term.type == token_t::right_paren) {
 
             break;
         }
@@ -423,9 +423,9 @@ boost::local_shared_ptr<ast::Object> Parser::define_type_statement()
 
 std::vector<boost::local_shared_ptr<ast::Object>> Parser::resolve_function_arguments()
 {
-    require({lexeme_t::left_paren});
+    require({token_t::left_paren});
 
-    if (match({lexeme_t::right_paren}))
+    if (match({token_t::right_paren}))
         return {};
 
     std::vector<boost::local_shared_ptr<ast::Object>> arguments;
@@ -434,13 +434,13 @@ std::vector<boost::local_shared_ptr<ast::Object>> Parser::resolve_function_argum
     {
         arguments.push_back(primary());
 
-        auto term = require({lexeme_t::right_paren, lexeme_t::comma});
+        auto term = require({token_t::right_paren, token_t::comma});
 
-        if (term.type == lexeme_t::comma)
+        if (term.type == token_t::comma)
         {
             continue;
         }
-        else if (term.type == lexeme_t::right_paren) {
+        else if (term.type == token_t::right_paren) {
 
             break;
         }
@@ -453,23 +453,23 @@ boost::local_shared_ptr<ast::Object> Parser::resolve_array_subscript()
 {
     std::string symbol_name = previous().data;
 
-    require({lexeme_t::left_box_brace});
+    require({token_t::left_box_brace});
 
     auto term = primary();
 
-    require({lexeme_t::right_box_brace});
+    require({token_t::right_box_brace});
 
     return boost::make_local_shared<ast::ArraySubscriptOperator>(symbol_name, std::move(term));
 }
 
 boost::local_shared_ptr<ast::Object> Parser::resolve_symbol()
 {
-    if (current().type == lexeme_t::left_paren)
+    if (current().type == token_t::left_paren)
     {
         std::string data = previous().data;
         return boost::make_local_shared<ast::FunctionCall>(std::move(data), resolve_function_arguments());
     }
-    else if (current().type == lexeme_t::left_box_brace) {
+    else if (current().type == token_t::left_box_brace) {
 
         return resolve_array_subscript();
     }

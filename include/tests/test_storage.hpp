@@ -1,7 +1,12 @@
 #ifndef WEAK_TESTS_STORAGE_HPP
 #define WEAK_TESTS_STORAGE_HPP
 
+#include "../ast/ast.hpp"
 #include "../storage/storage.hpp"
+
+#include <boost/smart_ptr/make_local_shared.hpp>
+
+#include <iostream>
 
 void test_found(const Storage& env, std::string_view name, bool expected_found_result)
 {
@@ -9,7 +14,7 @@ void test_found(const Storage& env, std::string_view name, bool expected_found_r
     {
         env.lookup(name.data());
 
-    } catch (SemanticError&) {
+    } catch (EvalError&) {
 
         if (expected_found_result)
         {

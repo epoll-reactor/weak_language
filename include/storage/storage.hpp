@@ -1,11 +1,14 @@
 #ifndef WEAK_STORAGE_HPP
 #define WEAK_STORAGE_HPP
 
-#include "../crc32.hpp"
-#include "../ast/ast.hpp"
-#include "../error/semantic_error.hpp"
+#include "../error/eval_error.hpp"
 
+#include <boost/smart_ptr/local_shared_ptr.hpp>
+
+#include <string>
 #include <unordered_map>
+
+namespace ast { class Object; }
 
 class Storage
 {
@@ -20,9 +23,9 @@ class Storage
 public:
     Storage();
 
-    void push(std::string_view name, const boost::local_shared_ptr<ast::Object>& value);
-    void overwrite(std::string_view name, const boost::local_shared_ptr<ast::Object>& value);
-    boost::local_shared_ptr<ast::Object> lookup(std::string_view name) const;
+    void push(std::string_view name, boost::local_shared_ptr<ast::Object> value);
+    void overwrite(std::string_view name, boost::local_shared_ptr<ast::Object> value);
+    const boost::local_shared_ptr<ast::Object>& lookup(std::string_view name) const;
 
     void scope_begin() noexcept;
     void scope_end() noexcept;

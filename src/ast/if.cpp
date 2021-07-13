@@ -28,8 +28,4 @@ const boost::local_shared_ptr<Block>& If::else_body() const noexcept
     return m_else_body;
 }
 
-ast_type_t If::ast_type() const noexcept
-{
-    return ast_type_t::IF;
-}
 } // namespace ast

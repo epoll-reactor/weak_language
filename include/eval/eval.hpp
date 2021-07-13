@@ -11,36 +11,50 @@ class Evaluator
 public:
     Evaluator(const boost::local_shared_ptr<ast::RootObject>& program);
 
-    void eval();
+    void eval() noexcept(false);
 
 private:
-    boost::local_shared_ptr<ast::Object> call_function(std::string_view name, const std::vector<boost::local_shared_ptr<ast::Object>>& evaluated_args);
+    /// @throws EvalError if function not found
+    /// @throws TypeError if non-functional object passed
+    /// @throws EvalError in case of mismatch in the number of arguments
+    /// @throws all exceptions from eval
+    boost::local_shared_ptr<ast::Object> call_function(std::string_view name, const std::vector<boost::local_shared_ptr<ast::Object>>& evaluated_args) noexcept(false);
 
-    boost::local_shared_ptr<ast::Object> eval_function_call(const boost::local_shared_ptr<ast::FunctionCall>& function_call);
+    /// @throws all exceptions from call_function or builtin functions
+    boost::local_shared_ptr<ast::Object> eval_function_call(const boost::local_shared_ptr<ast::FunctionCall>& function_call) noexcept(false);
 
-    void eval_block(const boost::local_shared_ptr<ast::Block>& block);
+    /// @throws all exceptions from eval
+    void eval_block(const boost::local_shared_ptr<ast::Block>& block) noexcept(false);
 
-    boost::local_shared_ptr<ast::Object> eval_binary(const boost::local_shared_ptr<ast::Binary>& binary);
+    /// @throws EvalError from implementation in case of wrong binary operator
+    /// @throws all exceptions from eval
+    boost::local_shared_ptr<ast::Object> eval_binary(const boost::local_shared_ptr<ast::Binary>& binary) noexcept(false);
 
-    boost::local_shared_ptr<ast::Object> eval_unary(const boost::local_shared_ptr<ast::Unary>& unary);
+    /// @throws EvalError if operand variable not found
+    /// @throws EvalError from implementation in case of wrong binary operator
+    /// @throws all exceptions from eval
+    boost::local_shared_ptr<ast::Object> eval_unary(const boost::local_shared_ptr<ast::Unary>& unary) noexcept(false);
 
-    boost::local_shared_ptr<ast::Object> eval_array_subscript(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& argument);
+    /// @throws EvalError if function not found
+    /// @throws EvalError if non-subscript object passed
+    /// @throws EvalError if out-of-range
+    /// @throws all exceptions from eval
+    boost::local_shared_ptr<ast::Object> eval_array_subscript(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& argument) noexcept(false);
 
-    void eval_array(const boost::local_shared_ptr<ast::Array>& array);
+    /// @throws all exceptions from eval
+    void eval_array(const boost::local_shared_ptr<ast::Array>& array) noexcept(false);
 
-    void eval_for(const boost::local_shared_ptr<ast::For>& for_stmt);
+    /// @throws all exceptions from eval
+    void eval_for(const boost::local_shared_ptr<ast::For>& for_stmt) noexcept(false);
 
-    void eval_while(const boost::local_shared_ptr<ast::While>& while_stmt);
+    /// @throws all exceptions from eval
+    void eval_while(const boost::local_shared_ptr<ast::While>& while_stmt) noexcept(false);
 
-    void eval_if(const boost::local_shared_ptr<ast::If>& if_stmt);
+    /// @throws all exceptions from eval
+    void eval_if(const boost::local_shared_ptr<ast::If>& if_stmt) noexcept(false);
 
-    boost::local_shared_ptr<ast::Object> eval_expression(const boost::local_shared_ptr<ast::Object>& expression);
-
-    template <typename T, typename... Args>
-    T* pool_allocate(Args&&... args)
-    {
-        return new T(std::forward<Args>(args)...);
-    }
+    /// @throws all exceptions from internal functions
+    boost::local_shared_ptr<ast::Object> eval(const boost::local_shared_ptr<ast::Object>& expression) noexcept(false);
 
     std::vector<boost::local_shared_ptr<ast::Object>> m_expressions;
     Storage m_storage;

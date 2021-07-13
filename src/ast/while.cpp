@@ -19,9 +19,4 @@ const boost::local_shared_ptr<Block>& While::body() const noexcept
     return m_block;
 }
 
-ast_type_t While::ast_type() const noexcept
-{
-    return ast_type_t::WHILE;
-}
-
 } // namespace ast

@@ -194,7 +194,7 @@ void run_eval_tests()
     )__", "");
 
     eval_detail::run_test(R"__(
-                fun main() {
+        fun main() {
             array = [
                 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
                 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
@@ -246,7 +246,8 @@ void run_eval_tests()
     std::cout << "Eval tests passed successfully\n";
 }
 
-auto create_evaluator(std::string_view program) {
+auto create_evaluator(std::string_view program)
+{
     Lexer lexer(std::istringstream{program.data()});
 
     Parser parser(lexer.tokenize());

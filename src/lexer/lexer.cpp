@@ -6,8 +6,8 @@
 
 Lexer::Lexer(std::istringstream data)
     : m_input(std::istreambuf_iterator<char>(data), std::istreambuf_iterator<char>())
-    , m_operators(test_operators)
     , m_keywords(test_keywords)
+    , m_operators(test_operators)
 { }
 
 char Lexer::current() const
@@ -73,7 +73,7 @@ std::vector<Lexeme> Lexer::tokenize()
                 break;
 
             default:
-                if (std::find_if(m_operators.begin(), m_operators.end(), [this](const std::pair<std::string, lexeme_t>& pair) {
+                if (std::find_if(m_operators.begin(), m_operators.end(), [this](const std::pair<std::string, token_t>& pair) {
                     return pair.first[0] == previous();
                 }) != m_operators.end())
                 {
@@ -86,7 +86,7 @@ std::vector<Lexeme> Lexer::tokenize()
     }
 #pragma GCC diagnostic pop
 
-    lexemes.emplace_back(Lexeme{"", lexeme_t::end_of_data});
+    lexemes.emplace_back(Lexeme{"", token_t::end_of_data});
 
     lexemes.shrink_to_fit();
 
@@ -110,14 +110,14 @@ Lexeme Lexer::process_digit()
     if (dots_reached > 1)  { throw LexicalError("Extra \".\" detected"); }
     if (digit.back() == '.') { throw LexicalError("Digit after \".\" expected"); }
 
-    return Lexeme{std::move(digit), (dots_reached == 0) ? lexeme_t::num : lexeme_t::floating_point};
+    return Lexeme{std::move(digit), (dots_reached == 0) ? token_t::num : token_t::floating_point};
 }
 
 Lexeme Lexer::process_string_literal()
 {
     peek(); /// Eat opening "
 
-    if (previous() == '\"') { return Lexeme{"", lexeme_t::string_literal}; }
+    if (previous() == '\"') { return Lexeme{"", token_t::string_literal}; }
 
     std::string literal(1, previous());
 
@@ -132,7 +132,7 @@ Lexeme Lexer::process_string_literal()
 
     peek(); /// Eat closing "
 
-    return Lexeme{std::move(literal), lexeme_t::string_literal};
+    return Lexeme{std::move(literal), token_t::string_literal};
 }
 
 Lexeme Lexer::process_symbol() noexcept
@@ -149,14 +149,14 @@ Lexeme Lexer::process_symbol() noexcept
         return Lexeme{"", m_keywords.at(symbol)};
     }
     else {
-        return Lexeme{std::move(symbol), lexeme_t::symbol};
+        return Lexeme{std::move(symbol), token_t::symbol};
     }
 }
 
 Lexeme Lexer::process_operator()
 {
     std::string op(1, previous());
-    lexeme_t type;
+    token_t type;
 
     while (has_next() && m_operators.find(op) != m_operators.end())
     {

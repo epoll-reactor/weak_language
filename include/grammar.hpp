@@ -1,71 +1,71 @@
 #ifndef WEAK_GRAMMAR_HPP
 #define WEAK_GRAMMAR_HPP
 
-#include "lexer/lexeme.hpp"
+#include "lexer/token.hpp"
 
 #include <unordered_map>
 
-static inline const std::unordered_map<std::string, lexeme_t> test_keywords {
-    {"for", lexeme_t::kw_for},
-    {"while", lexeme_t::kw_while},
-    {"if", lexeme_t::kw_if},
-    {"else", lexeme_t::kw_else},
-    {"return", lexeme_t::kw_return},
-    {"fun", lexeme_t::kw_function_decl},
-    {"load", lexeme_t::kw_load},
-    {"define-type", lexeme_t::kw_define_type}
+static inline const std::unordered_map<std::string, token_t> test_keywords {
+    {"for", token_t::kw_for},
+    {"while", token_t::kw_while},
+    {"if", token_t::kw_if},
+    {"else", token_t::kw_else},
+    {"return", token_t::kw_return},
+    {"fun", token_t::kw_function_decl},
+    {"load", token_t::kw_load},
+    {"define-type", token_t::kw_define_type}
 };
 
-static inline const std::unordered_map<std::string, lexeme_t> test_operators {
-    {"=", lexeme_t::assign},
+static inline const std::unordered_map<std::string, token_t> test_operators {
+    {"=", token_t::assign},
 
-    {"!", lexeme_t::negation},
+    {"!", token_t::negation},
 
-    {"==", lexeme_t::eq},
-    {"!=", lexeme_t::neq},
-    {"<", lexeme_t::lt},
-    {"<=", lexeme_t::le},
-    {">", lexeme_t::gt},
-    {">=", lexeme_t::ge},
+    {"==", token_t::eq},
+    {"!=", token_t::neq},
+    {"<", token_t::lt},
+    {"<=", token_t::le},
+    {">", token_t::gt},
+    {">=", token_t::ge},
 
-    {"++", lexeme_t::inc},
-    {"--", lexeme_t::dec},
+    {"++", token_t::inc},
+    {"--", token_t::dec},
 
-    {"<<", lexeme_t::slli},
-    {">>", lexeme_t::srli},
-    {"&",  lexeme_t::bit_and},
-    {"|",  lexeme_t::bit_or},
-    {"^",  lexeme_t::bit_xor},
-    {"&&", lexeme_t::logical_and},
-    {"||", lexeme_t::logical_or},
+    {"<<", token_t::slli},
+    {">>", token_t::srli},
+    {"&",  token_t::bit_and},
+    {"|",  token_t::bit_or},
+    {"^",  token_t::bit_xor},
+    {"&&", token_t::logical_and},
+    {"||", token_t::logical_or},
 
-    {"+", lexeme_t::plus},
-    {"-", lexeme_t::minus},
-    {"*", lexeme_t::star},
-    {"/", lexeme_t::slash},
-    {"%", lexeme_t::mod},
+    {"+", token_t::plus},
+    {"-", token_t::minus},
+    {"*", token_t::star},
+    {"/", token_t::slash},
+    {"%", token_t::mod},
 
-    {"+=", lexeme_t::plus_assign},
-    {"*=", lexeme_t::star_assign},
-    {"-=", lexeme_t::minus_assign},
-    {"/=", lexeme_t::slash_assign},
-    {"<<=", lexeme_t::slli_assign},
-    {">>=", lexeme_t::srli_assign},
-    {"&=",  lexeme_t::and_assign},
-    {"|=", lexeme_t::or_assign},
-    {"^=", lexeme_t::xor_assign},
+    {"+=", token_t::plus_assign},
+    {"*=", token_t::star_assign},
+    {"-=", token_t::minus_assign},
+    {"/=", token_t::slash_assign},
+    {"<<=", token_t::slli_assign},
+    {">>=", token_t::srli_assign},
+    {"&=",  token_t::and_assign},
+    {"|=", token_t::or_assign},
+    {"^=", token_t::xor_assign},
 
-    {".", lexeme_t::dot},
-    {",", lexeme_t::comma},
-    {":", lexeme_t::colon},
-    {";", lexeme_t::semicolon},
+    {".", token_t::dot},
+    {",", token_t::comma},
+    {":", token_t::colon},
+    {";", token_t::semicolon},
 
-    {"(", lexeme_t::left_paren},
-    {")", lexeme_t::right_paren},
-    {"{", lexeme_t::left_brace},
-    {"}", lexeme_t::right_brace},
-    {"[", lexeme_t::left_box_brace},
-    {"]", lexeme_t::right_box_brace},
+    {"(", token_t::left_paren},
+    {")", token_t::right_paren},
+    {"{", token_t::left_brace},
+    {"}", token_t::right_brace},
+    {"[", token_t::left_box_brace},
+    {"]", token_t::right_box_brace},
 };
 
 #endif // WEAK_GRAMMAR_HPP

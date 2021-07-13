@@ -1,7 +1,7 @@
 #ifndef WEAK_PARSER_HPP
 #define WEAK_PARSER_HPP
 
-#include "../lexer/lexeme.hpp"
+#include "../lexer/token.hpp"
 #include "../ast/ast.hpp"
 #include "../error/parse_error.hpp"
 
@@ -42,11 +42,11 @@ private:
 
     /// @brief  get current token and match with one of samples
     /// @return correct lexeme, std::nullopt if input find no more tokens
-    std::optional<Lexeme> match(const std::vector<lexeme_t>& expected_types);
+    std::optional<Lexeme> match(const std::vector<token_t>& expected_types);
 
     /// @throws ParseError if the match was unsuccessful
     /// @return correct lexeme of one of expected types
-    Lexeme require(const std::vector<lexeme_t>& expected_types);
+    Lexeme require(const std::vector<token_t>& expected_types);
 
     /// @brief main parse function
     boost::local_shared_ptr<ast::Object> primary();

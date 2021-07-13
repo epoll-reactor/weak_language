@@ -23,8 +23,4 @@ const boost::local_shared_ptr<Block>& Function::body() const noexcept
     return m_body;
 }
 
-ast_type_t Function::ast_type() const noexcept
-{
-    return ast_type_t::FUNCTION;
-}
 } // namespace ast

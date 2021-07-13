@@ -2,7 +2,7 @@
 #define WEAK_LEXER_HPP
 
 #include "../error/lexical_error.hpp"
-#include "../lexer/lexeme.hpp"
+#include "../lexer/token.hpp"
 
 #include <vector>
 #include <unordered_map>
@@ -26,11 +26,6 @@ public:
     std::vector<Lexeme> tokenize();
 
 private:
-//    friend class LexerBuilder;
-
-//     Used in LexerBuilder
-//    Lexer(std::unordered_map<std::string, lexeme_t> keywords, std::unordered_map<std::string, lexeme_t> operators, std::istringstream data);
-
     char current() const;
 
     char previous() const;
@@ -64,11 +59,11 @@ private:
     /// @return the longest parsed operator
     Lexeme process_operator();
 
-    const std::unordered_map<std::string, lexeme_t>& m_keywords;
-    const std::unordered_map<std::string, lexeme_t>& m_operators;
-
     std::size_t m_current_index{0};
     std::vector<char> m_input;
+
+    const std::unordered_map<std::string, token_t>& m_keywords;
+    const std::unordered_map<std::string, token_t>& m_operators;
 };
 
 #endif // WEAK_LEXER_HPP

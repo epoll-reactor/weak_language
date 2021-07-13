@@ -1,7 +1,7 @@
 #ifndef WEAK_AST_HPP
 #define WEAK_AST_HPP
 
-#include "../lexer/lexeme.hpp"
+#include "../lexer/token.hpp"
 
 #include <boost/smart_ptr/local_shared_ptr.hpp>
 #include <boost/smart_ptr/make_local_shared.hpp>
@@ -16,7 +16,7 @@ enum struct ast_type_t { OBJECT, INTEGER, FLOAT, STRING, SYMBOL, ARRAY, ARRAY_SU
 class Object
 {
 public:
-    virtual ast_type_t ast_type() const noexcept { return ast_type_t::OBJECT; }
+    virtual constexpr ast_type_t ast_type() const noexcept;
     virtual ~Object() = default;
 };
 
@@ -42,7 +42,7 @@ public:
 
     const int32_t& value() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     int32_t m_data;
@@ -59,7 +59,7 @@ public:
 
     const double& value() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     double m_data;
@@ -72,7 +72,7 @@ public:
 
     const std::string& value() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     std::string m_data;
@@ -85,7 +85,7 @@ public:
 
     const std::string& name() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     std::string m_name;
@@ -98,7 +98,7 @@ public:
 
     std::vector<boost::local_shared_ptr<Object>>& elements() noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     std::vector<boost::local_shared_ptr<Object>> m_elements;
@@ -113,7 +113,7 @@ public:
 
     const boost::local_shared_ptr<Object>& index() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     std::string m_name;
@@ -123,34 +123,34 @@ private:
 class Unary : public Object
 {
 public:
-    Unary(lexeme_t type, boost::local_shared_ptr<Object> operation);
+    Unary(token_t type, boost::local_shared_ptr<Object> operation);
 
     boost::local_shared_ptr<Object> operand() const noexcept;
 
-    lexeme_t type() const noexcept;
+    token_t type() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
-    lexeme_t m_type;
+    token_t m_type;
     boost::local_shared_ptr<Object> m_operation;
 };
 
 class Binary : public Object
 {
 public:
-    Binary(lexeme_t type, boost::local_shared_ptr<Object> lhs, boost::local_shared_ptr<Object> rhs);
+    Binary(token_t type, boost::local_shared_ptr<Object> lhs, boost::local_shared_ptr<Object> rhs);
 
     const boost::local_shared_ptr<Object>& lhs() const noexcept;
 
     const boost::local_shared_ptr<Object>& rhs() const noexcept;
 
-    lexeme_t type() const noexcept;
+    token_t type() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
-    lexeme_t m_type;
+    token_t m_type;
     boost::local_shared_ptr<Object> m_lhs;
     boost::local_shared_ptr<Object> m_rhs;
 };
@@ -162,7 +162,7 @@ public:
 
     const std::vector<boost::local_shared_ptr<Object>>& statements();
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     std::vector<boost::local_shared_ptr<Object>> m_statements;
@@ -177,7 +177,7 @@ public:
 
     const boost::local_shared_ptr<Block>& body() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     boost::local_shared_ptr<Object> m_exit_condition;
@@ -205,7 +205,7 @@ public:
 
     const boost::local_shared_ptr<Block>& body() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     boost::local_shared_ptr<Object> m_for_init;
@@ -227,7 +227,7 @@ public:
 
     const boost::local_shared_ptr<Block>& else_body() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     boost::local_shared_ptr<Object> m_exit_condition;
@@ -246,7 +246,7 @@ public:
 
     const boost::local_shared_ptr<Block>& body() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     std::string m_name;
@@ -263,7 +263,7 @@ public:
 
     const std::vector<boost::local_shared_ptr<Object>>& arguments() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     std::string m_name;
@@ -278,12 +278,29 @@ public:
     const std::string& name() const noexcept;
     const std::vector<std::string>& fields() const noexcept;
 
-    ast_type_t ast_type() const noexcept override final;
+    constexpr ast_type_t ast_type() const noexcept;
 
 private:
     std::string m_name;
     std::vector<std::string> m_fields;
 };
+
+constexpr ast_type_t Object::ast_type() const noexcept { return ast_type_t::OBJECT; }
+constexpr ast_type_t Integer::ast_type() const noexcept{ return ast_type_t::INTEGER;}
+constexpr ast_type_t Float::ast_type() const noexcept { return ast_type_t::FLOAT; }
+constexpr ast_type_t String::ast_type() const noexcept { return ast_type_t::STRING; }
+constexpr ast_type_t Symbol::ast_type() const noexcept { return ast_type_t::SYMBOL; }
+constexpr ast_type_t Array::ast_type() const noexcept { return ast_type_t::ARRAY; }
+constexpr ast_type_t ArraySubscriptOperator::ast_type() const noexcept { return ast_type_t::ARRAY_SUBSCRIPT_OPERATOR; }
+constexpr ast_type_t Unary::ast_type() const noexcept { return ast_type_t::UNARY; }
+constexpr ast_type_t Binary::ast_type() const noexcept { return ast_type_t::BINARY; }
+constexpr ast_type_t Block::ast_type() const noexcept { return ast_type_t::BLOCK; }
+constexpr ast_type_t While::ast_type() const noexcept { return ast_type_t::WHILE; }
+constexpr ast_type_t For::ast_type() const noexcept { return ast_type_t::FOR; }
+constexpr ast_type_t If::ast_type() const noexcept { return ast_type_t::IF; }
+constexpr ast_type_t Function::ast_type() const noexcept { return ast_type_t::FUNCTION; }
+constexpr ast_type_t FunctionCall::ast_type() const noexcept { return ast_type_t::FUNCTION_CALL; }
+constexpr ast_type_t TypeDefinition::ast_type() const noexcept { return ast_type_t::TYPE_DEFINITION; }
 
 } // namespace ast
 

@@ -7,7 +7,7 @@ namespace internal {
 
 boost::local_shared_ptr<ast::Object> unary_implementation(
     ast::ast_type_t ast_type,
-    lexeme_t unary_type,
+    token_t unary_type,
     const boost::local_shared_ptr<ast::Object>&  expression
 ) noexcept(false);
 

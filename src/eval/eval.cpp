@@ -7,7 +7,7 @@
 #include "../../include/error/eval_error.hpp"
 #include "../../include/std/builtins.hpp"
 
-ALWAYS_INLINE static bool is_datatype(const ast::Object* object) noexcept
+ALWAYS_INLINE static constexpr bool is_datatype(const ast::Object* object) noexcept(true)
 {
     if (!object) { return false; }
 
@@ -25,7 +25,7 @@ Evaluator::Evaluator(const boost::local_shared_ptr<ast::RootObject>& program)
     }
 }
 
-void Evaluator::eval()
+void Evaluator::eval() noexcept(false)
 {
     for (const auto& expr : m_expressions)
     {
@@ -41,15 +41,14 @@ void Evaluator::eval()
     call_function("main", {});
 }
 
-boost::local_shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, const std::vector<boost::local_shared_ptr<ast::Object>>& evaluated_args)
+boost::local_shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, const std::vector<boost::local_shared_ptr<ast::Object>>& evaluated_args) noexcept(false)
 {
     auto stored_function = m_storage.lookup(name.data());
-    if (stored_function->ast_type() != ast::ast_type_t::FUNCTION) { throw EvalError("Try to call not a function"); }
+    if (stored_function->ast_type() != ast::ast_type_t::FUNCTION) { throw TypeError("Try to call not a function"); }
 
     auto function = static_cast<ast::Function*>(stored_function.get());
 
-    if (UNLIKELY(function->arguments().size() != evaluated_args.size()))
-        throw EvalError("Wrong arguments size");
+    if (function->arguments().size() != evaluated_args.size()) { throw EvalError("Wrong arguments size"); }
 
     boost::local_shared_ptr<ast::Object> last_statement;
 
@@ -59,7 +58,7 @@ boost::local_shared_ptr<ast::Object> Evaluator::call_function(std::string_view n
         m_storage.push(static_cast<ast::Symbol*>(function->arguments()[i].get())->name().data(), evaluated_args[i]);
 
     for (const auto& arg : function->body()->statements())
-        last_statement = eval_expression(arg);
+        last_statement = eval(arg);
 
     m_storage.scope_end();
 
@@ -69,12 +68,12 @@ boost::local_shared_ptr<ast::Object> Evaluator::call_function(std::string_view n
         return {};
 }
 
-boost::local_shared_ptr<ast::Object> Evaluator::eval_function_call(const boost::local_shared_ptr<ast::FunctionCall>& function_call)
+boost::local_shared_ptr<ast::Object> Evaluator::eval_function_call(const boost::local_shared_ptr<ast::FunctionCall>& function_call) noexcept(false)
 {
     auto arguments = function_call->arguments();
 
     for (auto& arg : arguments)
-        arg = eval_expression(arg);
+        arg = eval(arg);
 
     if (builtins.contains(function_call->name()))
     {
@@ -90,44 +89,46 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_function_call(const boost::
     return call_function(function_call->name(), arguments);
 }
 
-void Evaluator::eval_block(const boost::local_shared_ptr<ast::Block>& block)
+void Evaluator::eval_block(const boost::local_shared_ptr<ast::Block>& block) noexcept(false)
 {
     m_storage.scope_begin();
 
     for (const auto& statement : block->statements())
-        eval_expression(statement);
+        eval(statement);
 
     m_storage.scope_end();
 }
 
-boost::local_shared_ptr<ast::Object> Evaluator::eval_binary(const boost::local_shared_ptr<ast::Binary>& binary)
+boost::local_shared_ptr<ast::Object> Evaluator::eval_binary(const boost::local_shared_ptr<ast::Binary>& binary) noexcept(false)
 {
-    if (binary->type() == lexeme_t::assign)
+    if (binary->type() == token_t::assign)
     {
         auto variable = boost::static_pointer_cast<ast::Symbol>(binary->lhs());
-        m_storage.overwrite(variable->name(), eval_expression(binary->rhs()));
+        m_storage.overwrite(variable->name(), eval(binary->rhs()));
 
         return binary;
     }
 
-    auto lhs = eval_expression(binary->lhs());
-    auto rhs = eval_expression(binary->rhs());
+    auto lhs = eval(binary->lhs());
+    auto rhs = eval(binary->rhs());
 
-    ast::ast_type_t lhs_binary_type = lhs->ast_type();
-    ast::ast_type_t rhs_binary_type = rhs->ast_type();
+    ast::ast_type_t lhs_t = lhs->ast_type();
+    ast::ast_type_t rhs_t = rhs->ast_type();
 
-    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::INTEGER) { return internal::i_i_binary_implementation(binary->type(), lhs, rhs); }
-    if (lhs_binary_type == ast::ast_type_t::INTEGER && rhs_binary_type == ast::ast_type_t::FLOAT)   { return internal::i_f_binary_implementation(binary->type(), lhs, rhs); }
-    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::INTEGER) { return internal::f_i_binary_implementation(binary->type(), lhs, rhs); }
-    if (lhs_binary_type == ast::ast_type_t::FLOAT   && rhs_binary_type == ast::ast_type_t::FLOAT)   { return internal::f_f_binary_implementation(binary->type(), lhs, rhs); }
+    using ast_t = ast::ast_type_t;
+
+    if (lhs_t == ast_t::INTEGER && rhs_t == ast_t::INTEGER) { return internal::i_i_binary_implementation(binary->type(), lhs, rhs); }
+    if (lhs_t == ast_t::INTEGER && rhs_t == ast_t::FLOAT)   { return internal::i_f_binary_implementation(binary->type(), lhs, rhs); }
+    if (lhs_t == ast_t::FLOAT   && rhs_t == ast_t::INTEGER) { return internal::f_i_binary_implementation(binary->type(), lhs, rhs); }
+    if (lhs_t == ast_t::FLOAT   && rhs_t == ast_t::FLOAT)   { return internal::f_f_binary_implementation(binary->type(), lhs, rhs); }
 
     throw EvalError("Unknown binary expr");
 }
 
-boost::local_shared_ptr<ast::Object> Evaluator::eval_unary(const boost::local_shared_ptr<ast::Unary>& unary)
+boost::local_shared_ptr<ast::Object> Evaluator::eval_unary(const boost::local_shared_ptr<ast::Unary>& unary) noexcept(false)
 {
     boost::local_shared_ptr<ast::Object> operand = unary->operand();
-    lexeme_t type = unary->type();
+    token_t type = unary->type();
     ast::ast_type_t ast_type = operand->ast_type();
 
     auto unary_result = internal::unary_implementation(ast_type, type, operand);
@@ -141,20 +142,19 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_unary(const boost::local_sh
     return symbol;
 }
 
-void Evaluator::eval_array(const boost::local_shared_ptr<ast::Array>& array)
+void Evaluator::eval_array(const boost::local_shared_ptr<ast::Array>& array) noexcept(false)
 {
     for (auto& element : array->elements())
-        element = eval_expression(element);
+        element = eval(element);
 }
 
-boost::local_shared_ptr<ast::Object> Evaluator::eval_array_subscript(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& argument)
+boost::local_shared_ptr<ast::Object> Evaluator::eval_array_subscript(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& argument) noexcept(false)
 {
     auto array_object = m_storage.lookup(argument->symbol_name());
     if (array_object->ast_type() != ast::ast_type_t::ARRAY) { throw EvalError("Try to subscript non-array expression"); }
     auto array = boost::static_pointer_cast<ast::Array>(array_object);
 
-    auto index = eval_expression(argument->index());
-    if (index->ast_type() != ast::ast_type_t::INTEGER) { throw EvalError("Index must be integral type"); }
+    auto index = eval(argument->index());
 
     auto casted_index = boost::static_pointer_cast<ast::Integer>(index);
     auto casted_array = boost::static_pointer_cast<ast::Array>(array);
@@ -165,42 +165,42 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_array_subscript(const boost
     return casted_array->elements().at(numeric_index);
 }
 
-void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& for_stmt)
+void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& for_stmt) noexcept(false)
 {
     m_storage.scope_begin();
 
-    auto init = boost::static_pointer_cast<ast::Binary>(eval_expression(for_stmt->loop_init()));
+    auto init = boost::static_pointer_cast<ast::Binary>(eval(for_stmt->loop_init()));
 
     auto exit_cond = for_stmt->exit_condition();
     auto increment = for_stmt->increment();
     auto body = for_stmt->body();
-    auto boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval_expression(exit_cond));
+    auto boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval(exit_cond));
 
     while (LIKELY(boolean_exit_condition->value()))
     {
-        eval_expression(body);
+        eval(body);
 
-        eval_expression(increment);
+        eval(increment);
 
-        boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval_expression(exit_cond));
+        boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval(exit_cond));
     }
 
     m_storage.scope_end();
 }
 
-void Evaluator::eval_while(const boost::local_shared_ptr<ast::While>& while_stmt)
+void Evaluator::eval_while(const boost::local_shared_ptr<ast::While>& while_stmt) noexcept(false)
 {
-    auto initial_exit_condition = eval_expression(while_stmt->exit_condition());
+    auto initial_exit_condition = eval(while_stmt->exit_condition());
     ast::ast_type_t exit_condition_type = initial_exit_condition->ast_type();
 
-    auto while_implementation = [this, &while_stmt, initial_exit_condition = std::move(initial_exit_condition)]<typename IntegralType>{
+    auto while_implementation = [this, &while_stmt, initial_exit_condition = std::move(initial_exit_condition)]<typename IntegralType> {
         auto body = while_stmt->body();
         auto exit_cond = boost::static_pointer_cast<IntegralType>(initial_exit_condition);
 
         while (LIKELY(exit_cond->value()))
         {
-            eval_expression(body);
-            exit_cond = boost::static_pointer_cast<IntegralType>(eval_expression(while_stmt->exit_condition()));
+            eval(body);
+            exit_cond = boost::static_pointer_cast<IntegralType>(eval(while_stmt->exit_condition()));
         }
     };
 
@@ -217,21 +217,21 @@ void Evaluator::eval_while(const boost::local_shared_ptr<ast::While>& while_stmt
     }
 }
 
-void Evaluator::eval_if(const boost::local_shared_ptr<ast::If>& if_stmt)
+void Evaluator::eval_if(const boost::local_shared_ptr<ast::If>& if_stmt) noexcept(false)
 {
-    auto if_condition = eval_expression(if_stmt->condition());
+    auto if_condition = eval(if_stmt->condition());
 
     if (boost::static_pointer_cast<ast::Integer>(if_condition)->value())
     {
-        eval_expression(if_stmt->body());
+        eval(if_stmt->body());
     }
     else if (auto else_body = if_stmt->else_body()) {
 
-        eval_expression(else_body);
+        eval(else_body);
     }
 }
 
-boost::local_shared_ptr<ast::Object> Evaluator::eval_expression(const boost::local_shared_ptr<ast::Object>& expression)
+boost::local_shared_ptr<ast::Object> Evaluator::eval(const boost::local_shared_ptr<ast::Object>& expression) noexcept(false)
 {
     ast::ast_type_t expr_type = expression->ast_type();
 

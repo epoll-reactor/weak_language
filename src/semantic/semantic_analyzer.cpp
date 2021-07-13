@@ -28,11 +28,11 @@ void SemanticAnalyzer::analyze_statement(const boost::local_shared_ptr<ast::Obje
     {
         auto binary = boost::static_pointer_cast<ast::Binary>(statement);
 
-        if (binary->type() == lexeme_t::assign
-        ||  binary->type() == lexeme_t::plus_assign
-        ||  binary->type() == lexeme_t::minus_assign
-        ||  binary->type() == lexeme_t::star_assign
-        ||  binary->type() == lexeme_t::slash_assign)
+        if (binary->type() == token_t::assign
+        ||  binary->type() == token_t::plus_assign
+        ||  binary->type() == token_t::minus_assign
+        ||  binary->type() == token_t::star_assign
+        ||  binary->type() == token_t::slash_assign)
         {
             analyze_assign_statement(binary);
         }
@@ -141,17 +141,17 @@ void SemanticAnalyzer::analyze_binary_statement(const boost::local_shared_ptr<as
 {
     switch (statement->type())
     {
-        case lexeme_t::plus:
-        case lexeme_t::minus:
-        case lexeme_t::star:
-        case lexeme_t::slash:
-        case lexeme_t::mod:
-        case lexeme_t::eq:
-        case lexeme_t::neq:
-        case lexeme_t::gt:
-        case lexeme_t::ge:
-        case lexeme_t::lt:
-        case lexeme_t::le:
+        case token_t::plus:
+        case token_t::minus:
+        case token_t::star:
+        case token_t::slash:
+        case token_t::mod:
+        case token_t::eq:
+        case token_t::neq:
+        case token_t::gt:
+        case token_t::ge:
+        case token_t::lt:
+        case token_t::le:
             break;
 
         default:
@@ -239,7 +239,7 @@ void SemanticAnalyzer::analyze_for_statement(const boost::local_shared_ptr<ast::
     {
         if (auto for_init = boost::dynamic_pointer_cast<ast::Binary>(for_statement->loop_init()))
         {
-            if (for_init->type() != lexeme_t::assign)
+            if (for_init->type() != token_t::assign)
             {
                 throw SemanticError("For init part requires assignment operation");
             }

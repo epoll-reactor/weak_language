@@ -17,8 +17,4 @@ const std::vector<boost::local_shared_ptr<Object>>& FunctionCall::arguments() co
     return m_arguments;
 }
 
-ast_type_t FunctionCall::ast_type() const noexcept
-{
-    return ast_type_t::FUNCTION_CALL;
-}
 } // namespace ast
