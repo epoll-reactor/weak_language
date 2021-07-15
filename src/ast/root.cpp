@@ -2,12 +2,17 @@
 
 namespace ast {
 
-const std::vector<boost::local_shared_ptr<Object>>& RootObject::get()
+std::vector<boost::local_shared_ptr<Object>>& RootObject::get() noexcept(true)
 {
     return m_expressions;
 }
 
-void RootObject::add(boost::local_shared_ptr<Object> expression)
+const std::vector<boost::local_shared_ptr<Object>>& RootObject::get() const
+{
+    return m_expressions;
+}
+
+void RootObject::add(boost::local_shared_ptr<Object> expression) noexcept(false)
 {
     m_expressions.push_back(std::move(expression));
 }

@@ -1,28 +1,30 @@
 #ifndef WEAK_ERROR_EVAL_ERROR_HPP
 #define WEAK_ERROR_EVAL_ERROR_HPP
 
-#include <stdexcept>
+#include "../../include/error/common_error.hpp"
 
-struct EvalError : public std::runtime_error
+struct EvalError : public CommonError
 {
-    explicit EvalError(std::string_view err)
-        : std::runtime_error(err.data())
-    { }
+public:
+    explicit EvalError(std::string_view argument)
+        : CommonError("eval_error", argument)
+    {}
 };
 
-struct RuntimeError : public EvalError
+struct RuntimeError : public CommonError
 {
-    explicit RuntimeError(std::string_view err)
-        : EvalError(err.data())
-    { }
+public:
+    explicit RuntimeError(std::string_view argument)
+        : CommonError("runtime_error", argument)
+    {}
 };
 
-struct TypeError : public EvalError
+struct TypeError : public CommonError
 {
-    explicit TypeError(std::string_view err)
-        : EvalError(err.data())
-    { }
+public:
+    explicit TypeError(std::string_view argument)
+        : CommonError("type_error", argument)
+    {}
 };
-
 
 #endif // WEAK_ERROR_EVAL_ERROR_HPP

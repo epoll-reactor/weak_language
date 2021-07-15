@@ -1,13 +1,14 @@
 #ifndef WEAK_ERROR_LEXICAL_ERROR_HPP
 #define WEAK_ERROR_LEXICAL_ERROR_HPP
 
-#include <stdexcept>
+#include "../../include/error/common_error.hpp"
 
-struct LexicalError : public std::runtime_error
+struct LexicalError : public CommonError
 {
-    explicit LexicalError(std::string_view err)
-        : std::runtime_error(err.data())
-    { }
+public:
+    explicit LexicalError(std::string_view argument)
+        : CommonError("lexical_error", argument)
+    {}
 };
 
 #endif //WEAK_ERROR_LEXICAL_ERROR_HPP

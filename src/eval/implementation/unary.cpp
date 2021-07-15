@@ -1,6 +1,5 @@
 #include "../../../include/eval/implementation/unary.hpp"
 
-#include "../../../include/common_defs.hpp"
 #include "../../../include/error/eval_error.hpp"
 
 ALWAYS_INLINE static void integral_unary_implementation(token_t type, int32_t& unary) noexcept(false)

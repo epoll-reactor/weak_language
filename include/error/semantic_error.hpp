@@ -1,14 +1,14 @@
 #ifndef WEAK_ERROR_SEMANTIC_ERROR_HPP
 #define WEAK_ERROR_SEMANTIC_ERROR_HPP
 
-#include <stdexcept>
+#include "../../include/error/common_error.hpp"
 
-struct SemanticError : public std::runtime_error
+struct SemanticError : public CommonError
 {
-    explicit SemanticError(std::string_view err)
-        : std::runtime_error(err.data())
-    { }
+public:
+    explicit SemanticError(std::string_view argument)
+        : CommonError("semantic_error", argument)
+    {}
 };
-
 
 #endif // WEAK_ERROR_SEMANTIC_ERROR_HPP

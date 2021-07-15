@@ -2,17 +2,17 @@
 
 namespace ast {
 
-ArraySubscriptOperator::ArraySubscriptOperator(std::string_view name, boost::local_shared_ptr<Object> index)
-    : m_name(name)
+ArraySubscriptOperator::ArraySubscriptOperator(std::string name, boost::local_shared_ptr<Object> index) noexcept(true)
+    : m_name(std::move(name))
     , m_index(std::move(index))
 { }
 
-const std::string& ArraySubscriptOperator::symbol_name() const noexcept
+const std::string& ArraySubscriptOperator::symbol_name() const noexcept(true)
 {
     return m_name;
 }
 
-const boost::local_shared_ptr<Object>& ArraySubscriptOperator::index() const noexcept
+const boost::local_shared_ptr<Object>& ArraySubscriptOperator::index() const noexcept(true)
 {
     return m_index;
 }

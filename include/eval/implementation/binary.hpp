@@ -9,25 +9,37 @@ namespace ast { class Object; }
 
 namespace internal {
 
+/// @throws EvalError if operator is invalid
 boost::local_shared_ptr<ast::Object> i_i_binary_implementation(
     token_t binary_type,
     const boost::local_shared_ptr<ast::Object>& lhs,
     const boost::local_shared_ptr<ast::Object>& rhs
 ) noexcept(false);
 
+/// @throws EvalError if operator is invalid
 boost::local_shared_ptr<ast::Object> i_f_binary_implementation(
     token_t binary_type,
     const boost::local_shared_ptr<ast::Object>& lhs,
     const boost::local_shared_ptr<ast::Object>& rhs
 ) noexcept(false);
 
+/// @throws EvalError if operator is invalid
 boost::local_shared_ptr<ast::Object> f_i_binary_implementation(
     token_t binary_type,
     const boost::local_shared_ptr<ast::Object>& lhs,
     const boost::local_shared_ptr<ast::Object>& rhs
 ) noexcept(false);
 
+/// @throws EvalError if operator is invalid
 boost::local_shared_ptr<ast::Object> f_f_binary_implementation(
+    token_t binary_type,
+    const boost::local_shared_ptr<ast::Object>& lhs,
+    const boost::local_shared_ptr<ast::Object>& rhs
+) noexcept(false);
+
+/// @throws EvalError if operator is invalid
+/// @throws EvalError if expression types are mismatch
+boost::local_shared_ptr<ast::Object> assign_binary_implementation(
     token_t binary_type,
     const boost::local_shared_ptr<ast::Object>& lhs,
     const boost::local_shared_ptr<ast::Object>& rhs

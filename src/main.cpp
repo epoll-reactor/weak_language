@@ -2,8 +2,10 @@
 
 #include "../include/tests/test_interpreter.hpp"
 #include "../include/tests/test_lexer.hpp"
+#include "../include/tests/test_optimizer.hpp"
 #include "../include/tests/test_semantic.hpp"
 #include "../include/tests/test_storage.hpp"
+#include "../include/tests/test_format.hpp"
 
 #include <iostream>
 #include <cstring>
@@ -64,11 +66,13 @@ float run_tests()
 {
     auto start = std::chrono::high_resolution_clock::now();
 
+    run_format_tests();
     run_lexer_tests();
     run_semantic_analyzer_tests();
+//    run_optimizer_tests();
     run_storage_tests();
     run_eval_tests();
-    eval_speed_tests();
+    run_eval_speed_tests();
 
     auto time_spent = std::chrono::high_resolution_clock::now() - start;
     return std::chrono::duration_cast<std::chrono::duration<float>>(time_spent).count();

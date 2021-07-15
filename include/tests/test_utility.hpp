@@ -39,6 +39,16 @@ void trace_error(std::string_view program, Fun&& fn)
 
         std::cout << "While analyzing:\n\t" << program << "\nEval error processed\n\t" << eval_error.what() << "\n\n";
         goto clear_stdout;
+
+    } catch (RuntimeError& eval_error) {
+
+        std::cout << "Runtime analyzing:\n\t" << program << "\nEval error processed\n\t" << eval_error.what() << "\n\n";
+        goto clear_stdout;
+
+    } catch (TypeError& eval_error) {
+
+        std::cout << "Type analyzing:\n\t" << program << "\nEval error processed\n\t" << eval_error.what() << "\n\n";
+        goto clear_stdout;
     }
 
 clear_stdout:
@@ -56,7 +66,7 @@ clear_stdout:
 template <class Function, class... Args>
 void speed_benchmark(std::string_view label, uint64_t iterations, Function function, Args&&... args)
 {
-    std::cout << std::setw(50) << label << "\t: " << iterations << " iteration(s): ";
+    std::cout << std::setw(60) << label << "\t: " << iterations << " iteration(s): ";
     auto start = std::chrono::high_resolution_clock::now();
     while (iterations-- > 0)
         function(std::forward<Args>(args)...);

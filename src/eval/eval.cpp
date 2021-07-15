@@ -3,8 +3,6 @@
 #include "../../include/eval/implementation/binary.hpp"
 #include "../../include/eval/implementation/unary.hpp"
 
-#include "../../include/common_defs.hpp"
-#include "../../include/error/eval_error.hpp"
 #include "../../include/std/builtins.hpp"
 
 ALWAYS_INLINE static constexpr bool is_datatype(const ast::Object* object) noexcept(true)
@@ -101,12 +99,24 @@ void Evaluator::eval_block(const boost::local_shared_ptr<ast::Block>& block) noe
 
 boost::local_shared_ptr<ast::Object> Evaluator::eval_binary(const boost::local_shared_ptr<ast::Binary>& binary) noexcept(false)
 {
-    if (binary->type() == token_t::assign)
+    auto type = binary->type();
+
+    if (type == token_t::assign)
     {
         auto variable = boost::static_pointer_cast<ast::Symbol>(binary->lhs());
         m_storage.overwrite(variable->name(), eval(binary->rhs()));
 
         return binary;
+    }
+
+    if (token_traits::is_assign(type))
+    {
+        auto variable = boost::static_pointer_cast<ast::Symbol>(binary->lhs());
+        m_storage.overwrite(
+            variable->name(),
+            internal::assign_binary_implementation(
+               type, m_storage.lookup(variable->name()), eval(binary->rhs())));
+        return variable;
     }
 
     auto lhs = eval(binary->lhs());
@@ -117,10 +127,10 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_binary(const boost::local_s
 
     using ast_t = ast::ast_type_t;
 
-    if (lhs_t == ast_t::INTEGER && rhs_t == ast_t::INTEGER) { return internal::i_i_binary_implementation(binary->type(), lhs, rhs); }
-    if (lhs_t == ast_t::INTEGER && rhs_t == ast_t::FLOAT)   { return internal::i_f_binary_implementation(binary->type(), lhs, rhs); }
-    if (lhs_t == ast_t::FLOAT   && rhs_t == ast_t::INTEGER) { return internal::f_i_binary_implementation(binary->type(), lhs, rhs); }
-    if (lhs_t == ast_t::FLOAT   && rhs_t == ast_t::FLOAT)   { return internal::f_f_binary_implementation(binary->type(), lhs, rhs); }
+    if (lhs_t == ast_t::INTEGER && rhs_t == ast_t::INTEGER) { return internal::i_i_binary_implementation(type, lhs, rhs); }
+    if (lhs_t == ast_t::INTEGER && rhs_t == ast_t::FLOAT)   { return internal::i_f_binary_implementation(type, lhs, rhs); }
+    if (lhs_t == ast_t::FLOAT   && rhs_t == ast_t::INTEGER) { return internal::f_i_binary_implementation(type, lhs, rhs); }
+    if (lhs_t == ast_t::FLOAT   && rhs_t == ast_t::FLOAT)   { return internal::f_f_binary_implementation(type, lhs, rhs); }
 
     throw EvalError("Unknown binary expr");
 }
@@ -155,11 +165,12 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_array_subscript(const boost
     auto array = boost::static_pointer_cast<ast::Array>(array_object);
 
     auto index = eval(argument->index());
+    if (index->ast_type() != ast::ast_type_t::INTEGER) { throw TypeError("Array subscript is not an integer"); }
 
     auto casted_index = boost::static_pointer_cast<ast::Integer>(index);
     auto casted_array = boost::static_pointer_cast<ast::Array>(array);
 
-    auto numeric_index = static_cast<std::size_t>(casted_index->value());
+    auto numeric_index = static_cast<size_t>(casted_index->value());
     if (casted_array->elements().size() <= numeric_index) { throw EvalError("Out of range"); }
 
     return casted_array->elements().at(numeric_index);
@@ -193,14 +204,14 @@ void Evaluator::eval_while(const boost::local_shared_ptr<ast::While>& while_stmt
     auto initial_exit_condition = eval(while_stmt->exit_condition());
     ast::ast_type_t exit_condition_type = initial_exit_condition->ast_type();
 
-    auto while_implementation = [this, &while_stmt, initial_exit_condition = std::move(initial_exit_condition)]<typename IntegralType> {
+    auto while_implementation = [this, &while_stmt, initial_exit_condition = std::move(initial_exit_condition)]<typename Integral> {
         auto body = while_stmt->body();
-        auto exit_cond = boost::static_pointer_cast<IntegralType>(initial_exit_condition);
+        auto exit_cond = boost::static_pointer_cast<Integral>(initial_exit_condition);
 
         while (LIKELY(exit_cond->value()))
         {
             eval(body);
-            exit_cond = boost::static_pointer_cast<IntegralType>(eval(while_stmt->exit_condition()));
+            exit_cond = boost::static_pointer_cast<Integral>(eval(while_stmt->exit_condition()));
         }
     };
 

@@ -52,7 +52,7 @@ bool ends_with(std::string_view src, std::string ending)
     }
 }
 
-std::vector<std::string_view> list_of_filenames(std::string_view contents)
+std::vector<std::string_view> list_of_filenames(std::string contents)
 {
     std::vector<std::string_view> filenames;
 
@@ -79,6 +79,7 @@ std::vector<std::string_view> list_of_filenames(std::string_view contents)
 
     return filenames;
 }
+
 } // anonymous namespace
 
 std::string preprocess_file(std::string_view filename)
@@ -93,8 +94,8 @@ std::string preprocess_file(std::string_view filename)
 
     FileInfo file_info(filename);
 
-    for (auto load_file : list_of_filenames(contents))
-        contents.insert(0, preprocess_file(file_info.path() + std::string(load_file)));
+    for (auto file_to_load : list_of_filenames(contents))
+        contents.insert(0, preprocess_file(file_info.path() + std::string(file_to_load)));
 
     const std::regex remove_load_re(R"(load\ \".*?\"\;)");
     std::ostringstream processed_file;

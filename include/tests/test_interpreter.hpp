@@ -6,6 +6,7 @@
 #include "../lexer/lexer.hpp"
 #include "../parser/parser.hpp"
 #include "../semantic/semantic_analyzer.hpp"
+#include "../optimizer/optimizer.hpp"
 
 #include "../tests/test_utility.hpp"
 
@@ -18,10 +19,8 @@ namespace eval_detail {
 
 static int test_counter = 0;
 
-void run_test(std::string_view program, std::string_view expected_output)
+Evaluator create_eval_context(std::string_view program, bool enable_optimizing = false)
 {
-    std::cout << "Run test " << test_counter++ << " => ";
-
     Lexer lexer(std::istringstream{program.data()});
 
     Parser parser(lexer.tokenize());
@@ -31,9 +30,22 @@ void run_test(std::string_view program, std::string_view expected_output)
     SemanticAnalyzer semantic_analyzer(parsed_program);
     semantic_analyzer.analyze();
 
+    if (enable_optimizing)
+    {
+        Optimizer optimizer(parsed_program);
+        optimizer.optimize();
+    }
+
     Evaluator evaluator(parsed_program);
 
-    evaluator.eval();
+    return evaluator;
+}
+
+void run_test(std::string_view program, std::string_view expected_output, bool enable_optimizing = true)
+{
+    std::cout << "Run test " << test_counter++ << " => ";
+
+    create_eval_context(program, enable_optimizing).eval();
 
     try
     {
@@ -62,18 +74,7 @@ void expect_error(std::string_view program)
 
     bool error = true;
 
-    trace_error(program, [&error, &program]{
-        Lexer lexer(std::istringstream{program.data()});
-
-        Parser parser(lexer.tokenize());
-
-        auto parsed_program = parser.parse();
-
-        SemanticAnalyzer semantic_analyzer(parsed_program);
-        semantic_analyzer.analyze();
-
-        Evaluator evaluator(parsed_program);
-
+    trace_error(program, [evaluator = create_eval_context(program, /*enable_optimizing=*/false), &error]() mutable {
         evaluator.eval();
 
         /// Will false if exception thrown
@@ -83,6 +84,13 @@ void expect_error(std::string_view program)
     assert(error);
 }
 
+auto speed_test(std::string_view description, std::string_view program, bool enable_optimizing = false)
+{
+    speed_benchmark(description, 1, [evaluator = create_eval_context(program, enable_optimizing)]() mutable {
+        evaluator.eval();
+    });
+};
+
 } // namespace eval_detail
 
 void run_eval_tests()
@@ -91,8 +99,9 @@ void run_eval_tests()
 
     eval_detail::run_test("fun main() {}", "");
     eval_detail::run_test("fun main() { print(1); }", "1");
-//    eval_detail::run_test("fun main() { print(2 + 2 * 2 * 2); }", "10");
-//    eval_detail::run_test("fun main() { print(2 * 2 * 2 + 2); }", "10");
+    eval_detail::run_test("fun main() { var = 1; var += 1; print(var); }", "2");
+    eval_detail::run_test("fun main() { var = 1; var += 1 + 1; print(var); }", "3");
+    eval_detail::run_test("fun main() { var = 2; var <<= 10; print(var); }", "2048");
     eval_detail::run_test("fun main() { print(1 + 1.5); }", "2.5");
     eval_detail::run_test("fun main() { print(1.5 + 1); }", "2.5");
     eval_detail::run_test("fun main() { print(1.5 + 1.5); }", "3");
@@ -109,11 +118,11 @@ void run_eval_tests()
     eval_detail::run_test("fun ret(var) { var; } fun main() { print(ret(123));}", "123");
     eval_detail::run_test("fun create_int() { 1; } fun sum(lhs, rhs) { lhs + rhs; } fun main() { print(sum(1 + 1, create_int())); }", "3");
     eval_detail::run_test("fun main() { var = 1; var = var + 1; print(var); }", "2");
-    eval_detail::run_test("fun main() { var = 0; while (var != 10) { var = var + 1; print(var); if (var < 10) { print(\" \"); } } }", "1 2 3 4 5 6 7 8 9 10");
+    eval_detail::run_test("fun main() { var = 0; while (var != 10) { ++var; print(var); if (var < 10) { print(\" \"); } } }", "1 2 3 4 5 6 7 8 9 10");
     eval_detail::run_test("fun main() { var = 0; if (var == 0) { println(\"Equal\"); } else { println(\"Different\"); } }", "Equal\n");
     eval_detail::run_test("fun main() { var = 0; if (var != 0) { println(\"Equal\"); } else { println(\"Different\"); } }", "Different\n");
-    eval_detail::run_test("fun main() { for (i = 0; i < 10; i = i + 1) { print(i); } }", "0123456789");
-    eval_detail::run_test("fun copy(arg) { arg; } fun main() { for (i = 0; i < 10; i = i + 1) { print(copy(i)); } }", "0123456789");
+    eval_detail::run_test("fun main() { for (i = 0; i < 10; ++i) { print(i); } }", "0123456789");
+    eval_detail::run_test("fun copy(arg) { arg; } fun main() { for (i = 0; i < 10; ++i) { print(copy(i)); } }", "0123456789");
     eval_detail::run_test("fun main() { var = 0  ; print(integer?(var), float?(var)); }", "1 0");
     eval_detail::run_test("fun main() { var = 0.0; print(integer?(var), float?(var)); }", "0 1");
     eval_detail::run_test("fun main() { array = [0, 0, 0]; digit = 1; print(array?(array), array?(digit)); }", "1 0");
@@ -121,6 +130,13 @@ void run_eval_tests()
     eval_detail::run_test("fun create_array(a, b, c) { [a, b, c]; } fun main() { array = create_array(1,2,3); print(array?(array)); }", "1");
     eval_detail::run_test("fun create_array(a, b, c) { [a, b, c]; } fun main() { array = create_array(5,6,7); print(array[0]); }", "5");
     eval_detail::run_test("define-type structure(a, b, c); fun main() { structure; }", "");
+
+    eval_detail::run_test("fun main() { while (1) {} }", ""); /// Reduced by optimizer
+    eval_detail::run_test("fun main() { while (1) { while (1) {} } }", ""); /// Reduced by optimizer
+    eval_detail::run_test("fun main() { for (;;) { for (;;) { for (;;) {} } } }", ""); /// Reduced by optimizer
+    eval_detail::run_test("fun main() { outer = 1; while (outer) { inner = 1; while (inner) {} } }", ""); /// Reduced by optimizer
+    eval_detail::run_test("fun main() { for (i = 0; ; ++i) {} }", ""); /// Reduced by optimizer
+    eval_detail::run_test("fun main() { for (i = 0; ; i += 1) {} }", ""); /// Reduced by optimizer
 
     eval_detail::run_test(R"__(
         fun sqrt(x) {
@@ -131,8 +147,8 @@ void run_eval_tests()
             while (root != temp) {
                 temp = root;
                 tmp_value = number / temp;
-                tmp_value = tmp_value + temp;
-                tmp_value = tmp_value / 2;
+                tmp_value += temp;
+                tmp_value /= 2;
                 root = tmp_value;
             }
 
@@ -152,9 +168,8 @@ void run_eval_tests()
             result = 1;
 
             while (stage > 0) {
-                result = result * num;
-
-                stage = stage - 1;
+                result *= num;
+                --stage;
             }
 
             result;
@@ -234,9 +249,9 @@ void run_eval_tests()
         }
     )__", "240 300");
 
-    eval_detail::expect_error("fun simple() { { var = 2; } var; } fun main() { simple(); }");
-    eval_detail::expect_error("fun main() { for (var = 0; var != 10; var = var + 1) { } print(var); }");
-    eval_detail::expect_error("fun main() { for (var = 0; var != 10; var = var + 1) { for (var_2 = 0; var_2 != 10; var_2 = var_2 + 1) { print(var); } print(var_2); } }");
+    eval_detail::expect_error("fun simple() { var; } fun main() { simple(); }");
+    eval_detail::expect_error("fun main() { for (var = 0; var != 10; ++var) { } print(var); }");
+    eval_detail::expect_error("fun main() { for (var = 0; var != 10; ++var) { for (var_2 = 0; var_2 != 10; var_2 = var_2 + 1) { print(var); } print(var_2); } }");
     eval_detail::expect_error("fun main() { array = [1, 2, 3]; print(array[0], array[1], array[2], array[3]); }");
     eval_detail::expect_error("fun main() { array = [1, 2, 3]; print(array[0], array[1.44], array[2]); }");
     eval_detail::expect_error("fun main() { array = [1, 2, 3]; index = 1.25; array[index]; }");
@@ -246,36 +261,16 @@ void run_eval_tests()
     std::cout << "Eval tests passed successfully\n";
 }
 
-auto create_evaluator(std::string_view program)
+void run_eval_speed_tests()
 {
-    Lexer lexer(std::istringstream{program.data()});
+    const bool enable_optimizing = true;
+    const bool disable_optimizing = false;
 
-    Parser parser(lexer.tokenize());
-
-    auto parsed_program = parser.parse();
-
-    SemanticAnalyzer semantic_analyzer(parsed_program);
-    semantic_analyzer.analyze();
-
-    Evaluator evaluator(parsed_program);
-
-    return evaluator;
-};
-
-void eval_speed_tests()
-{
-    auto run_test = [](std::string_view description, std::string_view program)
-    {
-        speed_benchmark(description, 1, [&program]{
-            create_evaluator(program).eval();
-        });
-    };
-
-    run_test("Multiply 1'000'000 * 1'000'000 * 1'000'000 times", R"(
+    eval_detail::speed_test("Multiply 1'000'000 * 1'000'000 * 1'000'000 times", R"(
         fun complex() { for (k = 0; k < 1000000; ++k) { for (j = 0; j < 1000000; ++j) { k * j; } } }
         fun main()    { for (i = 0; i < 1000000; ++i) { complex(); } }
-    )");
-    run_test("Count elements in array 27x20 1'000'000 times", R"(
+    )", enable_optimizing);
+    eval_detail::speed_test("Count elements in array 27x20 1'000'000 times", R"(
         fun main() {
             array = [
                 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
@@ -314,7 +309,31 @@ void eval_speed_tests()
 
             print(ones, zeros);
         }
-)");
+    )", enable_optimizing);
+    eval_detail::speed_test("Test 6'000'000 unary operations with optimization", R"__(
+        fun main() {
+            for (i = 0; i < 1000000; ++i) {
+                var_1 = ++1;
+                var_2 = ++1;
+                var_3 = ++1;
+                var_4 = ++1;
+                var_5 = ++1;
+                var_6 = ++1;
+            }
+        }
+    )__", enable_optimizing);
+    eval_detail::speed_test("Test 6'000'000 unary operations without optimization", R"__(
+        fun main() {
+            for (i = 0; i < 1000000; ++i) {
+                var_1 = ++1;
+                var_2 = ++1;
+                var_3 = ++1;
+                var_4 = ++1;
+                var_5 = ++1;
+                var_6 = ++1;
+            }
+        }
+    )__", disable_optimizing);
 }
 
 #endif // WEAK_TESTS_INTERPRETER_HPP

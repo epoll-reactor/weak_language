@@ -3,6 +3,7 @@ project(WeakLanguage)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_COMPILER "g++")
+set(CMAKE_VERBOSE_MAKEFILE 0)
 
 set(common_flags "-fPIC -Wall -Wextra -pedantic -Wshadow -Wunused-parameter")
 
@@ -17,7 +18,7 @@ else()
 endif()
 
 if (${extra_warnings_flag})
-    set(extra_warnings_flags "-Wcast-qual -Wnon-virtual-dtor -Wreturn-type -Wsign-promo -Wno-unused -Wcast-align -Woverloaded-virtual -Wno-parentheses -fstrict-aliasing")
+    set(extra_warnings_flags "-Werror -Wcast-qual -Wnon-virtual-dtor -Wreturn-type -Wsign-promo -Wno-unused -Wcast-align -Woverloaded-virtual -Wno-parentheses -fstrict-aliasing")
 else()
     set(extra_warnings_flags "")
 endif()
@@ -32,4 +33,4 @@ set(CMAKE_CXX_FLAGS "${common_flags} ${find_leaks_flags} ${extra_warnings_flags}
 
 
 file(GLOB_RECURSE SRC include/*.hpp src/*.cpp)
-add_executable(WeakLanguage ${SRC} include/eval/implementation/binary.hpp include/eval/implementation/unary.hpp src/eval/implementation/unary.cpp src/eval/implementation/binary.cpp src/storage/storage.cpp)
+add_executable(WeakLanguage ${SRC} include/eval/implementation/binary.hpp include/eval/implementation/unary.hpp src/eval/implementation/unary.cpp src/eval/implementation/binary.cpp src/storage/storage.cpp include/error/common_error.hpp include/format.hpp include/tests/test_format.hpp)

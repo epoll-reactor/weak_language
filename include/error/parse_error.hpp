@@ -1,13 +1,14 @@
 #ifndef WEAK_ERROR_PARSE_ERROR_HPP
 #define WEAK_ERROR_PARSE_ERROR_HPP
 
-#include <stdexcept>
+#include "../../include/error/common_error.hpp"
 
-struct ParseError : public std::runtime_error
+struct ParseError : public CommonError
 {
-    explicit ParseError(std::string_view err)
-        : std::runtime_error(err.data())
-    { }
+public:
+    explicit ParseError(std::string_view argument)
+        : CommonError("parse_error", argument)
+    {}
 };
 
 #endif // WEAK_ERROR_PARSE_ERROR_HPP

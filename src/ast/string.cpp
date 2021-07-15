@@ -2,11 +2,11 @@
 
 namespace ast {
 
-String::String(std::string data)
+String::String(std::string data) noexcept(true)
     : m_data(std::move(data))
 { }
 
-const std::string& String::value() const noexcept
+const std::string& String::value() const noexcept(true)
 {
     return m_data;
 }

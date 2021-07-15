@@ -5,6 +5,7 @@
 
 namespace internal {
 
+/// @throws EvalError if operator is invalid
 boost::local_shared_ptr<ast::Object> unary_implementation(
     ast::ast_type_t ast_type,
     token_t unary_type,

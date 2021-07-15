@@ -1,6 +1,8 @@
 #ifndef WEAK_LEXER_TOKEN_HPP
 #define WEAK_LEXER_TOKEN_HPP
 
+#include "../common_defs.hpp"
+
 #include <string>
 
 enum struct token_t
@@ -73,7 +75,7 @@ enum struct token_t
     end_of_data
 };
 
-inline std::string dispatch_token(token_t o)
+inline std::string dispatch_token(token_t o) noexcept(true)
 {
     switch (o)
     {
@@ -123,6 +125,56 @@ inline std::string dispatch_token(token_t o)
         default:                       return "<unknown>";
     }
 }
+
+namespace token_traits {
+
+ALWAYS_INLINE constexpr bool is_assign(token_t tok) noexcept(true)
+{
+    switch (tok)
+    {
+        case token_t::assign:
+        case token_t::plus_assign:
+        case token_t::minus_assign:
+        case token_t::slash_assign:
+        case token_t::star_assign:
+        case token_t::xor_assign:
+        case token_t::or_assign:
+        case token_t::and_assign:
+        case token_t::srli_assign:
+        case token_t::slli_assign:
+            return true;
+        default:
+            return false;
+    }
+}
+
+ALWAYS_INLINE constexpr bool is_binary(token_t tok) noexcept(true)
+{
+    switch (tok)
+    {
+        case token_t::plus:
+        case token_t::minus:
+        case token_t::star:
+        case token_t::slash:
+        case token_t::bit_and:
+        case token_t::bit_or:
+        case token_t::bit_xor:
+        case token_t::slli:
+        case token_t::srli:
+        case token_t::mod:
+        case token_t::eq:
+        case token_t::neq:
+        case token_t::gt:
+        case token_t::ge:
+        case token_t::lt:
+        case token_t::le:
+            return true;
+        default:
+            return false;
+    }
+}
+
+} // namespace token_traits
 
 struct Lexeme
 {

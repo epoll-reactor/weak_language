@@ -2,7 +2,6 @@
 
 #include "../../../include/ast/ast.hpp"
 #include "../../../include/error/eval_error.hpp"
-#include "../../../include/common_defs.hpp"
 
 #include <variant>
 
@@ -18,7 +17,7 @@ ALWAYS_INLINE static bool comparison_implementation(token_t type, LeftOperand l,
         case token_t::le:      return l <= r;
         case token_t::lt:      return l < r;
         default:
-            throw EvalError("Incorrect binary expression");
+            throw EvalError("Incorrect binary expression: " + dispatch_token(type));
     }
 }
 
@@ -83,4 +82,44 @@ boost::local_shared_ptr<ast::Object> internal::f_i_binary_implementation(token_t
 }
 boost::local_shared_ptr<ast::Object> internal::f_f_binary_implementation(token_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
     return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Float, ast::Float>(binary_type, lhs.get(), rhs.get())));
+}
+
+static constexpr token_t resolve_assign_operator(token_t token)
+{
+    switch (token)
+    {
+        case token_t::plus_assign: return token_t::plus;
+        case token_t::minus_assign: return token_t::minus;
+        case token_t::star_assign: return token_t::star;
+        case token_t::slash_assign: return token_t::slash;
+        case token_t::xor_assign: return token_t::bit_xor;
+        case token_t::or_assign: return token_t::bit_or;
+        case token_t::and_assign: return token_t::bit_and;
+        case token_t::srli_assign: return token_t::srli;
+        case token_t::slli_assign: return token_t::slli;
+        default: throw EvalError("Unknown assign operator");
+    }
+}
+
+boost::local_shared_ptr<ast::Object> internal::assign_binary_implementation(token_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false)
+{
+    if (lhs->ast_type() != rhs->ast_type()) { throw EvalError("Invalid binary operands"); }
+
+    auto ast_type = lhs->ast_type();
+
+    if (ast_type == ast::ast_type_t::INTEGER)
+    {
+        int& lhs_value = static_cast<ast::Integer*>(lhs.get())->value();
+        int& rhs_value = static_cast<ast::Integer*>(rhs.get())->value();
+        lhs_value = integral_arithmetic_implementation(resolve_assign_operator(binary_type), lhs_value, rhs_value);
+    }
+
+    if (ast_type == ast::ast_type_t::FLOAT)
+    {
+        double& lhs_value = static_cast<ast::Float*>(lhs.get())->value();
+        double& rhs_value = static_cast<ast::Float*>(rhs.get())->value();
+        lhs_value = floating_point_arithmetic_implementation(resolve_assign_operator(binary_type), lhs_value, rhs_value);
+    }
+
+    return lhs;
 }
