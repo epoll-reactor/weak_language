@@ -128,7 +128,7 @@ inline std::string dispatch_token(token_t o) noexcept(true)
 
 namespace token_traits {
 
-ALWAYS_INLINE constexpr bool is_assign(token_t tok) noexcept(true)
+ALWAYS_INLINE constexpr bool is_assign_operator(token_t tok) noexcept(true)
 {
     switch (tok)
     {

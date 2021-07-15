@@ -48,22 +48,16 @@ const std::unordered_map<std::string, builtin_function_t> builtins
     {"print", [](const std::vector<boost::local_shared_ptr<ast::Object>>& arguments) {
         for (std::size_t i = 0; i < arguments.size(); i++)
         {
-            if (auto integral = boost::dynamic_pointer_cast<ast::Integer>(arguments[i]))
-            {
+            if (auto integral = boost::dynamic_pointer_cast<ast::Integer>(arguments[i])) {
                 default_stdout << integral->value();
-
                 if (i < arguments.size() - 1) { default_stdout << ' '; }
             }
-            else if (auto floating_point = boost::dynamic_pointer_cast<ast::Float>(arguments[i]))
-            {
+            else if (auto floating_point = boost::dynamic_pointer_cast<ast::Float>(arguments[i])) {
                 default_stdout << floating_point->value();
-
                 if (i < arguments.size() - 1) { default_stdout << ' '; }
             }
             else if (auto string = boost::dynamic_pointer_cast<ast::String>(arguments[i])) {
-
                 default_stdout << string->value();
-
                 if (i < arguments.size() - 1) { default_stdout << ' '; }
             }
         }

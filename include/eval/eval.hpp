@@ -18,7 +18,7 @@ private:
     /// @throws TypeError if non-functional object passed
     /// @throws EvalError in case of mismatch in the number of arguments
     /// @throws all exceptions from eval
-    boost::local_shared_ptr<ast::Object> call_function(std::string_view name, const std::vector<boost::local_shared_ptr<ast::Object>>& evaluated_args) noexcept(false);
+    boost::local_shared_ptr<ast::Object> call_function(std::string_view name, std::vector<boost::local_shared_ptr<ast::Object>> evaluated_args) noexcept(false);
 
     /// @throws all exceptions from call_function or builtin functions
     boost::local_shared_ptr<ast::Object> eval_function_call(const boost::local_shared_ptr<ast::FunctionCall>& function_call) noexcept(false);

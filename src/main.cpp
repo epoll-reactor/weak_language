@@ -28,8 +28,7 @@ void eval(std::string_view program)
         Evaluator evaluator(parsed_program);
         evaluator.eval();
 
-        try
-        {
+        try {
             auto& ostream = dynamic_cast<std::ostringstream&>(default_stdout);
             std::cout << ostream.str() << '\n';
             ostream.str("");
@@ -51,8 +50,7 @@ void eval_file(std::string_view filename)
 
 [[noreturn]] void run_repr()
 {
-    while (true)
-    {
+    while (true) {
         std::cout << ">>> ";
 
         std::string program;
@@ -80,22 +78,20 @@ float run_tests()
 
 int main(int argc, char* argv[])
 {
-    if (argc == 1)
-    {
+    if (argc == 1) {
          run_repr();
     }
-    else if (argc == 2)
-    {
-        if (strcmp(argv[1], "test") == 0)
-        {
+    else if (argc == 2) {
+        if (strcmp(argv[1], "test") == 0) {
             #define tests_to_run 10
             std::array<float, tests_to_run> times{};
 
-            for (int i = 0; i < tests_to_run; ++i)
+            for (int i = 0; i < tests_to_run; ++i) {
                 times[i] = run_tests();
-
-            for (int i = 0; i < tests_to_run; ++i)
+            }
+            for (int i = 0; i < tests_to_run; ++i) {
                 std::cout << "Test " << i << ": " << times[i] << " s.\n";
+            }
             #undef tests_to_run
         }
         else {

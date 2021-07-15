@@ -41,14 +41,12 @@ std::vector<Lexeme> Lexer::tokenize()
 
     lexemes.reserve(m_input.size() / 4);
 
-    while (has_next())
-    {
+    while (has_next()) {
         peek();
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-        switch (previous())
-        {
+        switch (previous()) {
             case  ' ':
             case '\n':
             case '\r':
@@ -75,8 +73,7 @@ std::vector<Lexeme> Lexer::tokenize()
             default:
                 if (std::find_if(m_operators.begin(), m_operators.end(), [this](const std::pair<std::string, token_t>& pair) {
                     return pair.first[0] == previous();
-                }) != m_operators.end())
-                {
+                }) != m_operators.end()) {
                     lexemes.emplace_back(process_operator());
                 }
                 else {
@@ -98,10 +95,10 @@ Lexeme Lexer::process_digit()
     std::string digit(1, previous());
     std::size_t dots_reached = 0;
 
-    while (has_next() && (isdigit(current()) || current() == '.'))
-    {
-        if (current() == '.')
+    while (has_next() && (isdigit(current()) || current() == '.')) {
+        if (current() == '.') {
             dots_reached++;
+        }
 
         digit += peek();
     }
@@ -121,12 +118,9 @@ Lexeme Lexer::process_string_literal()
 
     std::string literal(1, previous());
 
-    while (has_next() && current() != '\"')
-    {
+    while (has_next() && current() != '\"') {
         if (current() == '\\') { peek(); }
-
         if (current() == '\0') { throw LexicalError("Closing '\\\"' expected"); }
-
         literal += peek();
     }
 
@@ -139,13 +133,11 @@ Lexeme Lexer::process_symbol() noexcept
 {
     std::string symbol(1, previous());
 
-    while (has_next() && (is_alphanumeric(current()) || isdigit(current())))
-    {
+    while (has_next() && (is_alphanumeric(current()) || isdigit(current()))) {
         symbol += peek();
     }
 
-    if (m_keywords.find(symbol) != m_keywords.end())
-    {
+    if (m_keywords.find(symbol) != m_keywords.end()) {
         return Lexeme{"", m_keywords.at(symbol)};
     }
     else {
@@ -156,21 +148,18 @@ Lexeme Lexer::process_symbol() noexcept
 Lexeme Lexer::process_operator()
 {
     std::string op(1, previous());
-    token_t type;
 
-    while (has_next() && m_operators.find(op) != m_operators.end())
-    {
+    while (has_next() && m_operators.find(op) != m_operators.end()) {
         op += peek();
 
-        if (m_operators.find(op) == m_operators.end())
-        {
+        if (m_operators.find(op) == m_operators.end()) {
             op.pop_back();
             --m_current_index;
             break;
         }
     }
 
-    type = m_operators.at(op);
+    const token_t type = m_operators.at(op);
 
     return Lexeme{"", type};
 }

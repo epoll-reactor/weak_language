@@ -60,7 +60,7 @@ private:
     Lexeme process_operator();
 
     std::size_t m_current_index{0};
-    std::vector<char> m_input;
+    const std::vector<char> m_input;
 
     const std::unordered_map<std::string, token_t>& m_keywords;
     const std::unordered_map<std::string, token_t>& m_operators;

@@ -15,8 +15,7 @@ public:
     {
         std::size_t last_slash = path.find_last_of('/');
 
-        if (last_slash == std::string_view::npos)
-        {
+        if (last_slash == std::string_view::npos) {
             m_path.clear();
             m_name = path.substr(last_slash + 1);
         }
@@ -43,8 +42,7 @@ private:
 
 bool ends_with(std::string_view src, std::string ending)
 {
-    if (src.length() >= ending.length())
-    {
+    if (src.length() >= ending.length()) {
         return (0 == src.compare(src.length() - ending.length(), ending.length(), ending));
     }
     else {
@@ -58,11 +56,9 @@ std::vector<std::string_view> list_of_filenames(std::string contents)
 
     std::size_t pos = 0;
 
-    while (pos != std::string::npos)
-    {
+    while (pos != std::string::npos) {
         pos = contents.find_first_of("load \"");
-        if (pos != std::string_view::npos)
-        {
+        if (pos != std::string_view::npos) {
             contents = contents.substr(pos);
             pos = contents.find_first_of('\"') + 1;
             contents = contents.substr(pos);
@@ -92,10 +88,11 @@ std::string preprocess_file(std::string_view filename)
 
     file.close();
 
-    FileInfo file_info(filename);
+    const FileInfo file_info(filename);
 
-    for (auto file_to_load : list_of_filenames(contents))
+    for (auto file_to_load : list_of_filenames(contents)) {
         contents.insert(0, preprocess_file(file_info.path() + std::string(file_to_load)));
+    }
 
     const std::regex remove_load_re(R"(load\ \".*?\"\;)");
     std::ostringstream processed_file;
