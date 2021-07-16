@@ -30,8 +30,7 @@ Evaluator create_eval_context(std::string_view program, bool enable_optimizing =
     SemanticAnalyzer semantic_analyzer(parsed_program);
     semantic_analyzer.analyze();
 
-    if (enable_optimizing)
-    {
+    if (enable_optimizing) {
         Optimizer optimizer(parsed_program);
         optimizer.optimize();
     }
@@ -43,16 +42,14 @@ Evaluator create_eval_context(std::string_view program, bool enable_optimizing =
 
 void run_test(std::string_view program, std::string_view expected_output, bool enable_optimizing = true)
 {
-    std::cout << "Run test " << test_counter++ << " => ";
+    std::cout << "Run eval test " << test_counter++ << " => ";
 
     create_eval_context(program, enable_optimizing).eval();
 
-    try
-    {
+    try {
         auto& string_stream = dynamic_cast<std::ostringstream&>(default_stdout);
 
-        if (string_stream.str() != expected_output)
-        {
+        if (string_stream.str() != expected_output) {
             std::cerr << "EVAL ERROR: for " << program << "\n\tgot [" << string_stream.str() << "], expected [" << expected_output << "]\n";
             exit(-1);
         }
@@ -93,12 +90,21 @@ auto speed_test(std::string_view description, std::string_view program, bool ena
 
 } // namespace eval_detail
 
-void run_eval_tests()
+void eval_print_tests()
 {
-    std::cout << "Running eval tests...\n====\n";
-
-    eval_detail::run_test("fun main() {}", "");
     eval_detail::run_test("fun main() { print(1); }", "1");
+    eval_detail::run_test("fun main() { print(\"Text\"); }", "Text");
+    eval_detail::run_test("fun main() { variable = \"Text\"; print(variable); }", "Text");
+}
+
+void eval_empty_function_tests()
+{
+    eval_detail::run_test("fun main() {}", "");
+    eval_detail::run_test("fun f1() {} fun f2() {} fun f3() {} fun main() { f1(); f2(); f3(); }", "");
+}
+
+void eval_arithmetic_tests()
+{
     eval_detail::run_test("fun main() { var = 1; var += 1; print(var); }", "2");
     eval_detail::run_test("fun main() { var = 1; var += 1 + 1; print(var); }", "3");
     eval_detail::run_test("fun main() { var = 2; var <<= 10; print(var); }", "2048");
@@ -111,33 +117,55 @@ void run_eval_tests()
     eval_detail::run_test("fun main() { print(++1); }", "2");
     eval_detail::run_test("fun main() { print(--1); }", "0");
     eval_detail::run_test("fun main() { var = 10; print(--var); }", "9");
+}
+
+void eval_return_value_tests()
+{
     eval_detail::run_test("fun simple() { var = 2; var; } fun main() { print(simple()); }", "2");
     eval_detail::run_test("fun return_string() { \"String\"; } fun main() { print(return_string()); }", "String");
     eval_detail::run_test("fun simple() { var = \"Text\"; var; } fun main() { var = simple(); print(var); }", "Text");
     eval_detail::run_test("fun ret() { 1 + 1 + 1 + 1; } fun test() { var = 2; var + ret(); } fun main() { print(test()); } ", "6");
     eval_detail::run_test("fun ret(var) { var; } fun main() { print(ret(123));}", "123");
     eval_detail::run_test("fun create_int() { 1; } fun sum(lhs, rhs) { lhs + rhs; } fun main() { print(sum(1 + 1, create_int())); }", "3");
-    eval_detail::run_test("fun main() { var = 1; var = var + 1; print(var); }", "2");
-    eval_detail::run_test("fun main() { var = 0; while (var != 10) { ++var; print(var); if (var < 10) { print(\" \"); } } }", "1 2 3 4 5 6 7 8 9 10");
+}
+
+void eval_if_else_tests()
+{
     eval_detail::run_test("fun main() { var = 0; if (var == 0) { println(\"Equal\"); } else { println(\"Different\"); } }", "Equal\n");
     eval_detail::run_test("fun main() { var = 0; if (var != 0) { println(\"Equal\"); } else { println(\"Different\"); } }", "Different\n");
+}
+
+void eval_for_loop_tests()
+{
     eval_detail::run_test("fun main() { for (i = 0; i < 10; ++i) { print(i); } }", "0123456789");
+    eval_detail::run_test("fun main() { for (i = 0; i < 10; i = i + 1) { print(i); } }", "0123456789");
     eval_detail::run_test("fun copy(arg) { arg; } fun main() { for (i = 0; i < 10; ++i) { print(copy(i)); } }", "0123456789");
+}
+
+void eval_while_loop_tests()
+{
+//    eval_detail::run_test("fun main() { i = 0; while (++i < 10) { print(i); } }", "0123456789");
+}
+
+void eval_typecheck_tests()
+{
     eval_detail::run_test("fun main() { var = 0  ; print(integer?(var), float?(var)); }", "1 0");
     eval_detail::run_test("fun main() { var = 0.0; print(integer?(var), float?(var)); }", "0 1");
     eval_detail::run_test("fun main() { array = [0, 0, 0]; digit = 1; print(array?(array), array?(digit)); }", "1 0");
     eval_detail::run_test("fun main() { var = \"0\"; print(integer?(var), string?(var)); }", "0 1");
     eval_detail::run_test("fun create_array(a, b, c) { [a, b, c]; } fun main() { array = create_array(1,2,3); print(array?(array)); }", "1");
     eval_detail::run_test("fun create_array(a, b, c) { [a, b, c]; } fun main() { array = create_array(5,6,7); print(array[0]); }", "5");
+    eval_detail::run_test("fun compound-procedure(a, b, c, d, e) {} fun main() { print(procedure-arity(compound-procedure)); }", "5");
+    eval_detail::run_test("fun compound-procedure () { \"Body\"; } fun main() { print(procedure?(compound-procedure)); }", "1");
+}
+
+void eval_user_types_tests()
+{
     eval_detail::run_test("define-type structure(a, b, c); fun main() { structure; }", "");
+}
 
-    eval_detail::run_test("fun main() { while (1) {} }", ""); /// Reduced by optimizer
-    eval_detail::run_test("fun main() { while (1) { while (1) {} } }", ""); /// Reduced by optimizer
-    eval_detail::run_test("fun main() { for (;;) { for (;;) { for (;;) {} } } }", ""); /// Reduced by optimizer
-    eval_detail::run_test("fun main() { outer = 1; while (outer) { inner = 1; while (inner) {} } }", ""); /// Reduced by optimizer
-    eval_detail::run_test("fun main() { for (i = 0; ; ++i) {} }", ""); /// Reduced by optimizer
-    eval_detail::run_test("fun main() { for (i = 0; ; i += 1) {} }", ""); /// Reduced by optimizer
-
+void eval_compound_tests()
+{
     eval_detail::run_test(R"__(
         fun sqrt(x) {
             temp = 0.0;
@@ -248,7 +276,20 @@ void run_eval_tests()
             print(ones, zeros);
         }
     )__", "240 300");
+}
 
+void eval_optimizer_reduce_tests()
+{
+    eval_detail::run_test("fun main() { while (1) {} }", ""); /// Reduced by optimizer
+    eval_detail::run_test("fun main() { while (1) { while (1) {} } }", ""); /// Reduced by optimizer
+    eval_detail::run_test("fun main() { for (;;) { for (;;) { for (;;) {} } } }", ""); /// Reduced by optimizer
+    eval_detail::run_test("fun main() { outer = 1; while (outer) { inner = 1; while (inner) {} } }", ""); /// Reduced by optimizer
+    eval_detail::run_test("fun main() { for (i = 0; ; ++i) {} }", ""); /// Reduced by optimizer
+    eval_detail::run_test("fun main() { for (i = 0; ; i += 1) {} }", ""); /// Reduced by optimizer
+}
+
+void eval_fuzz_tests()
+{
     eval_detail::expect_error("fun simple() { var; } fun main() { simple(); }");
     eval_detail::expect_error("fun main() { for (var = 0; var != 10; ++var) { } print(var); }");
     eval_detail::expect_error("fun main() { for (var = 0; var != 10; ++var) { for (var_2 = 0; var_2 != 10; var_2 = var_2 + 1) { print(var); } print(var_2); } }");
@@ -257,6 +298,25 @@ void run_eval_tests()
     eval_detail::expect_error("fun main() { array = [1, 2, 3]; index = 1.25; array[index]; }");
     eval_detail::expect_error("fun main() { a = 1; b = \"Text\"; print(a + b); }");
     eval_detail::expect_error("fun main() { a = 1 % 1.5; }");
+
+}
+
+void run_eval_tests()
+{
+    std::cout << "Running eval tests...\n====\n";
+
+    eval_empty_function_tests();
+    eval_arithmetic_tests();
+    eval_print_tests();
+    eval_return_value_tests();
+    eval_if_else_tests();
+    eval_for_loop_tests();
+    eval_while_loop_tests();
+    eval_typecheck_tests();
+    eval_user_types_tests();
+    eval_compound_tests();
+    eval_optimizer_reduce_tests();
+    eval_fuzz_tests();
 
     std::cout << "Eval tests passed successfully\n";
 }

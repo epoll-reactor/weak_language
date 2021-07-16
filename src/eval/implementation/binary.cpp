@@ -67,20 +67,7 @@ ALWAYS_INLINE static constexpr std::variant<int32_t, double> arithmetic(token_t 
     );
 }
 
-boost::local_shared_ptr<ast::Object> internal::i_i_binary_implementation(token_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-    return boost::make_local_shared<ast::Integer>(std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(binary_type, lhs.get(), rhs.get())));
-}
-boost::local_shared_ptr<ast::Object> internal::i_f_binary_implementation(token_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-    return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Integer, ast::Float>(binary_type, lhs.get(), rhs.get())));
-}
-boost::local_shared_ptr<ast::Object> internal::f_i_binary_implementation(token_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-    return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Float, ast::Integer>(binary_type, lhs.get(), rhs.get())));
-}
-boost::local_shared_ptr<ast::Object> internal::f_f_binary_implementation(token_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-    return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Float, ast::Float>(binary_type, lhs.get(), rhs.get())));
-}
-
-static constexpr token_t resolve_assign_operator(token_t token)
+static constexpr token_t resolve_assign_operator(token_t token) noexcept(true)
 {
     switch (token) {
         case token_t::plus_assign: return token_t::plus;
@@ -92,8 +79,22 @@ static constexpr token_t resolve_assign_operator(token_t token)
         case token_t::and_assign: return token_t::bit_and;
         case token_t::srli_assign: return token_t::srli;
         case token_t::slli_assign: return token_t::slli;
-        default: throw EvalError("Unknown assign operator");
+        /// Never executes due to the `token_traits::is_assign_operator` checks
+        default: return token_t::end_of_data;
     }
+}
+
+boost::local_shared_ptr<ast::Object> internal::i_i_binary_implementation(token_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+    return boost::make_local_shared<ast::Integer>(std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(binary_type, lhs.get(), rhs.get())));
+}
+boost::local_shared_ptr<ast::Object> internal::i_f_binary_implementation(token_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+    return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Integer, ast::Float>(binary_type, lhs.get(), rhs.get())));
+}
+boost::local_shared_ptr<ast::Object> internal::f_i_binary_implementation(token_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+    return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Float, ast::Integer>(binary_type, lhs.get(), rhs.get())));
+}
+boost::local_shared_ptr<ast::Object> internal::f_f_binary_implementation(token_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+    return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Float, ast::Float>(binary_type, lhs.get(), rhs.get())));
 }
 
 boost::local_shared_ptr<ast::Object> internal::assign_binary_implementation(token_t binary_type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false)

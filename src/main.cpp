@@ -2,7 +2,6 @@
 
 #include "../include/tests/test_interpreter.hpp"
 #include "../include/tests/test_lexer.hpp"
-#include "../include/tests/test_optimizer.hpp"
 #include "../include/tests/test_semantic.hpp"
 #include "../include/tests/test_storage.hpp"
 #include "../include/tests/test_format.hpp"
@@ -67,7 +66,6 @@ float run_tests()
     run_format_tests();
     run_lexer_tests();
     run_semantic_analyzer_tests();
-//    run_optimizer_tests();
     run_storage_tests();
     run_eval_tests();
     run_eval_speed_tests();

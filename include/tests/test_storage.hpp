@@ -10,8 +10,7 @@
 
 void test_found(const Storage& env, std::string_view name, bool expected_found_result)
 {
-    try
-    {
+    try {
         env.lookup(name.data());
 
     } catch (EvalError&) {
@@ -27,11 +26,8 @@ void test_found(const Storage& env, std::string_view name, bool expected_found_r
         }
     }
 
-    if (!expected_found_result)
-    {
-        [[maybe_unused]] const bool not_found_expected = false;
-
-        assert(not_found_expected);
+    if (!expected_found_result) {
+        assert(false && "Variable unexpectedly found");
     }
 }
 

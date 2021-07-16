@@ -132,7 +132,6 @@ ALWAYS_INLINE constexpr bool is_assign_operator(token_t tok) noexcept(true)
 {
     switch (tok)
     {
-        case token_t::assign:
         case token_t::plus_assign:
         case token_t::minus_assign:
         case token_t::slash_assign:

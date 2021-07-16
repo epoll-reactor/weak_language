@@ -39,7 +39,7 @@ private:
     /// @throws EvalError if non-subscript object passed
     /// @throws EvalError if out-of-range
     /// @throws all exceptions from eval
-    boost::local_shared_ptr<ast::Object> eval_array_subscript(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& argument) noexcept(false);
+    const boost::local_shared_ptr<ast::Object>& eval_array_subscript(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& argument) noexcept(false);
 
     /// @throws all exceptions from eval
     void eval_array(const boost::local_shared_ptr<ast::Array>& array) noexcept(false);

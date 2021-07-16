@@ -118,8 +118,8 @@ Lexeme Lexer::process_string_literal()
 
     std::string literal(1, previous());
 
-    while (has_next() && current() != '\"') {
-        if (current() == '\\') { peek(); }
+    while (current() != '\"') {
+        if (has_next() && current() == '\\') { peek(); }
         if (current() == '\0') { throw LexicalError("Closing '\\\"' expected"); }
         literal += peek();
     }

@@ -13,9 +13,7 @@ namespace semantic_detail {
 boost::local_shared_ptr<ast::RootObject> create_parse_tree(std::string_view data)
 {
     Lexer lexer(std::istringstream{data.data()});
-
     Parser parser(lexer.tokenize());
-
     return parser.parse();
 }
 

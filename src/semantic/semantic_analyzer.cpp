@@ -30,7 +30,7 @@ void SemanticAnalyzer::analyze_statement(const boost::local_shared_ptr<ast::Obje
 
         token_t binary_type = binary->type();
 
-        if (token_traits::is_assign_operator(binary_type)) {
+        if (binary_type == token_t::assign || token_traits::is_assign_operator(binary_type)) {
             analyze_assign_statement(binary);
         }
         else {
@@ -253,6 +253,9 @@ bool SemanticAnalyzer::to_integral_convertible(const boost::local_shared_ptr<ast
         return true;
     }
     else if (statement->ast_type() == ast::ast_type_t::FUNCTION_CALL) {
+        return true;
+    }
+    else if (statement->ast_type() == ast::ast_type_t::UNARY) {
         return true;
     }
     else if (auto binary_expression = boost::dynamic_pointer_cast<ast::Binary>(statement)) {

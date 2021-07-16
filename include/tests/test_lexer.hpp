@@ -20,36 +20,27 @@ void run_test(std::string_view data, std::vector<Lexeme> assertion_lexemes)
 
     assert(lexemes.size() == assertion_lexemes.size());
 
-    for (std::size_t i = 0; i < lexemes.size(); i++)
-    {
-        if (lexemes[i].type != assertion_lexemes[i].type)
+    for (std::size_t i = 0; i < lexemes.size(); i++) {
+        if (lexemes[i].type != assertion_lexemes[i].type) {
             throw LexicalError(dispatch_token(lexemes[i].type) + " got, but " + dispatch_token(assertion_lexemes[i].type) + " required");
-
-        if (lexemes[i].data != assertion_lexemes[i].data)
+        }
+        if (lexemes[i].data != assertion_lexemes[i].data) {
             throw LexicalError(lexemes[i].data + " got, but " + assertion_lexemes[i].data + " required");
+        }
     }
 }
 
 void assert_exception(std::string_view data)
 {
-    try
-    {
+    trace_error(data, [&data]{
         Lexer lexer(std::istringstream{data.data()});
         lexer.tokenize();
-    }
-    catch (LexicalError& error) {
-        std::cout << std::setw(25) << "Lexical error processed: " << error.what() << '\n';
-        return;
-    }
-    catch (std::exception& error) {
-        std::cout << std::setw(25) <<  "Error processed: " << error.what() << '\n';
-        return;
-    }
 
-    [[maybe_unused]] const bool error_expected = false;
-
-//    assert(error_expected);
+        /// Will be skipped if exception thrown from analyzer function
+        assert(false && "Error expected");
+    });
 }
+
 } // namespace lexer_detail
 
 void lexer_number_literal_tests()

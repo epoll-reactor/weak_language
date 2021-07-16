@@ -52,7 +52,7 @@ void Evaluator::eval() noexcept(false)
 boost::local_shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, std::vector<boost::local_shared_ptr<ast::Object>> evaluated_args) noexcept(false)
 {
     auto find_function = [this, &name] {
-        const auto stored_function = m_storage.lookup(name.data()).get();
+        const auto& stored_function = m_storage.lookup(name.data()).get();
         do_typecheck<ast::ast_type_t::FUNCTION>(stored_function, "Try to call not a function");
         return static_cast<ast::Function*>(stored_function);
     };
@@ -193,9 +193,9 @@ void Evaluator::eval_array(const boost::local_shared_ptr<ast::Array>& array) noe
     }
 }
 
-boost::local_shared_ptr<ast::Object> Evaluator::eval_array_subscript(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& argument) noexcept(false)
+const boost::local_shared_ptr<ast::Object>& Evaluator::eval_array_subscript(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& argument) noexcept(false)
 {
-    const auto array_object = m_storage.lookup(argument->symbol_name()).get();
+    const auto& array_object = m_storage.lookup(argument->symbol_name()).get();
     do_typecheck<ast::ast_type_t::ARRAY>(array_object, "Try to subscript non-array expression");
 
     const auto index_object = eval(argument->index()).get();
@@ -218,10 +218,10 @@ void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& for_stmt) noex
 
     const auto init = boost::static_pointer_cast<ast::Binary>(eval(for_stmt->loop_init()));
 
-    const auto exit_cond = for_stmt->exit_condition();
-    const auto increment = for_stmt->increment();
-    const auto body = for_stmt->body();
-          auto boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval(exit_cond));
+    const auto& exit_cond = for_stmt->exit_condition();
+    const auto& increment = for_stmt->increment();
+    const auto& body = for_stmt->body();
+          auto  boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval(exit_cond));
 
     while (LIKELY(boolean_exit_condition->value())) {
         eval(body);
