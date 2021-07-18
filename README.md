@@ -9,8 +9,8 @@ fun hello_world() {
 fun power(num, stage) {
   result = 1;
   while (stage > 0) {
-    result = result * num;
-    stage = stage - 1;
+    result *= num;
+    --stage;
   }
   result;
 }
