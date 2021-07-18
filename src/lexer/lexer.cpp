@@ -77,7 +77,7 @@ std::vector<Lexeme> Lexer::tokenize()
                     lexemes.emplace_back(process_operator());
                 }
                 else {
-                    throw LexicalError(std::string("Unknown symbol: (") + previous() + ", " + std::to_string(static_cast<int>(previous())) + ")");
+                    throw LexicalError("Unknown symbol: {} ({})", previous(), std::to_string(static_cast<int>(previous())));
                 }
         }
     }

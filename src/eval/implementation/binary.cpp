@@ -16,7 +16,7 @@ ALWAYS_INLINE static bool comparison_implementation(token_t type, LeftOperand l,
         case token_t::le:      return l <= r;
         case token_t::lt:      return l < r;
         default:
-            throw EvalError("Incorrect binary expression: " + dispatch_token(type));
+            throw EvalError("Incorrect binary expression: {}", dispatch_token(type));
     }
 }
 

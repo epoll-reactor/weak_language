@@ -21,10 +21,10 @@ class Storage
 
 public:
     /// May @throw std::bad_alloc
-    void push(std::string_view name, boost::local_shared_ptr<ast::Object> value) noexcept(false);
+    void push(std::string_view name, const boost::local_shared_ptr<ast::Object>& value) noexcept(false);
 
     /// May @throw std::bad_alloc
-    void overwrite(std::string_view name, boost::local_shared_ptr<ast::Object> value) noexcept(false);
+    void overwrite(std::string_view name, const boost::local_shared_ptr<ast::Object>& value) noexcept(false);
 
     /// @throw EvalError if variable not found
     /// May @throw std::bad_alloc

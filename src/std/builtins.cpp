@@ -60,6 +60,19 @@ const std::unordered_map<std::string, builtin_function_t> builtins
                 default_stdout << string->value();
                 if (i < arguments.size() - 1) { default_stdout << ' '; }
             }
+            else if (auto type_object = boost::dynamic_pointer_cast<ast::TypeObject>(arguments[i])) {
+                default_stdout  << '(';
+                const auto& fields = type_object->fields();
+                size_t field_iterator = 0;
+                for (const auto& field : type_object->fields()) {
+                    builtins.at("print")({field.second});
+                    if (field_iterator < fields.size() - 1) {
+                        default_stdout << ", ";
+                    }
+                    ++field_iterator;
+                }
+                default_stdout  << ')';
+            }
         }
 
         return std::nullopt;

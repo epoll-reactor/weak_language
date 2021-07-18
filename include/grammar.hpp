@@ -13,7 +13,8 @@ static inline const std::unordered_map<std::string, token_t> test_keywords {
     {"return", token_t::kw_return},
     {"fun", token_t::kw_function_decl},
     {"load", token_t::kw_load},
-    {"define-type", token_t::kw_define_type}
+    {"define-type", token_t::kw_define_type},
+    {"new", token_t::kw_new}
 };
 
 static inline const std::unordered_map<std::string, token_t> test_operators {

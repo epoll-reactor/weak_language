@@ -5,14 +5,22 @@
 
 #include "../../include/std/builtins.hpp"
 
+#include <numeric>
+
 ALWAYS_INLINE static constexpr bool is_datatype(const ast::Object* object) noexcept(true)
 {
     if (!object) { return false; }
 
-    return object->ast_type() == ast::ast_type_t::INTEGER
-        || object->ast_type() == ast::ast_type_t::FLOAT
-        || object->ast_type() == ast::ast_type_t::STRING
-        || object->ast_type() == ast::ast_type_t::ARRAY;
+    switch (object->ast_type()) {
+        case ast::ast_type_t::INTEGER:
+        case ast::ast_type_t::FLOAT:
+        case ast::ast_type_t::STRING:
+        case ast::ast_type_t::ARRAY:
+        case ast::ast_type_t::TYPE_OBJECT:
+            return true;
+        default:
+            return false;
+    }
 }
 
 template <ast::ast_type_t ExpectedType>
@@ -27,7 +35,7 @@ ALWAYS_INLINE static void do_typecheck(ast::ast_type_t target_type, const char* 
     if (UNLIKELY(ExpectedType != target_type)) { throw EvalError(error_message); }
 }
 
-Evaluator::Evaluator(const boost::local_shared_ptr<ast::RootObject>& program)
+Evaluator::Evaluator(const boost::local_shared_ptr<ast::RootObject>& program) noexcept(false)
 {
     for (const auto& stmt : program->get()) {
         m_expressions.emplace_back(stmt);
@@ -41,12 +49,49 @@ void Evaluator::eval() noexcept(false)
         if (function) { m_storage.push(function->name().data(), function); continue; }
 
         const auto type_def = boost::dynamic_pointer_cast<ast::TypeDefinition>(expr);
-        if (type_def) { m_storage.push(type_def->name().data(), type_def); continue; }
-
-        throw EvalError("Only functions as global objects supported");
+        add_type_definition(type_def);
+        continue;
     }
 
     call_function("main", {});
+}
+
+void Evaluator::add_type_definition(const boost::local_shared_ptr<ast::TypeDefinition>& definition) noexcept(false)
+{
+    m_type_creators.emplace(definition->name(), [type_list = definition->fields()] (
+        const std::vector<boost::local_shared_ptr<ast::Object>>& evaluated_fields
+    ) {
+        std::unordered_map<std::string, boost::local_shared_ptr<ast::Object>> fields;
+
+        for (size_t i = 0; i < type_list.size(); ++i) {
+            fields.emplace(type_list[i], evaluated_fields[i]);
+        }
+
+        return boost::make_local_shared<ast::TypeObject>(std::move(fields));
+    });
+}
+
+boost::local_shared_ptr<ast::Object> Evaluator::eval_type_creation_function(const boost::local_shared_ptr<ast::TypeCreator>& type_creator) noexcept(false)
+{
+    return m_type_creators[type_creator->name()](type_creator->arguments());
+}
+
+boost::local_shared_ptr<ast::Object> Evaluator::eval_type_field(const boost::local_shared_ptr<ast::TypeFieldOperator>& type_field) noexcept(false)
+{
+    const auto& name = type_field->name();
+    const auto& field = type_field->field();
+    const auto& object = m_storage.lookup(name);
+
+    if (object->ast_type() != ast::ast_type_t::TYPE_OBJECT) { throw EvalError("Type object expected"); }
+
+    const auto type_object = boost::static_pointer_cast<ast::TypeObject>(object);
+    const auto& fields = type_object->fields();
+
+    if (fields.contains(field)) {
+        return fields.at(field);
+    } else {
+        throw EvalError("{}: field not found - {}", name, field);
+    }
 }
 
 boost::local_shared_ptr<ast::Object> Evaluator::call_function(std::string_view name, std::vector<boost::local_shared_ptr<ast::Object>> evaluated_args) noexcept(false)
@@ -278,10 +323,17 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval(const boost::local_shared_p
         case ast::ast_type_t::INTEGER:
         case ast::ast_type_t::FLOAT:
         case ast::ast_type_t::STRING:
+        case ast::ast_type_t::TYPE_OBJECT:
             return expression;
 
         case ast::ast_type_t::SYMBOL:
             return m_storage.lookup(boost::static_pointer_cast<ast::Symbol>(expression)->name());
+
+        case ast::ast_type_t::TYPE_FIELD:
+            return eval_type_field(boost::static_pointer_cast<ast::TypeFieldOperator>(expression));
+
+        case ast::ast_type_t::TYPE_CREATOR:
+            return eval_type_creation_function(boost::static_pointer_cast<ast::TypeCreator>(expression));
 
         case ast::ast_type_t::ARRAY:
             eval_array(boost::static_pointer_cast<ast::Array>(expression));

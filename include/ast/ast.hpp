@@ -6,12 +6,13 @@
 #include <boost/smart_ptr/local_shared_ptr.hpp>
 #include <boost/smart_ptr/make_local_shared.hpp>
 
+#include <unordered_map>
 #include <vector>
 #include <memory>
 
 namespace ast {
 
-enum struct ast_type_t { OBJECT, INTEGER, FLOAT, STRING, SYMBOL, ARRAY, ARRAY_SUBSCRIPT_OPERATOR, UNARY, BINARY, BLOCK, WHILE, FOR, IF, FUNCTION, FUNCTION_CALL, TYPE_DEFINITION };
+enum struct ast_type_t { OBJECT, INTEGER, FLOAT, STRING, SYMBOL, ARRAY, ARRAY_SUBSCRIPT_OPERATOR, UNARY, BINARY, BLOCK, WHILE, FOR, IF, FUNCTION, FUNCTION_CALL, TYPE_CREATOR, TYPE_DEFINITION, TYPE_OBJECT, TYPE_FIELD };
 
 class Object
 {
@@ -222,6 +223,19 @@ private:
     std::vector<boost::local_shared_ptr<Object>> m_arguments;
 };
 
+class TypeCreator : public Object
+{
+public:
+    TypeCreator(std::string name, std::vector<boost::local_shared_ptr<Object>> arguments) noexcept(true);
+    const std::string& name() const noexcept(true);
+    const std::vector<boost::local_shared_ptr<Object>>& arguments() const noexcept(true);
+    constexpr ast_type_t ast_type() const noexcept(true);
+
+private:
+    std::string m_name;
+    std::vector<boost::local_shared_ptr<Object>> m_arguments;
+};
+
 class TypeDefinition : public Object
 {
 public:
@@ -234,6 +248,31 @@ private:
     std::string m_name;
     std::vector<std::string> m_fields;
 };
+
+class TypeObject : public Object
+{
+public:
+    TypeObject(std::unordered_map<std::string, boost::local_shared_ptr<Object>> arguments) noexcept(true);
+    const std::unordered_map<std::string, boost::local_shared_ptr<Object>>& fields() const noexcept(false);
+    constexpr ast_type_t ast_type() const noexcept(true);
+
+private:
+    std::unordered_map<std::string, boost::local_shared_ptr<Object>> m_arguments;
+};
+
+class TypeFieldOperator : public Object
+{
+public:
+    TypeFieldOperator(std::string type_name, std::string type_field) noexcept(true);
+    const std::string& name() const noexcept(true);
+    const std::string& field() const noexcept(true);
+    constexpr ast_type_t ast_type() const noexcept(true);
+
+private:
+    std::string m_type_name;
+    std::string m_type_field;
+};
+
 
 constexpr ast_type_t Object::ast_type() const noexcept(true) { return ast_type_t::OBJECT; }
 constexpr ast_type_t Integer::ast_type() const noexcept(true) { return ast_type_t::INTEGER;}
@@ -250,7 +289,10 @@ constexpr ast_type_t For::ast_type() const noexcept(true) { return ast_type_t::F
 constexpr ast_type_t If::ast_type() const noexcept(true) { return ast_type_t::IF; }
 constexpr ast_type_t Function::ast_type() const noexcept(true) { return ast_type_t::FUNCTION; }
 constexpr ast_type_t FunctionCall::ast_type() const noexcept(true) { return ast_type_t::FUNCTION_CALL; }
+constexpr ast_type_t TypeCreator::ast_type() const noexcept(true) { return ast_type_t::TYPE_CREATOR; }
 constexpr ast_type_t TypeDefinition::ast_type() const noexcept(true) { return ast_type_t::TYPE_DEFINITION; }
+constexpr ast_type_t TypeObject::ast_type() const noexcept(true) { return ast_type_t::TYPE_OBJECT; }
+constexpr ast_type_t TypeFieldOperator::ast_type() const noexcept(true) { return ast_type_t::TYPE_FIELD; }
 
 } // namespace ast
 

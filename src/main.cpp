@@ -81,13 +81,13 @@ int main(int argc, char* argv[])
     }
     else if (argc == 2) {
         if (strcmp(argv[1], "test") == 0) {
-            #define tests_to_run 10
+            constexpr size_t tests_to_run = 10;
             std::array<float, tests_to_run> times{};
 
-            for (int i = 0; i < tests_to_run; ++i) {
+            for (size_t i = 0; i < tests_to_run; ++i) {
                 times[i] = run_tests();
             }
-            for (int i = 0; i < tests_to_run; ++i) {
+            for (size_t i = 0; i < tests_to_run; ++i) {
                 std::cout << "Test " << i << ": " << times[i] << " s.\n";
             }
             #undef tests_to_run

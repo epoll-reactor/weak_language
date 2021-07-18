@@ -46,6 +46,9 @@ boost::local_shared_ptr<ast::Object> Parser::primary() noexcept(false)
         case token_t::kw_define_type:
             return define_type_statement();
 
+        case token_t::kw_new:
+            return type_creator();
+
         case token_t::left_brace:
             return block();
 
@@ -71,7 +74,7 @@ boost::local_shared_ptr<ast::Object> Parser::primary() noexcept(false)
             return unary();
 
         default:
-            throw ParseError("Unknown expression: " + dispatch_token(previous().type));
+            throw ParseError("Unknown expression: {}", dispatch_token(previous().type));
     }
 }
 
@@ -137,7 +140,7 @@ Lexeme Parser::require(const std::vector<token_t>& expected_types) noexcept(fals
         return lexeme.value();
     }
     else {
-        throw ParseError(dispatch_token(expected_types[0]) + " expected, got " + dispatch_token(current().type));
+        throw ParseError("{} expected, got {}", dispatch_token(expected_types[0]), dispatch_token(current().type));
     }
 }
 
@@ -418,6 +421,19 @@ boost::local_shared_ptr<ast::Object> Parser::resolve_array_subscript() noexcept(
     return boost::make_local_shared<ast::ArraySubscriptOperator>(symbol_name, std::move(term));
 }
 
+boost::local_shared_ptr<ast::Object> Parser::resolve_type_field_operator() noexcept(false)
+{
+    std::string symbol_name = previous().data;
+
+    require({token_t::dot});
+
+    peek();
+
+    std::string field_name = previous().data;
+
+    return boost::make_local_shared<ast::TypeFieldOperator>(std::move(symbol_name), std::move(field_name));
+}
+
 boost::local_shared_ptr<ast::Object> Parser::resolve_symbol() noexcept(false)
 {
     if (current().type == token_t::left_paren) {
@@ -427,7 +443,21 @@ boost::local_shared_ptr<ast::Object> Parser::resolve_symbol() noexcept(false)
     else if (current().type == token_t::left_box_brace) {
         return resolve_array_subscript();
     }
+    else if (current().type == token_t::dot) {
+        return resolve_type_field_operator();
+    }
     else {
         return binary(boost::make_local_shared<ast::Symbol>(previous().data));
+    }
+}
+
+boost::local_shared_ptr<ast::Object> Parser::type_creator() noexcept(false)
+{
+    std::string name = peek().data;
+
+    if (current().type == token_t::left_paren) {
+        return boost::make_local_shared<ast::TypeCreator>(std::move(name), resolve_function_arguments());
+    } else {
+        throw ParseError("'(' expected");
     }
 }

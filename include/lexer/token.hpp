@@ -65,6 +65,7 @@ enum struct token_t
     kw_return,
     kw_function_decl,
     kw_define_type,
+    kw_new,
     kw_load,
 
     num,
@@ -122,6 +123,7 @@ inline std::string dispatch_token(token_t o) noexcept(true)
         case token_t::kw_while:        return "<while>";
         case token_t::kw_if:           return "<if>";
         case token_t::kw_load:         return "<load>";
+        case token_t::kw_new:          return "<new>";
         default:                       return "<unknown>";
     }
 }

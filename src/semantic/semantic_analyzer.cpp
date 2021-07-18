@@ -58,6 +58,10 @@ void SemanticAnalyzer::analyze_statement(const boost::local_shared_ptr<ast::Obje
         /* Actually nothing to analyze. */
         return;
     }
+    if (statement_type == ast::ast_type_t::TYPE_FIELD) {
+        /* Actually nothing to analyze. */
+        return;
+    }
     if (statement_type == ast::ast_type_t::ARRAY) {
         analyze_array_statement(boost::static_pointer_cast<ast::Array>(statement));
         return;
@@ -134,7 +138,7 @@ void SemanticAnalyzer::analyze_assign_statement(const boost::local_shared_ptr<as
 void SemanticAnalyzer::analyze_binary_statement(const boost::local_shared_ptr<ast::Binary>& statement) noexcept(false)
 {
     if (!token_traits::is_binary(statement->type())) {
-        throw SemanticError("Incorrect binary expression operator: " + dispatch_token(statement->type()));
+        throw SemanticError("Incorrect binary expression operator: {}", dispatch_token(statement->type()));
     }
 
     if (auto lhs = boost::dynamic_pointer_cast<ast::Binary>(statement->lhs())) {
@@ -157,7 +161,8 @@ void SemanticAnalyzer::analyze_function_call_statement(const boost::local_shared
         &&  argument_type != ast::ast_type_t::UNARY
         &&  argument_type != ast::ast_type_t::FUNCTION_CALL
         &&  argument_type != ast::ast_type_t::ARRAY
-        &&  argument_type != ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR) {
+        &&  argument_type != ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR
+        &&  argument_type != ast::ast_type_t::TYPE_FIELD) {
             throw SemanticError("Wrong function call argument");
         }
     }

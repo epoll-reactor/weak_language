@@ -119,6 +119,13 @@ private:
     /// @return array subscript parse tree
     boost::local_shared_ptr<ast::Object> resolve_array_subscript() noexcept(false);
 
+    /// @pre    previous() returns symbol lexeme
+    /// @post   previous() returns lexeme after type field
+    /// @return field access parse tree
+    boost::local_shared_ptr<ast::Object> resolve_type_field_operator() noexcept(false);
+
+    boost::local_shared_ptr<ast::Object> type_creator() noexcept(false);
+
     template <typename T, typename... Args>
     boost::local_shared_ptr<T> pool_allocate(Args&&... args) noexcept(false)
     {

@@ -9,7 +9,7 @@
 class Evaluator
 {
 public:
-    Evaluator(const boost::local_shared_ptr<ast::RootObject>& program);
+    Evaluator(const boost::local_shared_ptr<ast::RootObject>& program) noexcept(false);
 
     void eval() noexcept(false);
 
@@ -53,10 +53,18 @@ private:
     /// @throws all exceptions from eval
     void eval_if(const boost::local_shared_ptr<ast::If>& if_stmt) noexcept(false);
 
+    void add_type_definition(const boost::local_shared_ptr<ast::TypeDefinition>& definition) noexcept(false);
+
+    boost::local_shared_ptr<ast::Object> eval_type_field(const boost::local_shared_ptr<ast::TypeFieldOperator>& type_field) noexcept(false);
+
+    boost::local_shared_ptr<ast::Object> eval_type_creation_function(const boost::local_shared_ptr<ast::TypeCreator>& type_creator) noexcept(false);
+
     /// @throws all exceptions from internal functions
     boost::local_shared_ptr<ast::Object> eval(const boost::local_shared_ptr<ast::Object>& expression) noexcept(false);
 
     std::vector<boost::local_shared_ptr<ast::Object>> m_expressions;
+    std::unordered_map<std::string, std::function<
+        boost::local_shared_ptr<ast::Object>(const std::vector<boost::local_shared_ptr<ast::Object>>&)>> m_type_creators;
     Storage m_storage;
 };
 

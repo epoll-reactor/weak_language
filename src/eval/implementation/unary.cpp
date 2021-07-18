@@ -6,14 +6,14 @@ ALWAYS_INLINE static void integral_unary_implementation(token_t type, int32_t& u
 {
     if (  LIKELY(type == token_t::inc)) { ++unary; return; }
     if (UNLIKELY(type == token_t::dec)) { --unary; return; }
-    throw EvalError("Unknown unary operator");
+    throw EvalError("Unknown unary operator: {}", dispatch_token(type));
 }
 
 ALWAYS_INLINE static void floating_point_unary_implementation(token_t type, double& unary) noexcept(false)
 {
     if (  LIKELY(type == token_t::inc)) { ++unary; return; }
     if (UNLIKELY(type == token_t::dec)) { --unary; return; }
-    throw EvalError("Unknown unary operator");
+    throw EvalError("Unknown unary operator: {}", dispatch_token(type));
 }
 
 boost::local_shared_ptr<ast::Object> internal::unary_implementation(ast::ast_type_t ast_type, token_t unary_type, const boost::local_shared_ptr<ast::Object>& expression) noexcept(false)
