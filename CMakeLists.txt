@@ -33,4 +33,4 @@ set(CMAKE_CXX_FLAGS "${common_flags} ${find_leaks_flags} ${extra_warnings_flags}
 
 
 file(GLOB_RECURSE SRC include/*.hpp src/*.cpp)
-add_executable(WeakLanguage ${SRC} include/eval/implementation/binary.hpp include/eval/implementation/unary.hpp src/eval/implementation/unary.cpp src/eval/implementation/binary.cpp src/storage/storage.cpp include/error/common_error.hpp include/format.hpp include/tests/test_format.hpp src/ast/type_object.cpp src/ast/type_field_operator.cpp src/ast/type_creator.cpp)
+add_executable(WeakLanguage ${SRC} include/eval/implementation/binary.hpp include/eval/implementation/unary.hpp src/eval/implementation/unary.cpp src/eval/implementation/binary.cpp src/storage/storage.cpp include/error/common_error.hpp include/format.hpp include/tests/test_format.hpp src/ast/type_object.cpp src/ast/type_field_operator.cpp src/ast/type_creator.cpp src/std/implementation/type_traits.cpp include/error/error.hpp src/std/implementation/io.cpp)
