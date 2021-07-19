@@ -7,8 +7,7 @@
 Lexer::Lexer(std::istringstream data)
     : m_input(std::istreambuf_iterator<char>(data), std::istreambuf_iterator<char>())
     , m_keywords(test_keywords)
-    , m_operators(test_operators)
-{ }
+    , m_operators(test_operators) {}
 
 char Lexer::current() const
 {

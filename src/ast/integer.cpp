@@ -3,13 +3,10 @@
 namespace ast {
 
 Integer::Integer(std::string_view data) noexcept(false)
-{
-    m_data = std::stoi(data.data());
-}
+    : m_data(std::stoi(data.data())) {}
 
 Integer::Integer(int32_t data) noexcept(true)
-    : m_data(data)
-{ }
+    : m_data(data) {}
 
 int32_t& Integer::value() noexcept(true)
 {

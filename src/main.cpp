@@ -90,7 +90,6 @@ int main(int argc, char* argv[])
             for (size_t i = 0; i < tests_to_run; ++i) {
                 std::cout << "Test " << i << ": " << times[i] << " s.\n";
             }
-            #undef tests_to_run
         }
         else {
             eval_file(argv[1]);

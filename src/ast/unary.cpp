@@ -6,8 +6,7 @@ namespace ast {
 
 Unary::Unary(token_t type, boost::local_shared_ptr<Object> operation) noexcept(true)
     : m_type(type)
-    , m_operation(std::move(operation))
-{ }
+    , m_operation(std::move(operation) {}
 
 boost::local_shared_ptr<Object> Unary::operand() const noexcept(true)
 {

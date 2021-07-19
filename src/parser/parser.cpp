@@ -2,8 +2,7 @@
 
 Parser::Parser(std::vector<Lexeme> lexemes) noexcept(true)
     : m_input(std::move(lexemes))
-    , m_current_index(0)
-{ }
+    , m_current_index(0) {}
 
 boost::local_shared_ptr<ast::RootObject> Parser::parse() noexcept(false)
 {

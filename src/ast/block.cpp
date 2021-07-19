@@ -3,8 +3,7 @@
 namespace ast {
 
 Block::Block(std::vector<boost::local_shared_ptr<Object>> statements) noexcept(true)
-    : m_statements(std::move(statements))
-{ }
+    : m_statements(std::move(statements)) {}
 
 const std::vector<boost::local_shared_ptr<Object>>& Block::statements() const noexcept(true)
 {

@@ -34,8 +34,7 @@ static void optimize_binary(
 ) noexcept(false);
 
 Optimizer::Optimizer(boost::local_shared_ptr<ast::RootObject>& root)
-    : m_input(root->get())
-{ }
+    : m_input(root->get()) {}
 
 void Optimizer::optimize()
 {

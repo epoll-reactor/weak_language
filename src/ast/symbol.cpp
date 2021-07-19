@@ -3,8 +3,7 @@
 namespace ast {
 
 Symbol::Symbol(std::string name) noexcept(true)
-    : m_name(std::move(name))
-{ }
+    : m_name(std::move(name)) {}
 
 const std::string& Symbol::name() const noexcept(true)
 {
