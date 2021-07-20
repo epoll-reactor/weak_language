@@ -183,13 +183,13 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_binary(const boost::local_s
 
     if (type == token_t::assign) {
         const auto variable = boost::static_pointer_cast<ast::Symbol>(binary->lhs());
-        m_storage.overwrite(variable->name(), eval(binary->rhs()));
+        m_storage.push(variable->name(), eval(binary->rhs()));
         return binary;
     }
 
     if (token_traits::is_assign_operator(type)) {
         const auto variable = boost::static_pointer_cast<ast::Symbol>(binary->lhs());
-        m_storage.overwrite(
+        m_storage.push(
             variable->name(),
             internal::assign_binary_implementation(
                type, m_storage.lookup(variable->name()), eval(binary->rhs())));
@@ -261,7 +261,7 @@ void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& for_stmt) noex
     m_storage.scope_begin();
 
     const auto  init      = eval(for_stmt->loop_init());
-    const auto  init_type = eval(boost::static_pointer_cast<ast::Binary>(init)->lhs());
+    const auto  init_type = eval(boost::static_pointer_cast<ast::Binary>(init)->lhs())->ast_type();
     const auto& exit_cond = for_stmt->exit_condition();
     const auto& increment = for_stmt->increment();
     const auto& body      = for_stmt->body();
@@ -276,10 +276,9 @@ void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& for_stmt) noex
         }
     };
 
-    if (init_type->ast_type() == ast::ast_type_t::INTEGER) {
+    if (init_type == ast::ast_type_t::INTEGER) {
         for_implementation.template operator()<ast::Integer>();
-    }
-    if (init_type->ast_type() == ast::ast_type_t::FLOAT) {
+    } else if (init_type == ast::ast_type_t::FLOAT) {
         for_implementation.template operator()<ast::Float>();
     }
 
@@ -288,7 +287,10 @@ void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& for_stmt) noex
 
 void Evaluator::eval_while(const boost::local_shared_ptr<ast::While>& while_stmt) noexcept(false)
 {
-    auto while_implementation = [this, &while_stmt]<typename Numeric>(auto&& exit_cond) {
+    const auto exit_cond = eval(while_stmt->exit_condition());
+    const auto exit_cond_type = exit_cond->ast_type();
+
+    auto while_implementation = [this, &while_stmt, &exit_cond]<typename Numeric>() {
         const auto& body = while_stmt->body();
         auto internal_exit_cond = boost::static_pointer_cast<Numeric>(exit_cond);
 
@@ -296,18 +298,13 @@ void Evaluator::eval_while(const boost::local_shared_ptr<ast::While>& while_stmt
             eval(body);
             internal_exit_cond = boost::static_pointer_cast<Numeric>(eval(while_stmt->exit_condition()));
         }
+
     };
 
-    auto exit_cond = eval(while_stmt->exit_condition());
-    auto exit_cond_type = exit_cond->ast_type();
-
     if (exit_cond_type == ast::ast_type_t::INTEGER) {
-        while_implementation.template operator()<ast::Integer>(exit_cond);
-        return;
+        while_implementation.template operator()<ast::Integer>();
     } else if (exit_cond_type == ast::ast_type_t::FLOAT) {
-        /// TODO: fix some troubles with floats
-        while_implementation.template operator()<ast::Integer/*Float*/>(exit_cond);
-        return;
+        while_implementation.template operator()<ast::Float>();
     }
 }
 

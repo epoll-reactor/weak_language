@@ -78,8 +78,7 @@ int main(int argc, char* argv[])
 {
     if (argc == 1) {
          run_repr();
-    }
-    else if (argc == 2) {
+    } else if (argc == 2) {
         if (strcmp(argv[1], "test") == 0) {
             constexpr size_t tests_to_run = 10;
             float times[tests_to_run];
@@ -90,8 +89,7 @@ int main(int argc, char* argv[])
             for (size_t i = 0; i < tests_to_run; ++i) {
                 std::cout << "Test " << i << ": " << times[i] << " s.\n";
             }
-        }
-        else {
+        } else {
             eval_file(argv[1]);
         }
     }

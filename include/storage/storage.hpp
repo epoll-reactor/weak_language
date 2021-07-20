@@ -6,7 +6,7 @@
 
 #include <boost/smart_ptr/local_shared_ptr.hpp>
 
-#include <unordered_map>
+#include <map>
 
 namespace ast { class Object; }
 
@@ -20,14 +20,14 @@ class Storage
     };
 
 public:
-    /// May @throw std::bad_alloc
+    /// @throws std::bad_alloc
     void push(std::string_view name, const boost::local_shared_ptr<ast::Object>& value) noexcept(false);
 
-    /// May @throw std::bad_alloc
+    /// @throws std::bad_alloc
     void overwrite(std::string_view name, const boost::local_shared_ptr<ast::Object>& value) noexcept(false);
 
-    /// @throw EvalError if variable not found
-    /// May @throw std::bad_alloc
+    /// @throws EvalError if variable not found
+    /// @throws std::bad_alloc
     const boost::local_shared_ptr<ast::Object>& lookup(std::string_view name) const noexcept(false);
 
     ALWAYS_INLINE void scope_begin() noexcept(true);
@@ -37,7 +37,7 @@ private:
     Storage::StorageRecord* find(std::string_view name) const noexcept(true);
 
     std::size_t m_scope_depth = 0;
-    mutable std::unordered_map <uint64_t, StorageRecord> m_inner_scopes;
+    mutable std::map<uint64_t, StorageRecord> m_inner_scopes;
 };
 
 void Storage::scope_begin() noexcept(true) { ++m_scope_depth; }
