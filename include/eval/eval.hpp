@@ -55,9 +55,11 @@ private:
 
     void add_type_definition(const boost::local_shared_ptr<ast::TypeDefinition>& definition) noexcept(false);
 
-    boost::local_shared_ptr<ast::Object> eval_type_field(const boost::local_shared_ptr<ast::TypeFieldOperator>& type_field) noexcept(false);
-
+    /// @throws std::out_of_range if no data is present
     boost::local_shared_ptr<ast::Object> eval_type_creation_function(const boost::local_shared_ptr<ast::TypeCreator>& type_creator) noexcept(false);
+
+    /// @throws EvalError if type mismatch
+    boost::local_shared_ptr<ast::Object> eval_type_field(const boost::local_shared_ptr<ast::TypeFieldOperator>& type_field) noexcept(false);
 
     /// @throws all exceptions from internal functions
     boost::local_shared_ptr<ast::Object> eval(const boost::local_shared_ptr<ast::Object>& expression) noexcept(false);

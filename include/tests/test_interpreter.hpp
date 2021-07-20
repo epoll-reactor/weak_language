@@ -138,6 +138,7 @@ void eval_if_else_tests()
 void eval_for_loop_tests()
 {
     eval_detail::run_test("fun main() { for (i = 0; i < 10; ++i) { print(i); } }", "0123456789");
+    eval_detail::run_test("fun main() { for (i = 0.0; i <= 2.0; i += 0.5) { print(i, \"\"); } }", "0 0.5 1 1.5 2 ");
     eval_detail::run_test("fun main() { for (i = 0; i < 10; i = i + 1) { print(i); } }", "0123456789");
     eval_detail::run_test("fun copy(arg) { arg; } fun main() { for (i = 0; i < 10; ++i) { print(copy(i)); } }", "0123456789");
 }
@@ -163,7 +164,7 @@ void eval_user_types_tests()
 {
     eval_detail::run_test("define-type structure(a, b, c); fun main() { obj = new structure(1, 2, 3); print(obj); }", "(3, 2, 1)");
     eval_detail::run_test("define-type structure(a, b, c); fun main() { obj = new structure(1, 2, 3); print(obj.a); }", "1");
-//    eval_detail::run_test("define-type structure(a, b, c); fun main() { obj = new structure(1, 2, 3); obj.a = 2; print(obj.a); }", "2");
+    eval_detail::expect_error("define-type structure(a, b, c); fun main() { obj = new structure(1); print(obj.a); }");
     eval_detail::expect_error("define-type structure(a, b, c); fun main() { obj = new structure(1, 2, 3); print(obj.field); }");
 }
 
@@ -333,7 +334,7 @@ void run_eval_speed_tests()
         fun complex() { for (k = 0; k < 1000000; ++k) { for (j = 0; j < 1000000; ++j) { k * j; } } }
         fun main()    { for (i = 0; i < 1000000; ++i) { complex(); } }
     )", enable_optimizing);
-    eval_detail::speed_test("Count elements in array 27x20 1'000'000 times", R"(
+    eval_detail::speed_test("Count elements in array 27x20 1'000'000 times with for", R"(
         fun main() {
             array = [
                 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
@@ -368,6 +369,47 @@ void run_eval_speed_tests()
                         ++zeros;
                     }
                 }
+            }
+
+            print(ones, zeros);
+        }
+    )", enable_optimizing);
+    eval_detail::speed_test("Count elements in array 27x20 1'000'000 times with while", R"(
+        fun main() {
+            array = [
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+                1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+                0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0
+            ];
+
+            ones = 0; zeros = 0; tests_count = 0;
+            while (tests_count < 1000000) {
+                for (i = 0; i < 540; ++i) {
+                    var = array[i];
+                    if (var == 1) {
+                        ++ones;
+                    } else {
+                        ++zeros;
+                    }
+                }
+                ++tests_count;
             }
 
             print(ones, zeros);

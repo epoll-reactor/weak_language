@@ -58,9 +58,13 @@ void Evaluator::eval() noexcept(false)
 
 void Evaluator::add_type_definition(const boost::local_shared_ptr<ast::TypeDefinition>& definition) noexcept(false)
 {
-    m_type_creators.emplace(definition->name(), [type_list = definition->fields()] (
+    m_type_creators.emplace(definition->name(), [&definition] (
         const std::vector<boost::local_shared_ptr<ast::Object>>& evaluated_fields
     ) {
+        const auto& type_list = definition->fields();
+
+        if (type_list.size() != evaluated_fields.size()) { throw EvalError("new {}: wrong arguments size", definition->name()); }
+
         std::unordered_map<std::string, boost::local_shared_ptr<ast::Object>> fields;
 
         for (size_t i = 0; i < type_list.size(); ++i) {
@@ -158,8 +162,7 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_function_call(const boost::
     if (builtins.contains(function_name)) {
         if (const auto function_result = builtins.at(function_name)(arguments)) {
             return function_result.value();
-        }
-        else {
+        } else {
             return {};
         }
     }
@@ -169,13 +172,9 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_function_call(const boost::
 
 void Evaluator::eval_block(const boost::local_shared_ptr<ast::Block>& block) noexcept(false)
 {
-    m_storage.scope_begin();
-
     for (const auto& statement : block->statements()) {
         eval(statement);
     }
-
-    m_storage.scope_end();
 }
 
 boost::local_shared_ptr<ast::Object> Evaluator::eval_binary(const boost::local_shared_ptr<ast::Binary>& binary) noexcept(false)
@@ -261,17 +260,27 @@ void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& for_stmt) noex
 {
     m_storage.scope_begin();
 
-    const auto init = boost::static_pointer_cast<ast::Binary>(eval(for_stmt->loop_init()));
-
+    const auto  init      = eval(for_stmt->loop_init());
+    const auto  init_type = eval(boost::static_pointer_cast<ast::Binary>(init)->lhs());
     const auto& exit_cond = for_stmt->exit_condition();
     const auto& increment = for_stmt->increment();
-    const auto& body = for_stmt->body();
-          auto  boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval(exit_cond));
+    const auto& body      = for_stmt->body();
 
-    while (LIKELY(boolean_exit_condition->value())) {
-        eval(body);
-        eval(increment);
-        boolean_exit_condition = boost::static_pointer_cast<ast::Integer>(eval(exit_cond));
+    auto for_implementation = [this, &exit_cond, &increment, &body]<typename Numeric>() {
+        auto boolean_exit_condition = boost::static_pointer_cast<Numeric>(eval(exit_cond));
+
+        while (boolean_exit_condition->value()) {
+            eval(body);
+            eval(increment);
+            boolean_exit_condition = boost::static_pointer_cast<Numeric>(eval(exit_cond));
+        }
+    };
+
+    if (init_type->ast_type() == ast::ast_type_t::INTEGER) {
+        for_implementation.template operator()<ast::Integer>();
+    }
+    if (init_type->ast_type() == ast::ast_type_t::FLOAT) {
+        for_implementation.template operator()<ast::Float>();
     }
 
     m_storage.scope_end();
@@ -279,26 +288,25 @@ void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& for_stmt) noex
 
 void Evaluator::eval_while(const boost::local_shared_ptr<ast::While>& while_stmt) noexcept(false)
 {
-    auto initial_exit_condition = eval(while_stmt->exit_condition());
-    const ast::ast_type_t exit_condition_type = initial_exit_condition->ast_type();
+    auto while_implementation = [this, &while_stmt]<typename Numeric>(auto&& exit_cond) {
+        const auto& body = while_stmt->body();
+        auto internal_exit_cond = boost::static_pointer_cast<Numeric>(exit_cond);
 
-    auto while_implementation = [this, &while_stmt, initial_exit_condition = std::move(initial_exit_condition)]<typename Integral> {
-        const auto body = while_stmt->body();
-        auto exit_cond = boost::static_pointer_cast<Integral>(initial_exit_condition);
-
-        while (LIKELY(exit_cond->value())) {
+        while (internal_exit_cond->value()) {
             eval(body);
-            exit_cond = boost::static_pointer_cast<Integral>(eval(while_stmt->exit_condition()));
+            internal_exit_cond = boost::static_pointer_cast<Numeric>(eval(while_stmt->exit_condition()));
         }
     };
 
-    if (exit_condition_type == ast::ast_type_t::INTEGER) {
-        while_implementation.template operator()<ast::Integer>();
-        return;
-    }
+    auto exit_cond = eval(while_stmt->exit_condition());
+    auto exit_cond_type = exit_cond->ast_type();
 
-    if (exit_condition_type == ast::ast_type_t::FLOAT) {
-        while_implementation.template operator()<ast::Integer>();
+    if (exit_cond_type == ast::ast_type_t::INTEGER) {
+        while_implementation.template operator()<ast::Integer>(exit_cond);
+        return;
+    } else if (exit_cond_type == ast::ast_type_t::FLOAT) {
+        /// TODO: fix some troubles with floats
+        while_implementation.template operator()<ast::Integer/*Float*/>(exit_cond);
         return;
     }
 }
