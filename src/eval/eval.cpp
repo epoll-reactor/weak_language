@@ -26,13 +26,13 @@ ALWAYS_INLINE static constexpr bool is_datatype(const ast::Object* object) noexc
 template <ast::ast_type_t ExpectedType>
 ALWAYS_INLINE static void do_typecheck(const ast::Object* object, const char* error_message) noexcept(false)
 {
-    if (UNLIKELY(object->ast_type() != ExpectedType)) { throw EvalError(error_message); }
+    if (object->ast_type() != ExpectedType) { throw EvalError(error_message); }
 }
 
 template <ast::ast_type_t ExpectedType>
 ALWAYS_INLINE static void do_typecheck(ast::ast_type_t target_type, const char* error_message) noexcept(false)
 {
-    if (UNLIKELY(ExpectedType != target_type)) { throw EvalError(error_message); }
+    if (ExpectedType != target_type) { throw EvalError(error_message); }
 }
 
 Evaluator::Evaluator(const boost::local_shared_ptr<ast::RootObject>& program) noexcept(false)
@@ -117,7 +117,7 @@ boost::local_shared_ptr<ast::Object> Evaluator::call_function(std::string_view n
 
     for (size_t i = 0; i < args.size(); ++i) {
         const std::string argument_name = static_cast<ast::Symbol*>(args[i].get())->name();
-        m_storage.push(argument_name, std::move(evaluated_args[i]));
+        m_storage.push(argument_name, evaluated_args[i]);
     }
 
     if (UNLIKELY(body.size() == 1)) {
@@ -183,7 +183,7 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_binary(const boost::local_s
 
     if (type == token_t::assign) {
         const auto variable = boost::static_pointer_cast<ast::Symbol>(binary->lhs());
-        m_storage.push(variable->name(), eval(binary->rhs()));
+        m_storage.overwrite(variable->name(), eval(binary->rhs()));
         return binary;
     }
 

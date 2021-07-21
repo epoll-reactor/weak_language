@@ -1,5 +1,6 @@
 #include "../include/lexer/preprocessor.hpp"
 
+#include "../include/tests/test_crc32.hpp"
 #include "../include/tests/test_interpreter.hpp"
 #include "../include/tests/test_lexer.hpp"
 #include "../include/tests/test_semantic.hpp"
@@ -63,6 +64,7 @@ float run_tests()
 {
     auto start = std::chrono::high_resolution_clock::now();
 
+    run_crc32_tests();
     run_format_tests();
     run_lexer_tests();
     run_semantic_analyzer_tests();

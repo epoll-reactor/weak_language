@@ -123,6 +123,7 @@ void eval_return_value_tests()
 {
     eval_detail::run_test("fun simple() { var = 2; var; } fun main() { print(simple()); }", "2");
     eval_detail::run_test("fun return_string() { \"String\"; } fun main() { print(return_string()); }", "String");
+    /// Error             v
     eval_detail::run_test("fun simple() { var = \"Text\"; var; } fun main() { var = simple(); print(var); }", "Text");
     eval_detail::run_test("fun ret() { 1 + 1 + 1 + 1; } fun test() { var = 2; var + ret(); } fun main() { print(test()); } ", "6");
     eval_detail::run_test("fun ret(var) { var; } fun main() { print(ret(123));}", "123");

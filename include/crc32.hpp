@@ -38,15 +38,15 @@ static constexpr unsigned long lookup_table[256] = {
     0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
 };
 
-inline unsigned long create(const char* buffer) noexcept
+constexpr unsigned long create(const char* buffer) noexcept
 {
-    int length = 0;
-    while (buffer[++length] != '\0');
     unsigned long crc32 = 0xFFFFFFFF;
-    while (length--)
-        crc32 = (crc32 >> 8) ^ lookup_table[(crc32 ^ *buffer++) & 0xFF];
+    while (*buffer != '\0') {
+        crc32 = (crc32 >> 8) ^ lookup_table[(crc32 ^ *(buffer++)) & 0xFF];
+    }
     return crc32 ^ 0xFFFFFFFF;
 }
+
 } // namespace crc32
 
 #endif // WEAK_CRC32_HPP
