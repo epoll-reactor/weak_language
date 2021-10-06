@@ -5,8 +5,8 @@
 void Storage::push(std::string_view name, boost::local_shared_ptr<ast::Object> value) noexcept(false)
 {
     const size_t hash = crc32::create(name.data());
-    auto it = m_inner_scopes.equal_range(hash);
-    StorageRecord record { m_scope_depth, std::string(name.data(), name.length()), std::move(value) };
+    const auto it = m_inner_scopes.equal_range(hash);
+    StorageRecord record { m_scope_depth, std::move(value) };
 
     if (it.first == it.second) {
         m_inner_scopes.emplace_hint(it.first, hash, std::move(record));
