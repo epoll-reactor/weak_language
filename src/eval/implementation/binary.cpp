@@ -6,7 +6,7 @@
 #include <variant>
 
 template <typename LeftOperand, typename RightOperand>
-ALWAYS_INLINE static bool comparison_implementation(token_t type, LeftOperand l, RightOperand r) noexcept(false) {
+ALWAYS_INLINE static constexpr bool comparison_implementation(token_t type, LeftOperand l, RightOperand r) noexcept(false) {
   // clang-format off
   switch (type) {
     case token_t::eq: { return l == r; }
@@ -22,7 +22,7 @@ ALWAYS_INLINE static bool comparison_implementation(token_t type, LeftOperand l,
 }
 
 template <typename LeftFloatingPoint, typename RightFloatingPoint>
-ALWAYS_INLINE static double floating_point_arithmetic_implementation(token_t type, LeftFloatingPoint l, RightFloatingPoint r) noexcept(false) {
+ALWAYS_INLINE static constexpr double floating_point_arithmetic_implementation(token_t type, LeftFloatingPoint l, RightFloatingPoint r) noexcept(false) {
   // clang-format off
   switch (type) {
     case token_t::plus: { return l + r; }
@@ -67,7 +67,7 @@ ALWAYS_INLINE static constexpr std::variant<int32_t, double> arithmetic(token_t 
       static_cast<const RightAST*>(rhs)->value());
 }
 
-static constexpr token_t resolve_assign_operator(token_t tok) noexcept(true) {
+ALWAYS_INLINE static constexpr token_t resolve_assign_operator(token_t tok) noexcept(true) {
   // clang-format off
   switch (tok) {
     case token_t::plus_assign: { return token_t::plus; }
@@ -86,16 +86,20 @@ static constexpr token_t resolve_assign_operator(token_t tok) noexcept(true) {
   // clang-format on
 }
 
-boost::local_shared_ptr<ast::Object> internal::i_i_binary_implementation(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+template <>
+boost::local_shared_ptr<ast::Object> internal::binary_implementation<ast::Integer, ast::Integer>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
   return boost::make_local_shared<ast::Integer>(std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(type, lhs.get(), rhs.get())));
 }
-boost::local_shared_ptr<ast::Object> internal::i_f_binary_implementation(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+template <>
+boost::local_shared_ptr<ast::Object> internal::binary_implementation<ast::Integer, ast::Float>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
   return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Integer, ast::Float>(type, lhs.get(), rhs.get())));
 }
-boost::local_shared_ptr<ast::Object> internal::f_i_binary_implementation(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+template <>
+boost::local_shared_ptr<ast::Object> internal::binary_implementation<ast::Float, ast::Integer>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
   return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Float, ast::Integer>(type, lhs.get(), rhs.get())));
 }
-boost::local_shared_ptr<ast::Object> internal::f_f_binary_implementation(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+template <>
+boost::local_shared_ptr<ast::Object> internal::binary_implementation<ast::Float, ast::Float>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
   return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Float, ast::Float>(type, lhs.get(), rhs.get())));
 }
 

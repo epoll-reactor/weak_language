@@ -172,10 +172,7 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_binary(const boost::local_s
     const auto variable = boost::static_pointer_cast<ast::Symbol>(binary->lhs());
     storage_.push(
         variable->name(),
-        internal::assign_binary_implementation(
-            type,
-            storage_.lookup(variable->name()),
-            eval(binary->rhs())));
+        internal::assign_binary_implementation(type, storage_.lookup(variable->name()), eval(binary->rhs())));
     return variable;
   }
 
@@ -187,16 +184,16 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_binary(const boost::local_s
 
   using ast_t = ast::ast_type_t;
   if (lhs_t == ast_t::INTEGER && rhs_t == ast_t::INTEGER) {
-    return internal::i_i_binary_implementation(type, lhs, rhs);
+    return internal::binary_implementation<ast::Integer, ast::Integer>(type, lhs, rhs);
   }
   if (lhs_t == ast_t::INTEGER && rhs_t == ast_t::FLOAT) {
-    return internal::i_f_binary_implementation(type, lhs, rhs);
+    return internal::binary_implementation<ast::Integer, ast::Float>(type, lhs, rhs);
   }
   if (lhs_t == ast_t::FLOAT && rhs_t == ast_t::INTEGER) {
-    return internal::f_i_binary_implementation(type, lhs, rhs);
+    return internal::binary_implementation<ast::Float, ast::Integer>(type, lhs, rhs);
   }
   if (lhs_t == ast_t::FLOAT && rhs_t == ast_t::FLOAT) {
-    return internal::f_f_binary_implementation(type, lhs, rhs);
+    return internal::binary_implementation<ast::Float, ast::Float>(type, lhs, rhs);
   }
   throw EvalError("Unknown binary expr");
 }
@@ -205,15 +202,12 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_unary(const boost::local_sh
   const auto operand = unary->operand();
   const token_t type = unary->type();
   const ast::ast_type_t ast_type = operand->ast_type();
-
-  if (auto unary_result = internal::unary_implementation(ast_type, type, operand)) {
-    return unary_result;
+  if (auto result = internal::unary_implementation(ast_type, type, operand)) {
+    return result;
   }
-
   do_typecheck<ast::ast_type_t::SYMBOL>(ast_type, "Unknown unary operand type");
-
   const auto variable = boost::static_pointer_cast<ast::Symbol>(operand);
-  auto symbol = storage_.lookup(variable->name());
+  const auto& symbol = storage_.lookup(variable->name());
   storage_.overwrite(variable->name(), internal::unary_implementation(symbol->ast_type(), type, symbol));
   return symbol;
 }
@@ -250,7 +244,7 @@ void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& for_stmt) noex
   const auto& increment = for_stmt->increment();
   const auto& body = for_stmt->body();
 
-  auto for_implementation = [this, &exit_cond, &increment, &body]<typename Numeric>() {
+  auto implementation = [this, &exit_cond, &increment, &body]<typename Numeric>() {
     auto boolean_exit_condition = boost::static_pointer_cast<Numeric>(eval(exit_cond));
     while (boolean_exit_condition->value()) {
       eval(body);
@@ -259,9 +253,9 @@ void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& for_stmt) noex
     }
   };
   if (init_type == ast::ast_type_t::INTEGER) {
-    for_implementation.template operator()<ast::Integer>();
+    implementation.template operator()<ast::Integer>();
   } else if (init_type == ast::ast_type_t::FLOAT) {
-    for_implementation.template operator()<ast::Float>();
+    implementation.template operator()<ast::Float>();
   }
   storage_.scope_end();
 }
@@ -270,7 +264,7 @@ void Evaluator::eval_while(const boost::local_shared_ptr<ast::While>& while_stmt
   const auto exit_cond = eval(while_stmt->exit_condition());
   const auto exit_cond_type = exit_cond->ast_type();
 
-  auto while_implementation = [this, &while_stmt, &exit_cond]<typename Numeric>() {
+  auto implementation = [this, &while_stmt, &exit_cond]<typename Numeric>() {
     const auto& body = while_stmt->body();
     auto internal_exit_cond = boost::static_pointer_cast<Numeric>(exit_cond);
     while (internal_exit_cond->value()) {
@@ -279,9 +273,9 @@ void Evaluator::eval_while(const boost::local_shared_ptr<ast::While>& while_stmt
     }
   };
   if (exit_cond_type == ast::ast_type_t::INTEGER) {
-    while_implementation.template operator()<ast::Integer>();
+    implementation.template operator()<ast::Integer>();
   } else if (exit_cond_type == ast::ast_type_t::FLOAT) {
-    while_implementation.template operator()<ast::Float>();
+    implementation.template operator()<ast::Float>();
   }
 }
 
@@ -289,7 +283,8 @@ void Evaluator::eval_if(const boost::local_shared_ptr<ast::If>& if_stmt) noexcep
   const auto if_condition = eval(if_stmt->condition());
   if (boost::static_pointer_cast<ast::Integer>(if_condition)->value()) {
     eval(if_stmt->body());
-  } else if (auto else_body = if_stmt->else_body()) {
+  }
+  if (auto else_body = if_stmt->else_body()) {
     eval(else_body);
   }
 }

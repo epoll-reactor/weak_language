@@ -4,7 +4,7 @@
 #include <optional>
 
 template <typename TargetType>
-boost::local_shared_ptr<ast::Object> default_typecheck(const std::string& fun_name, const std::vector<boost::local_shared_ptr<ast::Object>>& arguments) {
+static boost::local_shared_ptr<ast::Object> default_typecheck(const std::string& fun_name, const std::vector<boost::local_shared_ptr<ast::Object>>& arguments) {
   if (arguments.size() != 1) {
     throw EvalError(fun_name + ": 1 argument required, got " + std::to_string(arguments.size()));
   }

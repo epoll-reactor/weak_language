@@ -10,27 +10,8 @@ class Object;
 }
 
 namespace internal {
-
-/// @throws EvalError if operator is invalid
-boost::local_shared_ptr<ast::Object> i_i_binary_implementation(
-    token_t type,
-    const boost::local_shared_ptr<ast::Object>& lhs,
-    const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false);
-
-/// @throws EvalError if operator is invalid
-boost::local_shared_ptr<ast::Object> i_f_binary_implementation(
-    token_t type,
-    const boost::local_shared_ptr<ast::Object>& lhs,
-    const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false);
-
-/// @throws EvalError if operator is invalid
-boost::local_shared_ptr<ast::Object> f_i_binary_implementation(
-    token_t type,
-    const boost::local_shared_ptr<ast::Object>& lhs,
-    const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false);
-
-/// @throws EvalError if operator is invalid
-boost::local_shared_ptr<ast::Object> f_f_binary_implementation(
+template <typename LeftNumeric, typename RightNumeric>
+boost::local_shared_ptr<ast::Object> binary_implementation(
     token_t type,
     const boost::local_shared_ptr<ast::Object>& lhs,
     const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false);

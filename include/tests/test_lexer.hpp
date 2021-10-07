@@ -127,7 +127,7 @@ void lexer_operator_tests() {
     Lexeme{"", token_t::minus},
     Lexeme{"", token_t::plus},
   });
-  lexer_detail::run_test("\0", { // None });
+  lexer_detail::run_test("\0", { /* None */ });
   // Unknown operators
   lexer_detail::assert_exception("+++`+++");
   lexer_detail::assert_exception("@@@@@@@");
@@ -135,82 +135,82 @@ void lexer_operator_tests() {
 // clang-format on
 
 void lexer_expression_tests() {
-    lexer_detail::run_test(
-        "void f(int a, int b, int c) {"
-        "  if (true) {"
-        "    int variable-0 = 123;"
-        "  } else {"
-        "    string literal-1 = \"Lorem ipsum\";"
-        "  }"
-        "}",
-        {Lexeme{"void", token_t::symbol},
-         Lexeme{"f", token_t::symbol},
-         Lexeme{"", token_t::left_paren},
-         Lexeme{"int", token_t::symbol},
-         Lexeme{"a", token_t::symbol},
-         Lexeme{"", token_t::comma},
-         Lexeme{"int", token_t::symbol},
-         Lexeme{"b", token_t::symbol},
-         Lexeme{"", token_t::comma},
-         Lexeme{"int", token_t::symbol},
-         Lexeme{"c", token_t::symbol},
-         Lexeme{"", token_t::right_paren},
-         Lexeme{"", token_t::left_brace},
-         Lexeme{"", token_t::kw_if},
-         Lexeme{"", token_t::left_paren},
-         Lexeme{"true", token_t::symbol},
-         Lexeme{"", token_t::right_paren},
-         Lexeme{"", token_t::left_brace},
-         Lexeme{"int", token_t::symbol},
-         Lexeme{"variable-0", token_t::symbol},
-         Lexeme{"", token_t::assign},
-         Lexeme{"123", token_t::num},
-         Lexeme{"", token_t::semicolon},
-         Lexeme{"", token_t::right_brace},
-         Lexeme{"", token_t::kw_else},
-         Lexeme{"", token_t::left_brace},
-         Lexeme{"string", token_t::symbol},
-         Lexeme{"literal-1", token_t::symbol},
-         Lexeme{"", token_t::assign},
-         Lexeme{"Lorem ipsum", token_t::string_literal},
-         Lexeme{"", token_t::semicolon},
-         Lexeme{"", token_t::right_brace},
-         Lexeme{"", token_t::right_brace}});
+  lexer_detail::run_test(
+      "void f(int a, int b, int c) {"
+      "  if (true) {"
+      "    int variable-0 = 123;"
+      "  } else {"
+      "    string literal-1 = \"Lorem ipsum\";"
+      "  }"
+      "}",
+      {Lexeme{"void", token_t::symbol},
+       Lexeme{"f", token_t::symbol},
+       Lexeme{"", token_t::left_paren},
+       Lexeme{"int", token_t::symbol},
+       Lexeme{"a", token_t::symbol},
+       Lexeme{"", token_t::comma},
+       Lexeme{"int", token_t::symbol},
+       Lexeme{"b", token_t::symbol},
+       Lexeme{"", token_t::comma},
+       Lexeme{"int", token_t::symbol},
+       Lexeme{"c", token_t::symbol},
+       Lexeme{"", token_t::right_paren},
+       Lexeme{"", token_t::left_brace},
+       Lexeme{"", token_t::kw_if},
+       Lexeme{"", token_t::left_paren},
+       Lexeme{"true", token_t::symbol},
+       Lexeme{"", token_t::right_paren},
+       Lexeme{"", token_t::left_brace},
+       Lexeme{"int", token_t::symbol},
+       Lexeme{"variable-0", token_t::symbol},
+       Lexeme{"", token_t::assign},
+       Lexeme{"123", token_t::num},
+       Lexeme{"", token_t::semicolon},
+       Lexeme{"", token_t::right_brace},
+       Lexeme{"", token_t::kw_else},
+       Lexeme{"", token_t::left_brace},
+       Lexeme{"string", token_t::symbol},
+       Lexeme{"literal-1", token_t::symbol},
+       Lexeme{"", token_t::assign},
+       Lexeme{"Lorem ipsum", token_t::string_literal},
+       Lexeme{"", token_t::semicolon},
+       Lexeme{"", token_t::right_brace},
+       Lexeme{"", token_t::right_brace}});
 }
 
 std::string random_bytes(size_t count) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(20, 200);
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> distrib(20, 200);
 
-    std::vector<int> bytes;
-    for (size_t i = count; i > 0; i--) {
-      bytes.push_back(distrib(gen));
-    }
+  std::vector<int> bytes;
+  for (size_t i = count; i > 0; i--) {
+    bytes.push_back(distrib(gen));
+  }
 
-    std::stringstream ss;
-    std::copy(bytes.begin(), bytes.end(), std::ostream_iterator<char>(ss, " "));
+  std::stringstream ss;
+  std::copy(bytes.begin(), bytes.end(), std::ostream_iterator<char>(ss, " "));
 
-    return ss.str();
+  return ss.str();
 }
 
 void lexer_fuzz_tests() {
-    // Bad parsing errors
-    lexer_detail::assert_exception("1____");
-    lexer_detail::assert_exception("1.");
-    lexer_detail::assert_exception("1..1");
-    lexer_detail::assert_exception("?");
-    lexer_detail::assert_exception("++++\\+++");
-    lexer_detail::assert_exception("\"");
-    lexer_detail::assert_exception("\'");
-    // Unsupported char sequences
-    lexer_detail::assert_exception("!@#$%^&*()*&^%$#@!");
-    lexer_detail::assert_exception("日本語テキスト");
-    lexer_detail::assert_exception("Texte français");
-    lexer_detail::assert_exception("Texto en español");
-    lexer_detail::assert_exception("Текст на русском языке");
-    lexer_detail::assert_exception("Türkçe metin");
-    lexer_detail::assert_exception(R"(
+  // Bad parsing errors
+  lexer_detail::assert_exception("1____");
+  lexer_detail::assert_exception("1.");
+  lexer_detail::assert_exception("1..1");
+  lexer_detail::assert_exception("?");
+  lexer_detail::assert_exception("++++\\+++");
+  lexer_detail::assert_exception("\"");
+  lexer_detail::assert_exception("\'");
+  // Unsupported char sequences
+  lexer_detail::assert_exception("!@#$%^&*()*&^%$#@!");
+  lexer_detail::assert_exception("日本語テキスト");
+  lexer_detail::assert_exception("Texte français");
+  lexer_detail::assert_exception("Texto en español");
+  lexer_detail::assert_exception("Текст на русском языке");
+  lexer_detail::assert_exception("Türkçe metin");
+  lexer_detail::assert_exception(R"(
         Als glückliche Bestimmung gilt es mir heute, daß das
         Schicksal mir zum Geburtsort gerade Braunau am Inn
         zuwies. Liegt doch dieses Städtchen an der Grenze jener
@@ -218,46 +218,46 @@ void lexer_fuzz_tests() {
         Jüngeren als eine mit allen Mitteln durchzuführende Lebensaufgabe erscheint!
     )");
 
-    lexer_detail::assert_exception(random_bytes(100).data());
-    lexer_detail::assert_exception(random_bytes(1000).data());
-    lexer_detail::assert_exception(random_bytes(2000).data());
-    lexer_detail::assert_exception(random_bytes(3000).data());
+  lexer_detail::assert_exception(random_bytes(100).data());
+  lexer_detail::assert_exception(random_bytes(1000).data());
+  lexer_detail::assert_exception(random_bytes(2000).data());
+  lexer_detail::assert_exception(random_bytes(3000).data());
 }
 
 void lexer_speed_tests() {
-    std::string data =
-        "void f(int a, int b, int c) {"
-        "  if (true) {"
-        "    int variable_0 = 123;"
-        "  } else {"
-        "    string literal_1 = \"Lorem ipsum\";"
-        "  }"
-        "}";
+  std::string data =
+      "void f(int a, int b, int c) {"
+      "  if (true) {"
+      "    int variable_0 = 123;"
+      "  } else {"
+      "    string literal_1 = \"Lorem ipsum\";"
+      "  }"
+      "}";
 
-    /// Exponential grow
-    for (size_t i = 0; i < 10; i++)
-      data += data;
+  /// Exponential grow
+  for (size_t i = 0; i < 10; i++)
+    data += data;
 
-    Lexer lexer(std::istringstream{data.data()});
+  Lexer lexer(std::istringstream{data.data()});
 
-    std::cout << "\nLexer speed test - input size (" << data.size() / 1024.0 / 1024.0 << " MiB.)\n";
-    speed_benchmark(1, [&lexer] {
-      const std::vector<Lexeme> lexemes = lexer.tokenize();
-    });
+  std::cout << "\nLexer speed test - input size (" << data.size() / 1024.0 / 1024.0 << " MiB.)\n";
+  speed_benchmark(1, [&lexer] {
+    const std::vector<Lexeme> lexemes = lexer.tokenize();
+  });
 }
 
 void run_lexer_tests() {
-    std::cout << "Running lexer tests...\n====\n";
+  std::cout << "Running lexer tests...\n====\n";
 
-    lexer_number_literal_tests();
-    lexer_string_literal_tests();
-    lexer_symbol_tests();
-    lexer_operator_tests();
-    lexer_expression_tests();
-    lexer_fuzz_tests();
-    lexer_speed_tests();
+  lexer_number_literal_tests();
+  lexer_string_literal_tests();
+  lexer_symbol_tests();
+  lexer_operator_tests();
+  lexer_expression_tests();
+  lexer_fuzz_tests();
+  lexer_speed_tests();
 
-    std::cout << "Lexer tests passed successfully\n";
+  std::cout << "Lexer tests passed successfully\n";
 }
 
 #endif// WEAK_TESTS_LEXER_HPP

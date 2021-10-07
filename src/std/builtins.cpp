@@ -3,11 +3,6 @@
 #include "../../src/std/implementation/io.cpp"
 #include "../../src/std/implementation/type_traits.cpp"
 
-#include <string>
-#include <unordered_map>
-
-extern std::ostream& default_stdout;
-
 const std::unordered_map<std::string, builtin_function_t> builtins{
     /// type traits
     {"integer?", is_integer},
