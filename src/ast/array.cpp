@@ -3,11 +3,10 @@
 namespace ast {
 
 Array::Array(std::vector<boost::local_shared_ptr<Object>> elements) noexcept(true)
-    : m_elements(std::move(elements)) {}
+  : elements_(std::move(elements)) {}
 
-std::vector<boost::local_shared_ptr<Object>>& Array::elements() noexcept(true)
-{
-    return m_elements;
+std::vector<boost::local_shared_ptr<Object>>& Array::elements() noexcept(true) {
+  return elements_;
 }
 
-} // namespace ast
+}// namespace ast

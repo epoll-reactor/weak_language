@@ -10,4 +10,4 @@ using builtin_function_t = std::function<std::optional<boost::local_shared_ptr<a
 
 extern const std::unordered_map<std::string, builtin_function_t> builtins;
 
-#endif // WEAK_STD_BUILTINS_HPP
+#endif// WEAK_STD_BUILTINS_HPP

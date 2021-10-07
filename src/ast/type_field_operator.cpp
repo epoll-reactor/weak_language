@@ -3,17 +3,15 @@
 namespace ast {
 
 TypeFieldOperator::TypeFieldOperator(std::string type_name, std::string type_field) noexcept(true)
-    : m_type_name(std::move(type_name))
-    , m_type_field(std::move(type_field)) {}
+  : type_name_(std::move(type_name))
+  , type_field_(std::move(type_field)) {}
 
-const std::string& TypeFieldOperator::name() const noexcept(true)
-{
-    return m_type_name;
+const std::string& TypeFieldOperator::name() const noexcept(true) {
+  return type_name_;
 }
 
-const std::string& TypeFieldOperator::field() const noexcept(true)
-{
-    return m_type_field;
+const std::string& TypeFieldOperator::field() const noexcept(true) {
+  return type_field_;
 }
 
-} // namespace ast
+}// namespace ast

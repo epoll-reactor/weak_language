@@ -3,11 +3,10 @@
 namespace ast {
 
 String::String(std::string data) noexcept(true)
-    : m_data(std::move(data)) {}
+  : data_(std::move(data)) {}
 
-const std::string& String::value() const noexcept(true)
-{
-    return m_data;
+const std::string& String::value() const noexcept(true) {
+  return data_;
 }
 
-} // namespace ast
+}// namespace ast

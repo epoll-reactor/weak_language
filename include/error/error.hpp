@@ -6,4 +6,4 @@
 #include "parse_error.hpp"
 #include "semantic_error.hpp"
 
-#endif //WEAK_ERROR_HPP
+#endif//WEAK_ERROR_HPP

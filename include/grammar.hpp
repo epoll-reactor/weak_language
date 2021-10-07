@@ -5,7 +5,7 @@
 
 #include <unordered_map>
 
-static inline const std::unordered_map<std::string, token_t> test_keywords {
+static inline const std::unordered_map<std::string, token_t> test_keywords{
     {"for", token_t::kw_for},
     {"while", token_t::kw_while},
     {"if", token_t::kw_if},
@@ -14,10 +14,9 @@ static inline const std::unordered_map<std::string, token_t> test_keywords {
     {"fun", token_t::kw_function_decl},
     {"load", token_t::kw_load},
     {"define-type", token_t::kw_define_type},
-    {"new", token_t::kw_new}
-};
+    {"new", token_t::kw_new}};
 
-static inline const std::unordered_map<std::string, token_t> test_operators {
+static inline const std::unordered_map<std::string, token_t> test_operators{
     {"=", token_t::assign},
 
     {"!", token_t::negation},
@@ -34,9 +33,9 @@ static inline const std::unordered_map<std::string, token_t> test_operators {
 
     {"<<", token_t::slli},
     {">>", token_t::srli},
-    {"&",  token_t::bit_and},
-    {"|",  token_t::bit_or},
-    {"^",  token_t::bit_xor},
+    {"&", token_t::bit_and},
+    {"|", token_t::bit_or},
+    {"^", token_t::bit_xor},
     {"&&", token_t::logical_and},
     {"||", token_t::logical_or},
 
@@ -52,7 +51,7 @@ static inline const std::unordered_map<std::string, token_t> test_operators {
     {"/=", token_t::slash_assign},
     {"<<=", token_t::slli_assign},
     {">>=", token_t::srli_assign},
-    {"&=",  token_t::and_assign},
+    {"&=", token_t::and_assign},
     {"|=", token_t::or_assign},
     {"^=", token_t::xor_assign},
 
@@ -69,4 +68,4 @@ static inline const std::unordered_map<std::string, token_t> test_operators {
     {"]", token_t::right_box_brace},
 };
 
-#endif // WEAK_GRAMMAR_HPP
+#endif// WEAK_GRAMMAR_HPP

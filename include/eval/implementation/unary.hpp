@@ -9,9 +9,8 @@ namespace internal {
 boost::local_shared_ptr<ast::Object> unary_implementation(
     ast::ast_type_t ast_type,
     token_t unary_type,
-    const boost::local_shared_ptr<ast::Object>&  expression
-) noexcept(false);
+    const boost::local_shared_ptr<ast::Object>& expression) noexcept(false);
 
-} // namespace internal
+}// namespace internal
 
-#endif //WEAK_EVAL_IMPLEMENTATION_UNARY_HPP
+#endif//WEAK_EVAL_IMPLEMENTATION_UNARY_HPP

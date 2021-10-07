@@ -3,19 +3,17 @@
 namespace ast {
 
 Integer::Integer(std::string_view data) noexcept(false)
-    : m_data(std::stoi(data.data())) {}
+  : data_(std::stoi(data.data())) {}
 
-Integer::Integer(int32_t data) noexcept(true)
-    : m_data(data) {}
+Integer::Integer(size_t data) noexcept(true)
+  : data_(data) {}
 
-int32_t& Integer::value() noexcept(true)
-{
-    return m_data;
+size_t& Integer::value() noexcept(true) {
+  return data_;
 }
 
-const int32_t& Integer::value() const noexcept(true)
-{
-    return m_data;
+const size_t& Integer::value() const noexcept(true) {
+  return data_;
 }
 
-} // namespace ast
+}// namespace ast

@@ -10,4 +10,4 @@
 /// @return recursively expanded file contents
 std::string preprocess_file(std::string_view filename) noexcept(false);
 
-#endif // WEAK_LEXER_PREPROCESSOR_HPP
+#endif// WEAK_LEXER_PREPROCESSOR_HPP

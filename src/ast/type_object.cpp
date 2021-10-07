@@ -2,12 +2,11 @@
 
 namespace ast {
 
-TypeObject::TypeObject(std::unordered_map<std::string, boost::local_shared_ptr<Object>> arguments) noexcept(true)
-    : m_arguments(std::move(arguments)) {}
+TypeObject::TypeObject(std::vector<std::pair<std::string, boost::local_shared_ptr<Object>>> arguments) noexcept(true)
+  : arguments_(std::move(arguments)) {}
 
-const std::unordered_map<std::string, boost::local_shared_ptr<Object>>& TypeObject::fields() const noexcept(false)
-{
-    return m_arguments;
+const std::vector<std::pair<std::string, boost::local_shared_ptr<Object>>>& TypeObject::fields() const noexcept(false) {
+  return arguments_;
 }
 
-} // namespace ast
+}// namespace ast
