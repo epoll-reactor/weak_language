@@ -3,6 +3,7 @@
 #include "../../../include/ast/ast.hpp"
 #include "../../../include/error/eval_error.hpp"
 
+#include <boost/pool/pool_alloc.hpp>
 #include <variant>
 
 template <typename LeftOperand, typename RightOperand>
@@ -86,34 +87,54 @@ ALWAYS_INLINE static constexpr token_t resolve_assign_operator(token_t tok) noex
   // clang-format on
 }
 
+namespace {
+template <typename T>
+class allocator_holder {
+  using allocator_t = boost::fast_pool_allocator<T>;
+
+public:
+  static allocator_holder<T>& create() {
+    static allocator_holder<T> holder;
+    return holder;
+  }
+  allocator_t& get_allocator() {
+    return allocator_;
+  }
+
+private:
+  allocator_t allocator_;
+};
+
+}// namespace
+
 template <>
-boost::local_shared_ptr<ast::Object> internal::binary_implementation<ast::Integer, ast::Integer>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-  return boost::make_local_shared<ast::Integer>(std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(type, lhs.get(), rhs.get())));
+boost::local_shared_ptr<ast::Object> eval_context::binary_implementation<ast::Integer, ast::Integer>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+  return boost::allocate_local_shared<ast::Integer>(allocator_holder<ast::Integer>::create().get_allocator(), std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(type, lhs.get(), rhs.get())));
 }
 template <>
-boost::local_shared_ptr<ast::Object> internal::binary_implementation<ast::Integer, ast::Float>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-  return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Integer, ast::Float>(type, lhs.get(), rhs.get())));
+boost::local_shared_ptr<ast::Object> eval_context::binary_implementation<ast::Integer, ast::Float>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+  return boost::allocate_local_shared<ast::Float>(allocator_holder<ast::Float>::create().get_allocator(), std::get<double>(arithmetic<ast::Integer, ast::Float>(type, lhs.get(), rhs.get())));
 }
 template <>
-boost::local_shared_ptr<ast::Object> internal::binary_implementation<ast::Float, ast::Integer>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-  return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Float, ast::Integer>(type, lhs.get(), rhs.get())));
+boost::local_shared_ptr<ast::Object> eval_context::binary_implementation<ast::Float, ast::Integer>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+  return boost::allocate_local_shared<ast::Float>(allocator_holder<ast::Float>::create().get_allocator(), std::get<double>(arithmetic<ast::Float, ast::Integer>(type, lhs.get(), rhs.get())));
 }
 template <>
-boost::local_shared_ptr<ast::Object> internal::binary_implementation<ast::Float, ast::Float>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-  return boost::make_local_shared<ast::Float>(std::get<double>(arithmetic<ast::Float, ast::Float>(type, lhs.get(), rhs.get())));
+boost::local_shared_ptr<ast::Object> eval_context::binary_implementation<ast::Float, ast::Float>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+  return boost::allocate_local_shared<ast::Float>(allocator_holder<ast::Float>::create().get_allocator(), std::get<double>(arithmetic<ast::Float, ast::Float>(type, lhs.get(), rhs.get())));
 }
 
-boost::local_shared_ptr<ast::Object> internal::assign_binary_implementation(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+boost::local_shared_ptr<ast::Object> eval_context::assign_binary_implementation(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
   if (lhs->ast_type() != rhs->ast_type()) {
     throw EvalError("Invalid binary operands");
   }
   const auto ast_type = lhs->ast_type();
-  if (ast_type == ast::ast_type_t::INTEGER) {
+  if (ast_type == ast::type_t::INTEGER) {
     size_t& l = static_cast<ast::Integer*>(lhs.get())->value();
     size_t& r = static_cast<ast::Integer*>(rhs.get())->value();
     l = integral_arithmetic_implementation(resolve_assign_operator(type), l, r);
   }
-  if (ast_type == ast::ast_type_t::FLOAT) {
+  if (ast_type == ast::type_t::FLOAT) {
     double& l = static_cast<ast::Float*>(lhs.get())->value();
     double& r = static_cast<ast::Float*>(rhs.get())->value();
     l = floating_point_arithmetic_implementation(resolve_assign_operator(type), l, r);

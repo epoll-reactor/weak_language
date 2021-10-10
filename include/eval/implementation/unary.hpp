@@ -3,11 +3,11 @@
 
 #include "../../ast/ast.hpp"
 
-namespace internal {
+namespace eval_context {
 
 /// @throws EvalError if operator is invalid
 boost::local_shared_ptr<ast::Object> unary_implementation(
-    ast::ast_type_t ast_type,
+    ast::type_t ast_type,
     token_t unary_type,
     const boost::local_shared_ptr<ast::Object>& expression) noexcept(false);
 

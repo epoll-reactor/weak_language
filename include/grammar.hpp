@@ -11,7 +11,7 @@ static inline const std::unordered_map<std::string, token_t> test_keywords{
     {"if", token_t::kw_if},
     {"else", token_t::kw_else},
     {"return", token_t::kw_return},
-    {"fun", token_t::kw_function_decl},
+    {"lambda", token_t::kw_lambda_decl},
     {"load", token_t::kw_load},
     {"define-type", token_t::kw_define_type},
     {"new", token_t::kw_new}};

@@ -65,25 +65,25 @@ void semantic_analyzer_test_syntax() {
   semantic_detail::assert_correct("Symbol /= 1 * 2 / 3 * 4 / 5 * 6 / 7 * 8 / 9;");
   semantic_detail::expect_error("Symbol = 1 * 2 *= 3;");
 
-  semantic_detail::assert_correct("fun compound(a, b, c) { while (1) { if (1) {} else { while (1 == 1) {} } } }");
-  semantic_detail::expect_error("fun compound(a, b, c) { if (1) {} else { if (2) {} else { if (\"Non-bool\") {} else {} } } }");
+  semantic_detail::assert_correct("lambda compound(a, b, c) { while (1) { if (1) {} else { while (1 == 1) {} } } }");
+  semantic_detail::expect_error("lambda compound(a, b, c) { if (1) {} else { if (2) {} else { if (\"Non-bool\") {} else {} } } }");
 
-  semantic_detail::assert_correct("fun simple(a, b, c) {}");
-  semantic_detail::expect_error("fun simple(1, 2, 3) {}");
-  semantic_detail::expect_error("fun simple(fun simple() {}) {}");
-  semantic_detail::expect_error("simple(fun inner() {});");
+  semantic_detail::assert_correct("lambda simple(a, b, c) {}");
+  semantic_detail::expect_error("lambda simple(1, 2, 3) {}");
+  semantic_detail::expect_error("lambda simple(lambda simple() {}) {}");
+  semantic_detail::expect_error("simple(lambda inner() {});");
   semantic_detail::expect_error("simple(if (1) {} else {});");
   semantic_detail::assert_correct("simple(1);");
   semantic_detail::assert_correct("simple(\"text\");");
   semantic_detail::assert_correct("simple_1(simple_2());");
 
-  semantic_detail::assert_correct("array[1];");
-  semantic_detail::assert_correct("array[1 + 1];");
-  semantic_detail::assert_correct("array[name];");
-  semantic_detail::assert_correct("array[function_call()];");
-  semantic_detail::expect_error("array[\"String\"];");
-  semantic_detail::expect_error("array[fun main() {}];");
-  semantic_detail::expect_error("array[1.42];");
+  semantic_detail::assert_correct("array-get(array, 1);");
+  semantic_detail::assert_correct("array-get(array, 1 + 1);");
+  semantic_detail::assert_correct("array-get(array, type_name);");
+  semantic_detail::assert_correct("array-get(array, function_call());");
+  semantic_detail::expect_error("array-get(array, \"String\");");
+  semantic_detail::expect_error("array-get(array, lambda main() {});");
+  semantic_detail::expect_error("array-get(array, 1.42);");
 }
 
 void run_semantic_analyzer_tests() {

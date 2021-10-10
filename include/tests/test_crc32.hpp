@@ -8,7 +8,7 @@ namespace crc32_detail {
 
 void run(const char* payload, unsigned long expected_hash) {
   if (auto hash = crc32::create(payload); hash != expected_hash) {
-    throw RuntimeError("CRC32 error: got {}, expected {}", hash, expected_hash);
+    throw RuntimeError("CRC-32 error: got {}, expected {}", hash, expected_hash);
   }
 }
 

@@ -28,7 +28,7 @@ boost::local_shared_ptr<ast::Object> Parser::primary() noexcept(false) {
     case token_t::kw_if: { return if_statement(); }
     case token_t::kw_while: { return while_statement(); }
     case token_t::kw_for: { return for_statement(); }
-    case token_t::kw_function_decl: { return function_declare_statement(); }
+    case token_t::kw_lambda_decl: { return lambda_declare_statement(); }
     case token_t::kw_define_type: { return define_type_statement(); }
     case token_t::kw_new: { return type_creator(); }
     case token_t::left_brace: { return block(); }
@@ -72,12 +72,12 @@ bool Parser::has_next() const noexcept(false) {
 }
 
 bool Parser::is_block(const boost::local_shared_ptr<ast::Object>& statement) noexcept(true) {
-  return statement->ast_type() == ast::ast_type_t::BLOCK;
+  return statement->ast_type() == ast::type_t::BLOCK;
 }
 
 bool Parser::is_block_statement(const boost::local_shared_ptr<ast::Object>& statement) noexcept(true) {
-  return statement->ast_type() == ast::ast_type_t::IF || statement->ast_type() == ast::ast_type_t::WHILE ||
-         statement->ast_type() == ast::ast_type_t::FUNCTION || statement->ast_type() == ast::ast_type_t::FOR;
+  return statement->ast_type() == ast::type_t::IF || statement->ast_type() == ast::type_t::WHILE ||
+         statement->ast_type() == ast::type_t::LAMBDA || statement->ast_type() == ast::type_t::FOR;
 }
 
 std::optional<Lexeme> Parser::match(const std::vector<token_t>& expected_types) noexcept(false) {
@@ -232,15 +232,15 @@ boost::local_shared_ptr<ast::Object> Parser::for_statement() noexcept(false) {
   return for_statement;
 };
 
-boost::local_shared_ptr<ast::Object> Parser::function_declare_statement() noexcept(false) {
+boost::local_shared_ptr<ast::Object> Parser::lambda_declare_statement() noexcept(false) {
   const Lexeme symbol = require({token_t::symbol});
-  const std::string function_name = symbol.data;
+  const std::string lambda_name = symbol.data;
   require({token_t::left_paren});
   std::vector<boost::local_shared_ptr<ast::Object>> arguments;
   if (!match({token_t::right_paren})) {
     while (true) {
       if (current().type != token_t::symbol) {
-        throw ParseError("Symbol as function parameter expected");
+        throw ParseError("Symbol as lambda parameter expected");
       } else {
         arguments.emplace_back(boost::make_local_shared<ast::Symbol>(current().data));
       }
@@ -253,8 +253,8 @@ boost::local_shared_ptr<ast::Object> Parser::function_declare_statement() noexce
       }
     }
   }
-  auto function_body = block();
-  return boost::make_local_shared<ast::Function>(function_name, std::move(arguments), std::move(function_body));
+  auto lambda_body = block();
+  return boost::make_local_shared<ast::Lambda>(lambda_name, std::move(arguments), std::move(lambda_body));
 }
 
 boost::local_shared_ptr<ast::Object> Parser::define_type_statement() noexcept(false) {
@@ -278,7 +278,7 @@ boost::local_shared_ptr<ast::Object> Parser::define_type_statement() noexcept(fa
   return boost::make_local_shared<ast::TypeDefinition>(name, std::move(fields));
 }
 
-std::vector<boost::local_shared_ptr<ast::Object>> Parser::resolve_function_arguments() noexcept(false) {
+std::vector<boost::local_shared_ptr<ast::Object>> Parser::resolve_lambda_arguments() noexcept(false) {
   require({token_t::left_paren});
   if (match({token_t::right_paren})) {
     return {};
@@ -296,14 +296,6 @@ std::vector<boost::local_shared_ptr<ast::Object>> Parser::resolve_function_argum
   return arguments;
 }
 
-boost::local_shared_ptr<ast::Object> Parser::resolve_array_subscript() noexcept(false) {
-  const std::string symbol_name = previous().data;
-  require({token_t::left_box_brace});
-  auto term = primary();
-  require({token_t::right_box_brace});
-  return boost::make_local_shared<ast::ArraySubscriptOperator>(symbol_name, std::move(term));
-}
-
 boost::local_shared_ptr<ast::Object> Parser::resolve_type_field_operator() noexcept(false) {
   std::string symbol_name = previous().data;
   require({token_t::dot});
@@ -316,10 +308,7 @@ boost::local_shared_ptr<ast::Object> Parser::resolve_symbol() noexcept(false) {
   switch (current().type) {
     case token_t::left_paren: {
       std::string data = previous().data;
-      return boost::make_local_shared<ast::FunctionCall>(std::move(data), resolve_function_arguments());
-    }
-    case token_t::left_box_brace: {
-      return resolve_array_subscript();
+      return boost::make_local_shared<ast::LambdaCall>(std::move(data), resolve_lambda_arguments());
     }
     case token_t::dot: {
       return resolve_type_field_operator();
@@ -333,7 +322,7 @@ boost::local_shared_ptr<ast::Object> Parser::resolve_symbol() noexcept(false) {
 boost::local_shared_ptr<ast::Object> Parser::type_creator() noexcept(false) {
   std::string name = peek().data;
   if (current().type == token_t::left_paren) {
-    return boost::make_local_shared<ast::TypeCreator>(std::move(name), resolve_function_arguments());
+    return boost::make_local_shared<ast::TypeCreator>(std::move(name), resolve_lambda_arguments());
   } else {
     throw ParseError("'(' expected");
   }

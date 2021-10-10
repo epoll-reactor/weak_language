@@ -9,7 +9,7 @@ namespace ast {
 class Object;
 }
 
-namespace internal {
+namespace eval_context {
 template <typename LeftNumeric, typename RightNumeric>
 boost::local_shared_ptr<ast::Object> binary_implementation(
     token_t type,

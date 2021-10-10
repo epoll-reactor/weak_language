@@ -16,14 +16,14 @@ ALWAYS_INLINE static void floating_point_unary_implementation(token_t type, doub
 }
 // clang-format on
 
-boost::local_shared_ptr<ast::Object> internal::unary_implementation(ast::ast_type_t ast_type, token_t unary_type, const boost::local_shared_ptr<ast::Object>& expression) noexcept(false) {
+boost::local_shared_ptr<ast::Object> eval_context::unary_implementation(ast::type_t ast_type, token_t unary_type, const boost::local_shared_ptr<ast::Object>& expression) noexcept(false) {
   switch (ast_type) {
-    case ast::ast_type_t::INTEGER: {
+    case ast::type_t::INTEGER: {
       size_t& value = static_cast<ast::Integer*>(expression.get())->value();
       integral_unary_implementation(unary_type, value);
       return expression;
     }
-    case ast::ast_type_t::FLOAT: {
+    case ast::type_t::FLOAT: {
       double& value = static_cast<ast::Float*>(expression.get())->value();
       floating_point_unary_implementation(unary_type, value);
       return expression;

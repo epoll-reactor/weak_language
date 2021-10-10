@@ -8,7 +8,7 @@ namespace format_detail {
 template <typename... Args>
 void run(std::string assertion_string, std::string string, Args&&... args) {
   if (auto f = format(string, std::forward<Args>(args)...); f != assertion_string) {
-    throw std::runtime_error("FORMAT error, expected " + assertion_string + ", got " + f);
+    throw std::runtime_error("format error, expected " + assertion_string + ", got " + f);
   }
 }
 }// namespace format_detail

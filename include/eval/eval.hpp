@@ -20,7 +20,7 @@ private:
   boost::local_shared_ptr<ast::Object> call_function(std::string_view name, std::vector<boost::local_shared_ptr<ast::Object>> evaluated_args) noexcept(false);
 
   /// @throws all exceptions from call_function or builtin functions
-  boost::local_shared_ptr<ast::Object> eval_function_call(const boost::local_shared_ptr<ast::FunctionCall>& function_call) noexcept(false);
+  boost::local_shared_ptr<ast::Object> eval_function_call(const boost::local_shared_ptr<ast::LambdaCall>& function_call) noexcept(false);
 
   /// @throws all exceptions from eval
   void eval_block(const boost::local_shared_ptr<ast::Block>& block) noexcept(false);
@@ -34,11 +34,11 @@ private:
   /// @throws all exceptions from eval
   boost::local_shared_ptr<ast::Object> eval_unary(const boost::local_shared_ptr<ast::Unary>& unary) noexcept(false);
 
-  /// @throws EvalError if function not found
-  /// @throws EvalError if non-subscript object passed
-  /// @throws EvalError if out-of-range
-  /// @throws all exceptions from eval
-  const boost::local_shared_ptr<ast::Object>& eval_array_subscript(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& argument) noexcept(false);
+//  /// @throws EvalError if function not found
+//  /// @throws EvalError if non-subscript object passed
+//  /// @throws EvalError if out-of-range
+//  /// @throws all exceptions from eval
+//  const boost::local_shared_ptr<ast::Object>& eval_array_subscript(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& argument) noexcept(false);
 
   /// @throws all exceptions from eval
   void eval_array(const boost::local_shared_ptr<ast::Array>& array) noexcept(false);
@@ -58,7 +58,7 @@ private:
   boost::local_shared_ptr<ast::Object> eval_type_creation_function(const boost::local_shared_ptr<ast::TypeCreator>& type_creator) noexcept(false);
 
   /// @throws EvalError if type mismatch
-  boost::local_shared_ptr<ast::Object> eval_type_field(const boost::local_shared_ptr<ast::TypeFieldOperator>& type_field) noexcept(false);
+  boost::local_shared_ptr<ast::Object> eval_type_field_access(const boost::local_shared_ptr<ast::TypeFieldOperator>& type_field) noexcept(false);
 
   /// @throws all exceptions from internal functions
   boost::local_shared_ptr<ast::Object> eval(const boost::local_shared_ptr<ast::Object>& expression) noexcept(false);

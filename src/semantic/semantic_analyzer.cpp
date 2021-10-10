@@ -11,101 +11,87 @@ void SemanticAnalyzer::analyze() noexcept(false) {
     analyze_statement(expression);
   }
 }
-
 void SemanticAnalyzer::analyze_statement(const boost::local_shared_ptr<ast::Object>& statement) noexcept(false) {
-  ast::ast_type_t statement_type = statement->ast_type();
-
-  if (statement_type == ast::ast_type_t::STRING || statement_type == ast::ast_type_t::INTEGER || statement_type == ast::ast_type_t::FLOAT || statement_type == ast::ast_type_t::SYMBOL) {
-    return;
-  }
-
-  if (statement_type == ast::ast_type_t::BINARY) {
-    auto binary = boost::static_pointer_cast<ast::Binary>(statement);
-
-    token_t binary_type = binary->type();
-
-    if (binary_type == token_t::assign || token_traits::is_assign_operator(binary_type)) {
-      analyze_assign_statement(binary);
-    } else {
-      analyze_binary_statement(binary);
+  // clang-format off
+  switch (statement->ast_type()) {
+    case ast::type_t::STRING:
+    case ast::type_t::INTEGER:
+    case ast::type_t::FLOAT:
+    case ast::type_t::SYMBOL:
+    case ast::type_t::TYPE_DEFINITION:
+    case ast::type_t::TYPE_FIELD: {
+      return;
     }
-    return;
-  }
-
-  if (statement_type == ast::ast_type_t::UNARY) {
-    auto unary = boost::static_pointer_cast<ast::Unary>(statement);
-
-    if (unary->operand()->ast_type() != ast::ast_type_t::INTEGER && unary->operand()->ast_type() != ast::ast_type_t::FLOAT && unary->operand()->ast_type() != ast::ast_type_t::SYMBOL) {
-      throw SemanticError("Invalid unary operands");
+    case ast::type_t::BINARY: {
+      const auto binary = boost::static_pointer_cast<ast::Binary>(statement);
+      const token_t binary_type = binary->type();
+      if (binary_type == token_t::assign || token_traits::is_assign_operator(binary_type)) {
+        analyze_assign_statement(binary);
+      } else {
+        analyze_binary_statement(binary);
+      }
+      return;
     }
-    return;
+    case ast::type_t::UNARY: {
+      const auto unary = boost::static_pointer_cast<ast::Unary>(statement);
+      if (unary->operand()->ast_type() != ast::type_t::INTEGER && unary->operand()->ast_type() != ast::type_t::FLOAT && unary->operand()->ast_type() != ast::type_t::SYMBOL) {
+        throw SemanticError("Invalid unary operands");
+      }
+      return;
+    }
+    case ast::type_t::BLOCK: {
+      analyze_block_statement(boost::static_pointer_cast<ast::Block>(statement));
+      return;
+    }
+    case ast::type_t::ARRAY: {
+      analyze_array_statement(boost::static_pointer_cast<ast::Array>(statement));
+      return;
+    }
+    case ast::type_t::LAMBDA: {
+      analyze_lambda_statement(boost::static_pointer_cast<ast::Lambda>(statement));
+      return;
+    }
+    case ast::type_t::LAMBDA_CALL: {
+      analyze_lambda_call_statement(boost::static_pointer_cast<ast::LambdaCall>(statement));
+      return;
+    }
+    case ast::type_t::IF: {
+      analyze_if_statement(boost::static_pointer_cast<ast::If>(statement));
+      return;
+    }
+    case ast::type_t::WHILE: {
+      analyze_while_statement(boost::static_pointer_cast<ast::While>(statement));
+      return;
+    }
+    case ast::type_t::FOR: {
+      analyze_for_statement(boost::static_pointer_cast<ast::For>(statement));
+      return;
+    }
+    default: { throw SemanticError("Unexpected statement"); }
   }
-
-  if (statement_type == ast::ast_type_t::BLOCK) {
-    analyze_block_statement(boost::static_pointer_cast<ast::Block>(statement));
-    return;
-  }
-  if (statement_type == ast::ast_type_t::TYPE_DEFINITION) {
-    /* Actually nothing to analyze. */
-    return;
-  }
-  if (statement_type == ast::ast_type_t::TYPE_FIELD) {
-    /* Actually nothing to analyze. */
-    return;
-  }
-  if (statement_type == ast::ast_type_t::ARRAY) {
-    analyze_array_statement(boost::static_pointer_cast<ast::Array>(statement));
-    return;
-  }
-  if (statement_type == ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR) {
-    analyze_array_subscript_statement(boost::static_pointer_cast<ast::ArraySubscriptOperator>(statement));
-    return;
-  }
-  if (statement_type == ast::ast_type_t::FUNCTION) {
-    analyze_function_statement(boost::static_pointer_cast<ast::Function>(statement));
-    return;
-  }
-  if (statement_type == ast::ast_type_t::FUNCTION_CALL) {
-    analyze_function_call_statement(boost::static_pointer_cast<ast::FunctionCall>(statement));
-    return;
-  }
-  if (statement_type == ast::ast_type_t::IF) {
-    analyze_if_statement(boost::static_pointer_cast<ast::If>(statement));
-    return;
-  }
-  if (statement_type == ast::ast_type_t::WHILE) {
-    analyze_while_statement(boost::static_pointer_cast<ast::While>(statement));
-    return;
-  }
-  if (statement_type == ast::ast_type_t::FOR) {
-    analyze_for_statement(boost::static_pointer_cast<ast::For>(statement));
-    return;
-  }
-
-  throw SemanticError("Unexpected statement");
+  // clang-format on
 }
 
 void SemanticAnalyzer::analyze_array_statement(const boost::local_shared_ptr<ast::Array>& statement) noexcept(false) {
   for (const auto& element : statement->elements()) {
-    ast::ast_type_t element_type = element->ast_type();
-    if (element_type != ast::ast_type_t::SYMBOL && element_type != ast::ast_type_t::INTEGER && element_type != ast::ast_type_t::FLOAT && element_type != ast::ast_type_t::STRING && element_type != ast::ast_type_t::BINARY && element_type != ast::ast_type_t::FUNCTION_CALL && element_type != ast::ast_type_t::ARRAY) {
+    ast::type_t element_type = element->ast_type();
+    if (element_type != ast::type_t::SYMBOL && element_type != ast::type_t::INTEGER && element_type != ast::type_t::FLOAT && element_type != ast::type_t::STRING && element_type != ast::type_t::BINARY && element_type != ast::type_t::LAMBDA_CALL && element_type != ast::type_t::ARRAY) {
       throw SemanticError("Array expects object don't statement");
     }
   }
 }
 
 void SemanticAnalyzer::analyze_assign_statement(const boost::local_shared_ptr<ast::Binary>& statement) noexcept(false) {
-  if (statement->lhs()->ast_type() != ast::ast_type_t::SYMBOL) {
+  if (statement->lhs()->ast_type() != ast::type_t::SYMBOL) {
     throw SemanticError("Expression is not assignable");
   }
 
-  ast::ast_type_t statement_type = statement->ast_type();
-
-  if (statement_type != ast::ast_type_t::SYMBOL && statement_type != ast::ast_type_t::INTEGER && statement_type != ast::ast_type_t::FLOAT && statement_type != ast::ast_type_t::STRING && statement_type != ast::ast_type_t::BINARY && statement_type != ast::ast_type_t::UNARY && statement_type != ast::ast_type_t::FUNCTION_CALL && statement_type != ast::ast_type_t::ARRAY && statement_type != ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR) {
+  const ast::type_t statement_type = statement->ast_type();
+  if (statement_type != ast::type_t::SYMBOL && statement_type != ast::type_t::INTEGER && statement_type != ast::type_t::FLOAT && statement_type != ast::type_t::STRING && statement_type != ast::type_t::BINARY && statement_type != ast::type_t::UNARY && statement_type != ast::type_t::LAMBDA_CALL && statement_type != ast::type_t::ARRAY) {
     throw SemanticError("Expression is not assignable");
   }
 
-  if (statement->rhs()->ast_type() == ast::ast_type_t::BINARY) {
+  if (statement->rhs()->ast_type() == ast::type_t::BINARY) {
     analyze_statement(boost::static_pointer_cast<ast::Binary>(statement->rhs()));
   }
 }
@@ -122,18 +108,30 @@ void SemanticAnalyzer::analyze_binary_statement(const boost::local_shared_ptr<as
   }
 }
 
-void SemanticAnalyzer::analyze_function_call_statement(const boost::local_shared_ptr<ast::FunctionCall>& function_statement) noexcept(false) {
-  for (const auto& argument : function_statement->arguments()) {
-    ast::ast_type_t argument_type = argument->ast_type();
-    if (argument_type != ast::ast_type_t::INTEGER && argument_type != ast::ast_type_t::FLOAT && argument_type != ast::ast_type_t::STRING && argument_type != ast::ast_type_t::SYMBOL && argument_type != ast::ast_type_t::BINARY && argument_type != ast::ast_type_t::UNARY && argument_type != ast::ast_type_t::FUNCTION_CALL && argument_type != ast::ast_type_t::ARRAY && argument_type != ast::ast_type_t::ARRAY_SUBSCRIPT_OPERATOR && argument_type != ast::ast_type_t::TYPE_FIELD) {
-      throw SemanticError("Wrong function call argument");
+void SemanticAnalyzer::analyze_lambda_call_statement(const boost::local_shared_ptr<ast::LambdaCall>& lambda) noexcept(false) {
+  for (const auto& argument : lambda->arguments()) {
+    switch (argument->ast_type()) {
+      case ast::type_t::INTEGER:
+      case ast::type_t::FLOAT:
+      case ast::type_t::STRING:
+      case ast::type_t::SYMBOL:
+      case ast::type_t::BINARY:
+      case ast::type_t::UNARY:
+      case ast::type_t::LAMBDA_CALL:
+      case ast::type_t::TYPE_FIELD:
+      case ast::type_t::ARRAY: {
+        return;
+      }
+      default: {
+        throw SemanticError("Wrong lambda call argument");
+      }
     }
   }
 }
 
-void SemanticAnalyzer::analyze_function_statement(const boost::local_shared_ptr<ast::Function>& function_statement) noexcept(false) {
-  /// Function arguments are easily checked in parser.
-  analyze_block_statement(function_statement->body());
+void SemanticAnalyzer::analyze_lambda_statement(const boost::local_shared_ptr<ast::Lambda>& lambda) noexcept(false) {
+  /// Lambda arguments are easily checked in parser.
+  analyze_block_statement(lambda->body());
 }
 
 void SemanticAnalyzer::analyze_if_statement(const boost::local_shared_ptr<ast::If>& if_statement) noexcept(false) {
@@ -167,70 +165,61 @@ void SemanticAnalyzer::analyze_while_statement(const boost::local_shared_ptr<ast
   }
 }
 
-void SemanticAnalyzer::analyze_for_statement(const boost::local_shared_ptr<ast::For>& for_statement) noexcept(false) {
-  if (for_statement->loop_init()) {
-    if (for_statement->loop_init()->ast_type() != ast::ast_type_t::BINARY) {
+void SemanticAnalyzer::analyze_for_statement(const boost::local_shared_ptr<ast::For>& statement) noexcept(false) {
+  if (statement->loop_init()) {
+    if (statement->loop_init()->ast_type() != ast::type_t::BINARY) {
       throw SemanticError("Bad for init");
     }
 
-    auto for_init = boost::static_pointer_cast<ast::Binary>(for_statement->loop_init());
-
-    if (for_init->type() != token_t::assign) {
+    auto init = boost::static_pointer_cast<ast::Binary>(statement->loop_init());
+    if (init->type() != token_t::assign) {
       throw SemanticError("For init part requires assignment operation");
     }
   }
-
-  if (for_statement->exit_condition()) {
-    if (!to_integral_convertible(for_statement->exit_condition())) {
+  if (statement->exit_condition()) {
+    if (!to_integral_convertible(statement->exit_condition())) {
       throw SemanticError("For condition requires convertible to bool expression");
     }
   }
-
-  if (for_statement->increment()) {
-    if (for_statement->increment()->ast_type() != ast::ast_type_t::UNARY && for_statement->increment()->ast_type() != ast::ast_type_t::BINARY) {
+  if (statement->increment()) {
+    if (statement->increment()->ast_type() != ast::type_t::UNARY && statement->increment()->ast_type() != ast::type_t::BINARY) {
       throw SemanticError("Bad for increment part");
     }
   }
-
-  for (const auto& for_instruction : for_statement->body()->statements()) {
-    analyze_statement(for_instruction);
+  for (const auto& instruction : statement->body()->statements()) {
+    analyze_statement(instruction);
   }
 }
 
-void SemanticAnalyzer::analyze_array_subscript_statement(const boost::local_shared_ptr<ast::ArraySubscriptOperator>& statement) noexcept(false) {
-  if (!to_integral_convertible(statement->index())) {
-    throw SemanticError("Array subscript operator requires convertible to number expression");
-  }
-}
-
-void SemanticAnalyzer::analyze_block_statement(const boost::local_shared_ptr<ast::Block>& block_statement) noexcept(false) {
-  for (const auto& statement : block_statement->statements()) {
-    analyze_statement(statement);
+void SemanticAnalyzer::analyze_block_statement(const boost::local_shared_ptr<ast::Block>& statement) noexcept(false) {
+  for (const auto& instruction : statement->statements()) {
+    analyze_statement(instruction);
   }
 }
 
 bool SemanticAnalyzer::to_integral_convertible(const boost::local_shared_ptr<ast::Object>& statement) noexcept(false) {
-  if (statement->ast_type() == ast::ast_type_t::INTEGER) {
-    return true;
-  } else if (statement->ast_type() == ast::ast_type_t::SYMBOL) {
-    return true;
-  } else if (statement->ast_type() == ast::ast_type_t::FUNCTION_CALL) {
-    return true;
-  } else if (statement->ast_type() == ast::ast_type_t::UNARY) {
-    return true;
-  } else if (auto binary_expression = boost::dynamic_pointer_cast<ast::Binary>(statement)) {
-    try {
-      analyze_binary_statement(binary_expression);
-
-    } catch (SemanticError& err) {
-      return false;
+  // clang-format off
+  switch (statement->ast_type()) {
+    case ast::type_t::SYMBOL:
+    case ast::type_t::INTEGER:
+    case ast::type_t::LAMBDA_CALL:
+    case ast::type_t::UNARY: {
+      return true;
     }
-    return true;
-  } else {
-    return false;
+    case ast::type_t::BINARY: {
+      auto binary = boost::static_pointer_cast<ast::Binary>(statement);
+      try {
+        analyze_binary_statement(binary);
+      } catch (SemanticError& err) {
+        return false;
+      }
+      return true;
+    }
+    default: { return false; }
   }
+  // clang-format on
 }
 
 bool SemanticAnalyzer::to_number_convertible(const boost::local_shared_ptr<ast::Object>& statement) noexcept(false) {
-  return to_integral_convertible(statement) || statement->ast_type() == ast::ast_type_t::FLOAT;
+  return to_integral_convertible(statement) || statement->ast_type() == ast::type_t::FLOAT;
 }

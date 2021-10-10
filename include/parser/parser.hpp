@@ -49,7 +49,7 @@ private:
   /// @return correct lexeme of one of expected types
   Lexeme require(const std::vector<token_t>& expected_types) noexcept(false);
 
-  /// @brief main parse function
+  /// @brief main parse lambda
   boost::local_shared_ptr<ast::Object> primary() noexcept(false);
 
   /// @return array parse tree
@@ -61,7 +61,7 @@ private:
   /// @return parse tree if ptr is multiplicative operation, unchanged ptr otherwise
   boost::local_shared_ptr<ast::Object> multiplicative() noexcept(false);
 
-  /// @note   this function does not check operation types
+  /// @note   this lambda does not check operation types
   /// @pre    previous() returns number or symbol lexeme
   /// @post   previous() returns first lexeme after parsed binary expression
   /// @return binary parse tree
@@ -93,9 +93,9 @@ private:
   boost::local_shared_ptr<ast::Object> for_statement() noexcept(false);
 
   /// @pre    previous() returns 'fun' lexeme
-  /// @post   previous() returns first lexeme after function declaration
-  /// @return function parse tree that contains function name, argument list and body (block)
-  boost::local_shared_ptr<ast::Object> function_declare_statement() noexcept(false);
+  /// @post   previous() returns first lexeme after lambda declaration
+  /// @return lambda parse tree that contains lambda type_name, argument list and body (block)
+  boost::local_shared_ptr<ast::Object> lambda_declare_statement() noexcept(false);
 
   /// @pre    previous() returns 'define-type' lexeme
   /// @post   previous() returns first lexeme after type definition
@@ -104,18 +104,18 @@ private:
 
   /// @pre    previous() returns '(' lexeme
   /// @post   previous() returns ')' lexeme
-  /// @return correct function argument list
-  std::vector<boost::local_shared_ptr<ast::Object>> resolve_function_arguments() noexcept(false);
+  /// @return correct lambda argument list
+  std::vector<boost::local_shared_ptr<ast::Object>> resolve_lambda_arguments() noexcept(false);
 
   /// @pre    previous() returns symbol lexeme
-  /// @post   previous() returns ')' lexeme if function call argument processed, symbol lexeme otherwise
-  /// @return symbol object, function call object if '(' token placed after symbol
+  /// @post   previous() returns ')' lexeme if lambda call argument processed, symbol lexeme otherwise
+  /// @return symbol object, lambda call object if '(' token placed after symbol
   boost::local_shared_ptr<ast::Object> resolve_symbol() noexcept(false);
 
   /// @pre    previous() returns symbol lexeme
   /// @post   previous() returns ']' lexeme
   /// @return array subscript parse tree
-  boost::local_shared_ptr<ast::Object> resolve_array_subscript() noexcept(false);
+//  boost::local_shared_ptr<ast::Object> resolve_array_subscript() noexcept(false);
 
   /// @pre    previous() returns symbol lexeme
   /// @post   previous() returns lexeme after type field

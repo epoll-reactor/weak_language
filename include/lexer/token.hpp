@@ -62,7 +62,7 @@ enum struct token_t {
   kw_if,
   kw_else,
   kw_return,
-  kw_function_decl,
+  kw_lambda_decl,
   kw_define_type,
   kw_new,
   kw_load,
@@ -115,7 +115,7 @@ inline std::string dispatch_token(token_t tok) noexcept(true) {
     case token_t::string_literal: { return "<string literal>"; }
     case token_t::none: { return "<none>"; }
     case token_t::end_of_data: { return "<EOF>"; }
-    case token_t::kw_function_decl: { return "<function_decl>"; }
+    case token_t::kw_lambda_decl: { return "<lambda>"; }
     case token_t::kw_for: { return "<for>"; }
     case token_t::kw_while: { return "<while>"; }
     case token_t::kw_if: { return "<if>"; }
