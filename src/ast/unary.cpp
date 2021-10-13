@@ -8,7 +8,11 @@ Unary::Unary(token_t type, boost::local_shared_ptr<Object> operation) noexcept(t
   : type_(type)
   , operation_(std::move(operation)) {}
 
-boost::local_shared_ptr<Object> Unary::operand() const noexcept(true) {
+boost::local_shared_ptr<Object>& Unary::operand() noexcept(true) {
+  return operation_;
+}
+
+const boost::local_shared_ptr<Object>& Unary::operand() const noexcept(true) {
   return operation_;
 }
 

@@ -5,7 +5,7 @@
 
 inline std::optional<boost::local_shared_ptr<ast::Object>> array_get(const std::vector<boost::local_shared_ptr<ast::Object>>& arguments) {
   if (arguments.size() != 2) {
-    throw EvalError("array-get: 2 arguments required, got " + std::to_string(arguments.size()));
+    throw EvalError("array-get: 2 arguments required, got {}", arguments.size());
   }
   auto array = dynamic_cast<ast::Array*>((*arguments.begin()).get());
   auto index = dynamic_cast<ast::Integer*>((*++arguments.begin()).get());
@@ -13,14 +13,14 @@ inline std::optional<boost::local_shared_ptr<ast::Object>> array_get(const std::
     throw EvalError("array-get: wrong types");
   }
   if (array->elements().size() <= index->value()) {
-    throw EvalError(format("array-get: overflow (index is {}, size is {})", index->value(), array->elements().size()));
+    throw EvalError("array-get: overflow (index is {}, size is {})", index->value(), array->elements().size());
   }
   return array->elements().at(index->value());
 }
 
 inline std::optional<boost::local_shared_ptr<ast::Object>> array_set(const std::vector<boost::local_shared_ptr<ast::Object>>& arguments) {
   if (arguments.size() != 3) {
-    throw EvalError("array-set: 3 arguments required, got " + std::to_string(arguments.size()));
+    throw EvalError("array-set: 3 arguments required, got {}", arguments.size());
   }
   auto array = dynamic_cast<ast::Array*>((*arguments.begin()).get());
   auto index = dynamic_cast<ast::Integer*>((*(arguments.begin() + 1)).get());

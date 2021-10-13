@@ -92,18 +92,22 @@ static void optimize_for(std::vector<boost::local_shared_ptr<ast::Object>>& outs
 }
 
 static void optimize_unary(std::vector<boost::local_shared_ptr<ast::Object>>& outside_block, boost::local_shared_ptr<ast::Object>& expression, ssize_t to_erase) noexcept(false) {
-  auto unary = boost::static_pointer_cast<ast::Unary>(expression);
+  const auto unary = boost::static_pointer_cast<ast::Unary>(expression);
   if (unary->operand()->ast_type() == ast::type_t::INTEGER || unary->operand()->ast_type() == ast::type_t::FLOAT) {
-    outside_block[to_erase] = eval_context::unary_implementation(
+    bool failed = false;
+    eval_context::unary_implementation(
         unary->operand()->ast_type(),
         unary->type(),
-        unary->operand());
+        unary->operand(),
+        failed);
+    if (!failed) {
+      outside_block[to_erase] = unary->operand();
+    }
   }
 }
 
 static void optimize_binary(std::vector<boost::local_shared_ptr<ast::Object>>& outside_block, boost::local_shared_ptr<ast::Object>& expression, ssize_t to_erase) noexcept(false) {
   UNUSED(outside_block);
+  UNUSED(expression);
   UNUSED(to_erase);
-  auto binary = boost::static_pointer_cast<ast::Binary>(expression);
-  // ...
 }

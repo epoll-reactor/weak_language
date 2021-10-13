@@ -112,10 +112,7 @@ private:
   /// @return symbol object, lambda call object if '(' token placed after symbol
   boost::local_shared_ptr<ast::Object> resolve_symbol() noexcept(false);
 
-  /// @pre    previous() returns symbol lexeme
-  /// @post   previous() returns ']' lexeme
-  /// @return array subscript parse tree
-//  boost::local_shared_ptr<ast::Object> resolve_array_subscript() noexcept(false);
+  boost::local_shared_ptr<ast::Object> resolve_braced_expression() noexcept(false);
 
   /// @pre    previous() returns symbol lexeme
   /// @post   previous() returns lexeme after type field

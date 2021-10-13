@@ -35,7 +35,7 @@ inline std::optional<boost::local_shared_ptr<ast::Object>> print(const std::vect
   // clang-format off
   for (size_t i = 0; i < arguments.size(); ++i) {
     ast::Object* pointer = arguments[i].get();
-    ast::typecase(pointer,
+    ast::dynamic_typecase(pointer,
       [&i, &print_impl](ast::Integer* ptr)    { print_impl(i, ptr); },
       [&i, &print_impl](ast::Float* ptr)      { print_impl(i, ptr); },
       [&i, &print_impl](ast::String* ptr)     { print_impl(i, ptr); },

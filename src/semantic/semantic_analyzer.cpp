@@ -2,7 +2,7 @@
 
 SemanticAnalyzer::SemanticAnalyzer(boost::local_shared_ptr<ast::RootObject> input) noexcept(false) {
   for (const auto& expr : input->get()) {
-    input_.emplace_back(expr);
+    input_.push_back(expr);
   }
 }
 
@@ -11,6 +11,7 @@ void SemanticAnalyzer::analyze() noexcept(false) {
     analyze_statement(expression);
   }
 }
+
 void SemanticAnalyzer::analyze_statement(const boost::local_shared_ptr<ast::Object>& statement) noexcept(false) {
   // clang-format off
   switch (statement->ast_type()) {
@@ -157,9 +158,7 @@ void SemanticAnalyzer::analyze_while_statement(const boost::local_shared_ptr<ast
   if (!to_number_convertible(while_statement->exit_condition())) {
     throw SemanticError("While condition requires convertible to bool expression");
   }
-
   auto body = boost::dynamic_pointer_cast<ast::Block>(while_statement->body());
-
   for (const auto& while_instruction : body->statements()) {
     analyze_statement(while_instruction);
   }

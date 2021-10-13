@@ -28,6 +28,10 @@ public:
   /// @throws std::bad_alloc
   const boost::local_shared_ptr<ast::Object>& lookup(std::string_view name) const noexcept(false);
 
+  /// @throws EvalError if variable not found
+  /// @throws std::bad_alloc
+  boost::local_shared_ptr<ast::Object>& lookup(std::string_view name) noexcept(false);
+
   ALWAYS_INLINE void scope_begin() noexcept(true);
   ALWAYS_INLINE void scope_end() noexcept(true);
 

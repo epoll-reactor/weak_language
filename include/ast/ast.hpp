@@ -12,8 +12,35 @@
 namespace ast {
 
 // clang-format off
-enum struct type_t { OBJECT, INTEGER, FLOAT, STRING, SYMBOL, ARRAY, UNARY, BINARY, BLOCK, WHILE, FOR, IF, LAMBDA, LAMBDA_CALL, TYPE_CREATOR, TYPE_DEFINITION, TYPE_OBJECT, TYPE_FIELD };
+enum struct type_t : uint32_t {
+  OBJECT          = (1 << 1),
+  INTEGER         = (1 << 2),
+  FLOAT           = (1 << 3),
+  STRING          = (1 << 4),
+  SYMBOL          = (1 << 5),
+  ARRAY           = (1 << 6),
+  UNARY           = (1 << 7),
+  BINARY          = (1 << 8),
+  BLOCK           = (1 << 9),
+  WHILE           = (1 << 10),
+  FOR             = (1 << 11),
+  IF              = (1 << 12),
+  LAMBDA          = (1 << 13),
+  LAMBDA_CALL     = (1 << 14),
+  TYPE_CREATOR    = (1 << 15),
+  TYPE_DEFINITION = (1 << 16),
+  TYPE_OBJECT     = (1 << 17),
+  TYPE_FIELD      = (1 << 18)
+};
+//enum struct type_t { OBJECT, INTEGER, FLOAT, STRING, SYMBOL, ARRAY, UNARY, BINARY, BLOCK, WHILE, FOR, IF, LAMBDA, LAMBDA_CALL, TYPE_CREATOR, TYPE_DEFINITION, TYPE_OBJECT, TYPE_FIELD };
 // clang-format on
+
+constexpr uint32_t operator&(type_t lhs, type_t rhs) noexcept(true) {
+  return static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs);
+}
+constexpr uint32_t operator|(type_t lhs, type_t rhs) noexcept(true) {
+  return static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs);
+}
 
 class Object {
 public:
@@ -89,7 +116,8 @@ private:
 class Unary : public Object {
 public:
   Unary(token_t type, boost::local_shared_ptr<Object> operation) noexcept(true);
-  boost::local_shared_ptr<Object> operand() const noexcept(true);
+  boost::local_shared_ptr<Object>& operand() noexcept(true);
+  const boost::local_shared_ptr<Object>& operand() const noexcept(true);
   token_t type() const noexcept(true);
   constexpr type_t ast_type() const noexcept(true) override;
 
@@ -101,7 +129,9 @@ private:
 class Binary : public Object {
 public:
   Binary(token_t type, boost::local_shared_ptr<Object> lhs, boost::local_shared_ptr<Object> rhs) noexcept(true);
+  boost::local_shared_ptr<Object>& lhs() noexcept(true);
   const boost::local_shared_ptr<Object>& lhs() const noexcept(true);
+  boost::local_shared_ptr<Object>& rhs() noexcept(true);
   const boost::local_shared_ptr<Object>& rhs() const noexcept(true);
   token_t type() const noexcept(true);
   constexpr type_t ast_type() const noexcept(true) override;
@@ -321,23 +351,39 @@ template <typename T>
 using get_signature = typename get_signature_impl<T>::type;
 
 template <typename Base, typename T>
-bool typecase_impl(Base* base, std::function<void(T*)> function) {
+bool dynamic_typecase_impl(Base* base, std::function<void(T*)> function) {
   if (T* ptr = dynamic_cast<T*>(base)) {
     function(ptr);
     return true;
   }
   return false;
 }
-template <typename Base, typename Subclass, typename... Subclasses>
-void typecase(Base* base, Subclass&& subclass, Subclasses&&... subclasses) {
-  using signature_t = get_signature<Subclass>;
-  if (typecase_impl(base, static_cast<std::function<signature_t>>(subclass))) {
+/*!
+ * Performs type dispatching using dynamic_cast.
+ *
+ * @param base          - base class pointer.
+ * @param type_case     - functional object.
+ * @param type_cases    - rest of functional objects.
+ * @code
+ *   Base* pointer = new Derived_3;
+ *   dynamic_typecase(pointer,
+ *     [](Derived_1* ptr) { ... },
+ *     [](Derived_2* ptr) { ... },
+ *     [](Derived_3* ptr) { ... }
+ *   );
+ * @endcode
+ */
+template <typename Base, typename TypeCase, typename... TypeCases>
+void dynamic_typecase(Base* base, TypeCase&& type_case, TypeCases&&... type_cases) {
+  using signature = get_signature<TypeCase>;
+  if (dynamic_typecase_impl(base, static_cast<std::function<signature>>(type_case))) {
     return;
   }
-  typecase(base, subclasses...);
+  dynamic_typecase(base, type_cases...);
 }
 template <typename Base>
-void typecase(Base*) { /* Stop case */ }
+void dynamic_typecase(Base*) { /* Stop case */
+}
 
 }// namespace ast
 

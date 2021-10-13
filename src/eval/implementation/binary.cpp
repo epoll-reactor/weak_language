@@ -3,6 +3,7 @@
 #include "../../../include/ast/ast.hpp"
 #include "../../../include/error/eval_error.hpp"
 
+#include <any>
 #include <boost/pool/pool_alloc.hpp>
 #include <variant>
 
@@ -61,7 +62,6 @@ ALWAYS_INLINE static constexpr std::variant<int32_t, double> arithmetic(token_t 
         static_cast<const ast::Integer*>(lhs)->value(),
         static_cast<const ast::Integer*>(rhs)->value());
   }
-
   return floating_point_arithmetic_implementation(
       type,
       static_cast<const LeftAST*>(lhs)->value(),
@@ -107,22 +107,40 @@ private:
 
 }// namespace
 
-template <>
-boost::local_shared_ptr<ast::Object> eval_context::binary_implementation<ast::Integer, ast::Integer>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-  return boost::allocate_local_shared<ast::Integer>(allocator_holder<ast::Integer>::create().get_allocator(), std::get<int32_t>(arithmetic<ast::Integer, ast::Integer>(type, lhs.get(), rhs.get())));
+template <typename Result, typename LeftAST, typename RightAST>
+ALWAYS_INLINE auto create_binary(
+    token_t operation,
+    const boost::local_shared_ptr<ast::Object>& lhs,
+    const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+  if constexpr (std::is_same_v<Result, ast::Integer>) {
+    return boost::make_local_shared<Result>(std::get<int32_t>(arithmetic<LeftAST, RightAST>(operation, lhs.get(), rhs.get())));
+  } else if constexpr (std::is_same_v<Result, ast::Float>) {
+    return boost::make_local_shared<Result>(std::get<double>(arithmetic<LeftAST, RightAST>(operation, lhs.get(), rhs.get())));
+  }
 }
-template <>
-boost::local_shared_ptr<ast::Object> eval_context::binary_implementation<ast::Integer, ast::Float>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-  return boost::allocate_local_shared<ast::Float>(allocator_holder<ast::Float>::create().get_allocator(), std::get<double>(arithmetic<ast::Integer, ast::Float>(type, lhs.get(), rhs.get())));
+
+#define ENUM_PAIR(x, y) ((static_cast<uint32_t>(x)) | ((static_cast<uint32_t>(y)) << 16))
+
+boost::local_shared_ptr<ast::Object> eval_context::binary_implementation(ast::type_t left_type, ast::type_t right_type, token_t operation, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
+  switch (ENUM_PAIR(left_type, right_type)) {
+    case ENUM_PAIR(ast::type_t::INTEGER, ast::type_t::INTEGER): {
+      return create_binary<ast::Integer, ast::Integer, ast::Integer>(operation, lhs, rhs);
+    }
+    case ENUM_PAIR(ast::type_t::INTEGER, ast::type_t::FLOAT): {
+      return create_binary<ast::Float, ast::Integer, ast::Float>(operation, lhs, rhs);
+    }
+    case ENUM_PAIR(ast::type_t::FLOAT, ast::type_t::FLOAT): {
+      return create_binary<ast::Float, ast::Float, ast::Float>(operation, lhs, rhs);
+    }
+    case ENUM_PAIR(ast::type_t::FLOAT, ast::type_t::INTEGER): {
+      return create_binary<ast::Float, ast::Float, ast::Integer>(operation, lhs, rhs);
+    }
+    default: {
+      /* Unreachable. */ return nullptr;
+    }
+  }
 }
-template <>
-boost::local_shared_ptr<ast::Object> eval_context::binary_implementation<ast::Float, ast::Integer>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-  return boost::allocate_local_shared<ast::Float>(allocator_holder<ast::Float>::create().get_allocator(), std::get<double>(arithmetic<ast::Float, ast::Integer>(type, lhs.get(), rhs.get())));
-}
-template <>
-boost::local_shared_ptr<ast::Object> eval_context::binary_implementation<ast::Float, ast::Float>(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
-  return boost::allocate_local_shared<ast::Float>(allocator_holder<ast::Float>::create().get_allocator(), std::get<double>(arithmetic<ast::Float, ast::Float>(type, lhs.get(), rhs.get())));
-}
+#undef MAKE_PAIR
 
 boost::local_shared_ptr<ast::Object> eval_context::assign_binary_implementation(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
   if (lhs->ast_type() != rhs->ast_type()) {

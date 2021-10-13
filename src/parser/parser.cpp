@@ -33,6 +33,7 @@ boost::local_shared_ptr<ast::Object> Parser::primary() noexcept(false) {
     case token_t::kw_new: { return type_creator(); }
     case token_t::left_brace: { return block(); }
     case token_t::left_box_brace: { return array(); }
+    case token_t::left_paren: { return resolve_braced_expression(); }
     case token_t::num: { return binary(boost::make_local_shared<ast::Integer>(previous().data)); }
     case token_t::floating_point: { return binary(boost::make_local_shared<ast::Float>(previous().data)); }
     case token_t::string_literal: { return boost::make_local_shared<ast::String>(previous().data); }
@@ -40,8 +41,9 @@ boost::local_shared_ptr<ast::Object> Parser::primary() noexcept(false) {
     case token_t::minus:
     case token_t::negation:
     case token_t::inc:
-    case token_t::dec:
+    case token_t::dec: {
       return unary();
+    }
 
     default: {
       throw ParseError("Unknown expression: {}", dispatch_token(previous().type));
@@ -317,6 +319,14 @@ boost::local_shared_ptr<ast::Object> Parser::resolve_symbol() noexcept(false) {
       return binary(boost::make_local_shared<ast::Symbol>(previous().data));
     }
   }
+}
+
+boost::local_shared_ptr<ast::Object> Parser::resolve_braced_expression() noexcept(false) {
+  --current_index_;
+  require({token_t::left_paren});
+  auto expr = primary();
+  require({token_t::right_paren});
+  return expr;
 }
 
 boost::local_shared_ptr<ast::Object> Parser::type_creator() noexcept(false) {
