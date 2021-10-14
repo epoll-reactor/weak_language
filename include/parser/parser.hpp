@@ -11,21 +11,21 @@
 /// LL Syntax analyzer.
 class Parser {
 public:
-  explicit Parser(std::vector<Lexeme> lexemes) noexcept(true);
+  explicit Parser(std::vector<Token> tokens) noexcept(true);
 
   boost::local_shared_ptr<ast::RootObject> parse() noexcept(false);
 
 private:
   /// @throws std::out_of_range
-  const Lexeme& current() const noexcept(false);
+  const Token& current() const noexcept(false);
 
   /// @throws std::out_of_range
-  const Lexeme& previous() const noexcept(false);
+  const Token& previous() const noexcept(false);
 
   /// @throws std::out_of_range
-  const Lexeme& peek() noexcept(false);
+  const Token& peek() noexcept(false);
 
-  /// @return true if current lexeme is ';', ')' or ','
+  /// @return true if current token is ';', ')' or ','
   bool end_of_expression() const noexcept(true);
 
   /// @note   don't throw because guarantees that valid index will be passed to at() method of m_input array
@@ -41,13 +41,13 @@ private:
 
   /// @throws std::out_of_range from current() and peek()
   /// @brief  get current token and match with one of samples
-  /// @return correct lexeme, std::nullopt if input find no more tokens
-  std::optional<Lexeme> match(const std::vector<token_t>& expected_types) noexcept(false);
+  /// @return correct token, std::nullopt if input find no more tokens
+  std::optional<Token> match(const std::vector<token_t>& expected_types) noexcept(false);
 
   /// @throws std::out_of_range from match()
   /// @throws ParseError if the match was unsuccessful
-  /// @return correct lexeme of one of expected types
-  Lexeme require(const std::vector<token_t>& expected_types) noexcept(false);
+  /// @return correct token of one of expected types
+  Token require(const std::vector<token_t>& expected_types) noexcept(false);
 
   /// @brief main parse lambda
   boost::local_shared_ptr<ast::Object> primary() noexcept(false);
@@ -62,66 +62,66 @@ private:
   boost::local_shared_ptr<ast::Object> multiplicative() noexcept(false);
 
   /// @note   this lambda does not check operation types
-  /// @pre    previous() returns number or symbol lexeme
-  /// @post   previous() returns first lexeme after parsed binary expression
+  /// @pre    previous() returns number or symbol token
+  /// @post   previous() returns first token after parsed binary expression
   /// @return binary parse tree
   boost::local_shared_ptr<ast::Object> binary(const boost::local_shared_ptr<ast::Object>& ptr) noexcept(false);
 
   /// @pre    previous() returns unary operator
-  /// @post   previous() returns first lexeme after parsed unary expression
+  /// @post   previous() returns first token after parsed unary expression
   boost::local_shared_ptr<ast::Object> unary() noexcept(false);
 
-  /// @pre    previous() returns '{' lexeme
-  /// @post   current() returns '}' lexeme
+  /// @pre    previous() returns '{' token
+  /// @post   current() returns '}' token
   /// @return block parse tree of recursively parsed expressions
   boost::local_shared_ptr<ast::Block> block() noexcept(false);
 
-  /// @pre    previous() returns 'if' lexeme
-  /// @post   previous() returns first lexeme after parsed if
+  /// @pre    previous() returns 'if' token
+  /// @post   previous() returns first token after parsed if
   /// @return if parse tree with or without else block
   boost::local_shared_ptr<ast::Object> if_statement() noexcept(false);
 
-  /// @pre    previous() returns 'while' lexeme
-  /// @post   previous() returns first lexeme after parsed while
+  /// @pre    previous() returns 'while' token
+  /// @post   previous() returns first token after parsed while
   /// @return while parse tree
   boost::local_shared_ptr<ast::Object> while_statement() noexcept(false);
 
   /// @note   any number of C-style for blocks (for ( 1 ; 2 ; 3 )) can be empty
-  /// @pre    previous() returns 'for' lexeme
-  /// @post   previous() returns first lexeme after parsed for
+  /// @pre    previous() returns 'for' token
+  /// @post   previous() returns first token after parsed for
   /// @return for parse tree
   boost::local_shared_ptr<ast::Object> for_statement() noexcept(false);
 
-  /// @pre    previous() returns 'fun' lexeme
-  /// @post   previous() returns first lexeme after lambda declaration
+  /// @pre    previous() returns 'fun' token
+  /// @post   previous() returns first token after lambda declaration
   /// @return lambda parse tree that contains lambda type_name, argument list and body (block)
   boost::local_shared_ptr<ast::Object> lambda_declare_statement() noexcept(false);
 
-  /// @pre    previous() returns 'define-type' lexeme
-  /// @post   previous() returns first lexeme after type definition
+  /// @pre    previous() returns 'define-type' token
+  /// @post   previous() returns first token after type definition
   /// @return parsed type definition with only field names
   boost::local_shared_ptr<ast::Object> define_type_statement() noexcept(false);
 
-  /// @pre    previous() returns '(' lexeme
-  /// @post   previous() returns ')' lexeme
+  /// @pre    previous() returns '(' token
+  /// @post   previous() returns ')' token
   /// @return correct lambda argument list
   std::vector<boost::local_shared_ptr<ast::Object>> resolve_lambda_arguments() noexcept(false);
 
-  /// @pre    previous() returns symbol lexeme
-  /// @post   previous() returns ')' lexeme if lambda call argument processed, symbol lexeme otherwise
+  /// @pre    previous() returns symbol token
+  /// @post   previous() returns ')' token if lambda call argument processed, symbol token otherwise
   /// @return symbol object, lambda call object if '(' token placed after symbol
   boost::local_shared_ptr<ast::Object> resolve_symbol() noexcept(false);
 
   boost::local_shared_ptr<ast::Object> resolve_braced_expression() noexcept(false);
 
-  /// @pre    previous() returns symbol lexeme
-  /// @post   previous() returns lexeme after type field
+  /// @pre    previous() returns symbol token
+  /// @post   previous() returns token after type field
   /// @return field access parse tree
   boost::local_shared_ptr<ast::Object> resolve_type_field_operator() noexcept(false);
 
   boost::local_shared_ptr<ast::Object> type_creator() noexcept(false);
 
-  std::vector<Lexeme> input_;
+  std::vector<Token> input_;
   size_t current_index_;
 };
 

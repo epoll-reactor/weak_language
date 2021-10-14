@@ -7,7 +7,6 @@ namespace eval_context {
 
 /// @throws EvalError if operator is invalid
 void unary_implementation(
-    ast::type_t ast_type,
     token_t unary_type,
     boost::local_shared_ptr<ast::Object>& expression,
     bool& failed) noexcept(false);

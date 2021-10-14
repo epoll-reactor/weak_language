@@ -3,12 +3,12 @@
 
 #include <optional>
 
-template <typename TargetType>
+template <typename AST>
 static boost::local_shared_ptr<ast::Object> default_typecheck(const std::string& fun_name, const std::vector<boost::local_shared_ptr<ast::Object>>& arguments) {
   if (arguments.size() != 1) {
     throw EvalError("{}: 1 argument required, got {}", fun_name, arguments.size());
   }
-  return boost::make_local_shared<ast::Integer>(static_cast<bool>(boost::dynamic_pointer_cast<TargetType>(arguments[0])));
+  return boost::make_local_shared<ast::Integer>(static_cast<bool>(boost::dynamic_pointer_cast<AST>(arguments[0])));
 }
 
 inline std::optional<boost::local_shared_ptr<ast::Object>> is_integer(const std::vector<boost::local_shared_ptr<ast::Object>>& arguments) {
@@ -26,6 +26,7 @@ inline std::optional<boost::local_shared_ptr<ast::Object>> is_procedure(const st
 inline std::optional<boost::local_shared_ptr<ast::Object>> is_array(const std::vector<boost::local_shared_ptr<ast::Object>>& arguments) {
   return default_typecheck<ast::Array>("array?", arguments);
 }
+
 inline std::optional<boost::local_shared_ptr<ast::Object>> procedure_arity(const std::vector<boost::local_shared_ptr<ast::Object>>& arguments) {
   if (arguments.size() != 1) {
     throw EvalError("procedure-arity: 1 argument required, got {}", arguments.size());

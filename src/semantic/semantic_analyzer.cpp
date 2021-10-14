@@ -26,7 +26,7 @@ void SemanticAnalyzer::analyze_statement(const boost::local_shared_ptr<ast::Obje
     case ast::type_t::BINARY: {
       const auto binary = boost::static_pointer_cast<ast::Binary>(statement);
       const token_t binary_type = binary->type();
-      if (binary_type == token_t::assign || token_traits::is_assign_operator(binary_type)) {
+      if (binary_type == token_t::ASSIGN || token_traits::is_assign_operator(binary_type)) {
         analyze_assign_statement(binary);
       } else {
         analyze_binary_statement(binary);
@@ -171,7 +171,7 @@ void SemanticAnalyzer::analyze_for_statement(const boost::local_shared_ptr<ast::
     }
 
     auto init = boost::static_pointer_cast<ast::Binary>(statement->loop_init());
-    if (init->type() != token_t::assign) {
+    if (init->type() != token_t::ASSIGN) {
       throw SemanticError("For init part requires assignment operation");
     }
   }

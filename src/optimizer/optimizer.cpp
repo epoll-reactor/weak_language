@@ -96,7 +96,6 @@ static void optimize_unary(std::vector<boost::local_shared_ptr<ast::Object>>& ou
   if (unary->operand()->ast_type() == ast::type_t::INTEGER || unary->operand()->ast_type() == ast::type_t::FLOAT) {
     bool failed = false;
     eval_context::unary_implementation(
-        unary->operand()->ast_type(),
         unary->type(),
         unary->operand(),
         failed);

@@ -23,6 +23,10 @@ inline std::optional<boost::local_shared_ptr<ast::Object>> print(const std::vect
     default_stdout << ')';
   };
   auto array_impl = [](auto* object) {
+    if (object->elements().empty()) {
+      default_stdout << "[]";
+      return;
+    }
     default_stdout << '[';
     const auto& elements = object->elements();
     for (const auto& field : cut_last(elements)) {

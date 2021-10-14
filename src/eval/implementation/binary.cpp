@@ -1,6 +1,5 @@
 #include "../../../include/eval/implementation/binary.hpp"
 
-#include "../../../include/ast/ast.hpp"
 #include "../../../include/error/eval_error.hpp"
 
 #include <any>
@@ -11,12 +10,12 @@ template <typename LeftOperand, typename RightOperand>
 ALWAYS_INLINE static constexpr bool comparison_implementation(token_t type, LeftOperand l, RightOperand r) noexcept(false) {
   // clang-format off
   switch (type) {
-    case token_t::eq: { return l == r; }
-    case token_t::neq: { return l != r; }
-    case token_t::ge: { return l >= r; }
-    case token_t::gt: { return l > r; }
-    case token_t::le: { return l <= r; }
-    case token_t::lt: { return l < r; }
+    case token_t::EQ: { return l == r; }
+    case token_t::NEQ: { return l != r; }
+    case token_t::GE: { return l >= r; }
+    case token_t::GT: { return l > r; }
+    case token_t::LE: { return l <= r; }
+    case token_t::LT: { return l < r; }
     default:
       throw EvalError("Incorrect binary expression: {}", dispatch_token(type));
   }
@@ -27,10 +26,10 @@ template <typename LeftFloatingPoint, typename RightFloatingPoint>
 ALWAYS_INLINE static constexpr double floating_point_arithmetic_implementation(token_t type, LeftFloatingPoint l, RightFloatingPoint r) noexcept(false) {
   // clang-format off
   switch (type) {
-    case token_t::plus: { return l + r; }
-    case token_t::minus: { return l - r; }
-    case token_t::star: { return l * r; }
-    case token_t::slash: { return l / r; }
+    case token_t::PLUS: { return l + r; }
+    case token_t::MINUS: { return l - r; }
+    case token_t::STAR: { return l * r; }
+    case token_t::SLASH: { return l / r; }
     default:
       return comparison_implementation<LeftFloatingPoint, RightFloatingPoint>(type, l, r);
   }
@@ -41,13 +40,13 @@ template <typename LeftIntegral, typename RightIntegral>
 ALWAYS_INLINE static constexpr int32_t integral_arithmetic_implementation(token_t type, LeftIntegral l, RightIntegral r) noexcept(false) {
   // clang-format off
   switch (type) {
-    case token_t::plus: { return l + r; }
-    case token_t::minus: { return l - r; }
-    case token_t::star: { return l * r; }
-    case token_t::slash: { return l / r; }
-    case token_t::mod: { return l % r; }
-    case token_t::slli: { return l << r; }
-    case token_t::srli: { return l >> r; }
+    case token_t::PLUS: { return l + r; }
+    case token_t::MINUS: { return l - r; }
+    case token_t::STAR: { return l * r; }
+    case token_t::SLASH: { return l / r; }
+    case token_t::MOD: { return l % r; }
+    case token_t::SLLI: { return l << r; }
+    case token_t::SRLI: { return l >> r; }
     default:
       return comparison_implementation<LeftIntegral, RightIntegral>(type, l, r);
   }
@@ -71,41 +70,21 @@ ALWAYS_INLINE static constexpr std::variant<int32_t, double> arithmetic(token_t 
 ALWAYS_INLINE static constexpr token_t resolve_assign_operator(token_t tok) noexcept(true) {
   // clang-format off
   switch (tok) {
-    case token_t::plus_assign: { return token_t::plus; }
-    case token_t::minus_assign: { return token_t::minus; }
-    case token_t::star_assign: { return token_t::star; }
-    case token_t::slash_assign: { return token_t::slash; }
-    case token_t::xor_assign: { return token_t::bit_xor; }
-    case token_t::or_assign: { return token_t::bit_or; }
-    case token_t::and_assign: { return token_t::bit_and; }
-    case token_t::srli_assign: { return token_t::srli;}
-    case token_t::slli_assign: { return token_t::slli; }
+    case token_t::PLUS_ASSIGN: { return token_t::PLUS; }
+    case token_t::MINUS_ASSIGN: { return token_t::MINUS; }
+    case token_t::STAR_ASSIGN: { return token_t::STAR; }
+    case token_t::SLASH_ASSIGN: { return token_t::SLASH; }
+    case token_t::XOR_ASSIGN: { return token_t::BIT_XOR; }
+    case token_t::OR_ASSIGN: { return token_t::BIT_OR; }
+    case token_t::AND_ASSIGN: { return token_t::BIT_AND; }
+    case token_t::SRLI_ASSIGN: { return token_t::SRLI;}
+    case token_t::SLLI_ASSIGN: { return token_t::SLLI; }
     /// Never executes due to the `token_traits::is_assign_operator` checks
     default:
-      return token_t::end_of_data;
+      return token_t::END_OF_DATA;
   }
   // clang-format on
 }
-
-namespace {
-template <typename T>
-class allocator_holder {
-  using allocator_t = boost::fast_pool_allocator<T>;
-
-public:
-  static allocator_holder<T>& create() {
-    static allocator_holder<T> holder;
-    return holder;
-  }
-  allocator_t& get_allocator() {
-    return allocator_;
-  }
-
-private:
-  allocator_t allocator_;
-};
-
-}// namespace
 
 template <typename Result, typename LeftAST, typename RightAST>
 ALWAYS_INLINE auto create_binary(
@@ -136,26 +115,32 @@ boost::local_shared_ptr<ast::Object> eval_context::binary_implementation(ast::ty
       return create_binary<ast::Float, ast::Float, ast::Integer>(operation, lhs, rhs);
     }
     default: {
-      /* Unreachable. */ return nullptr;
+      throw EvalError("wrong binary types");
     }
   }
 }
+
 #undef MAKE_PAIR
 
 boost::local_shared_ptr<ast::Object> eval_context::assign_binary_implementation(token_t type, const boost::local_shared_ptr<ast::Object>& lhs, const boost::local_shared_ptr<ast::Object>& rhs) noexcept(false) {
   if (lhs->ast_type() != rhs->ast_type()) {
     throw EvalError("Invalid binary operands");
   }
-  const auto ast_type = lhs->ast_type();
-  if (ast_type == ast::type_t::INTEGER) {
-    size_t& l = static_cast<ast::Integer*>(lhs.get())->value();
-    size_t& r = static_cast<ast::Integer*>(rhs.get())->value();
-    l = integral_arithmetic_implementation(resolve_assign_operator(type), l, r);
+  switch (lhs->ast_type()) {
+    case ast::type_t::INTEGER: {
+      size_t& l = static_cast<ast::Integer*>(lhs.get())->value();
+      size_t& r = static_cast<ast::Integer*>(rhs.get())->value();
+      l = integral_arithmetic_implementation(resolve_assign_operator(type), l, r);
+      return lhs;
+    }
+    case ast::type_t::FLOAT: {
+      double& l = static_cast<ast::Float*>(lhs.get())->value();
+      double& r = static_cast<ast::Float*>(rhs.get())->value();
+      l = floating_point_arithmetic_implementation(resolve_assign_operator(type), l, r);
+      return lhs;
+    }
+    default: {
+      throw EvalError("Invalid binary operands");
+    }
   }
-  if (ast_type == ast::type_t::FLOAT) {
-    double& l = static_cast<ast::Float*>(lhs.get())->value();
-    double& r = static_cast<ast::Float*>(rhs.get())->value();
-    l = floating_point_arithmetic_implementation(resolve_assign_operator(type), l, r);
-  }
-  return lhs;
 }

@@ -29,10 +29,10 @@ bool Lexer::is_alphanumeric(char token) noexcept {
   return isalpha(token) || token == '_' || token == '?' || token == '-';
 }
 
-std::vector<Lexeme> Lexer::tokenize() {
-  std::vector<Lexeme> lexemes;
+std::vector<Token> Lexer::tokenize() {
+  std::vector<Token> tokens;
 
-  lexemes.reserve(input_.size() / 4);
+  tokens.reserve(input_.size() / 4);
 
   while (has_next()) {
     peek();
@@ -50,24 +50,24 @@ std::vector<Lexeme> Lexer::tokenize() {
         break;
 
       case '0' ... '9':
-        lexemes.emplace_back(process_digit());
+        tokens.emplace_back(process_digit());
         break;
 
       case '_':
       case 'a' ... 'z':
       case 'A' ... 'Z':
-        lexemes.emplace_back(process_symbol());
+        tokens.emplace_back(process_symbol());
         break;
 
       case '\"':
-        lexemes.emplace_back(process_string_literal());
+        tokens.emplace_back(process_string_literal());
         break;
 
       default:
         if (std::find_if(operators_.begin(), operators_.end(), [this](const std::pair<std::string, token_t>& pair) {
               return pair.first[0] == previous();
             }) != operators_.end()) {
-          lexemes.emplace_back(process_operator());
+          tokens.emplace_back(process_operator());
         } else {
           throw LexicalError("Unknown symbol: {} ({})", previous(), std::to_string(static_cast<int>(previous())));
         }
@@ -75,14 +75,14 @@ std::vector<Lexeme> Lexer::tokenize() {
   }
 #pragma GCC diagnostic pop
 
-  lexemes.emplace_back(Lexeme{"", token_t::end_of_data});
+  tokens.emplace_back(Token{"", token_t::END_OF_DATA});
 
-  lexemes.shrink_to_fit();
+  tokens.shrink_to_fit();
 
-  return lexemes;
+  return tokens;
 }
 
-Lexeme Lexer::process_digit() {
+Token Lexer::process_digit() {
   std::string digit(1, previous());
   size_t dots_reached = 0;
 
@@ -103,14 +103,14 @@ Lexeme Lexer::process_digit() {
     throw LexicalError("Digit after \".\" expected");
   }
 
-  return Lexeme{std::move(digit), (dots_reached == 0) ? token_t::num : token_t::floating_point};
+  return Token{std::move(digit), (dots_reached == 0) ? token_t::NUM : token_t::FLOAT};
 }
 
-Lexeme Lexer::process_string_literal() {
+Token Lexer::process_string_literal() {
   peek();/// Eat opening "
 
   if (previous() == '\"') {
-    return Lexeme{"", token_t::string_literal};
+    return Token{"", token_t::STRING_LITERAL};
   }
   std::string literal(1, previous());
   while (current() != '\"') {
@@ -124,22 +124,22 @@ Lexeme Lexer::process_string_literal() {
   }
   peek();/// Eat closing "
 
-  return Lexeme{std::move(literal), token_t::string_literal};
+  return Token{std::move(literal), token_t::STRING_LITERAL};
 }
 
-Lexeme Lexer::process_symbol() noexcept {
+Token Lexer::process_symbol() noexcept {
   std::string symbol(1, previous());
   while (has_next() && (is_alphanumeric(current()) || isdigit(current()))) {
     symbol += peek();
   }
   if (keywords_.find(symbol) != keywords_.end()) {
-    return Lexeme{"", keywords_.at(symbol)};
+    return Token{"", keywords_.at(symbol)};
   } else {
-    return Lexeme{std::move(symbol), token_t::symbol};
+    return Token{std::move(symbol), token_t::SYMBOL};
   }
 }
 
-Lexeme Lexer::process_operator() {
+Token Lexer::process_operator() {
   std::string op(1, previous());
   while (has_next() && operators_.find(op) != operators_.end()) {
     op += peek();
@@ -151,5 +151,5 @@ Lexeme Lexer::process_operator() {
   }
   const token_t type = operators_.at(op);
 
-  return Lexeme{"", type};
+  return Token{"", type};
 }

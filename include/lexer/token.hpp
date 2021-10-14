@@ -6,121 +6,120 @@
 #include <string>
 
 enum struct token_t {
-  dot,// .
-  comma,// ,
-  negation,// !
+  DOT,// .
+  COMMA,// ,
+  NEGATION,// !
 
-  gt,// >
-  ge,// >=
-  lt,// <
+  GT,// >
+  GE,// >=
+  LT,// <
+  LE,// <=
+  EQ,// ==
+  NEQ,// !=
 
-  le,// <=
-  eq,// ==
-  neq,// !=
+  MOD,// %
+  PLUS,// +
+  MINUS,// -
+  INC,// ++
+  DEC,// --
+  STAR,// *
+  SLASH,// /
+  ASSIGN,// =
 
-  mod,// %
-  plus,// +
-  minus,// -
-  inc,// ++
-  dec,// --
-  star,// *
-  slash,// /
-  assign,// =
+  SLLI,// <<
+  SRLI,// >>
 
-  slli,// <<
-  srli,// >>
+  BIT_AND,// &
+  BIT_OR,// |
+  BIT_XOR,// ^
 
-  bit_and,// &
-  bit_or,// |
-  bit_xor,// ^
+  LOGICAL_AND,// &&
+  LOGICAL_OR,// ||
 
-  logical_and,// &&
-  logical_or,// ||
+  PLUS_ASSIGN,// +=
+  MINUS_ASSIGN,// -=
+  STAR_ASSIGN,// *=
+  SLASH_ASSIGN,// /=
+  SLLI_ASSIGN,// <<=
+  SRLI_ASSIGN,// >>=
+  AND_ASSIGN,// &=
+  OR_ASSIGN,// |=
+  XOR_ASSIGN,// ^=
 
-  plus_assign,// +=
-  minus_assign,// -=
-  star_assign,// *=
-  slash_assign,// /=
-  slli_assign,// <<=
-  srli_assign,// >>=
-  and_assign,// &=
-  or_assign,// |=
-  xor_assign,// ^=
+  LEFT_PAREN,// (
+  RIGHT_PAREN,// )
+  LEFT_BRACE,// {
+  RIGHT_BRACE,// }
+  LEFT_BOX_BRACE,// [
+  RIGHT_BOX_BRACE,// ]
 
-  left_paren,// (
-  right_paren,// )
-  left_brace,// {
-  right_brace,// }
-  left_box_brace,// [
-  right_box_brace,// ]
+  COLON,// :
+  SEMICOLON,// ;
 
-  colon,// :
-  semicolon,// ;
+  FOR,
+  WHILE,
+  IF,
+  ELSE,
+  RETURN,
+  LAMBDA,
+  DEFINE_TYPE,
+  NEW,
+  LOAD,
 
-  kw_for,
-  kw_while,
-  kw_if,
-  kw_else,
-  kw_return,
-  kw_lambda_decl,
-  kw_define_type,
-  kw_new,
-  kw_load,
-
-  num,
-  floating_point,
-  symbol,
-  string_literal,
-  none,
-  end_of_data
+  NUM,
+  FLOAT,
+  SYMBOL,
+  STRING_LITERAL,
+  NONE,
+  END_OF_DATA
 };
 
 inline std::string dispatch_token(token_t tok) noexcept(true) {
   // clang-format off
   switch (tok) {
-    case token_t::dot: { return "."; }
-    case token_t::comma: { return ","; }
-    case token_t::plus: { return "+"; }
-    case token_t::minus: { return "-"; }
-    case token_t::inc: { return "++"; }
-    case token_t::dec: { return "--"; }
-    case token_t::star: { return "*"; }
-    case token_t::slash: { return "/"; }
-    case token_t::assign: { return "="; }
-    case token_t::plus_assign: { return "+="; }
-    case token_t::minus_assign: { return "-="; }
-    case token_t::star_assign: { return "*="; }
-    case token_t::slash_assign: { return "/="; }
-    case token_t::mod: { return "%"; }
-    case token_t::left_paren: { return "("; }
-    case token_t::right_paren: { return ")"; }
-    case token_t::left_brace: { return "{"; }
-    case token_t::right_brace: { return "}"; }
-    case token_t::left_box_brace: { return "["; }
-    case token_t::right_box_brace: { return "]"; }
-    case token_t::colon: { return ":"; }
-    case token_t::semicolon: { return ";"; }
-    case token_t::eq: { return "=="; }
-    case token_t::gt: { return ">"; }
-    case token_t::ge: { return ">="; }
-    case token_t::lt: { return "<"; }
-    case token_t::le: { return "<="; }
-    case token_t::negation: { return "!"; }
-    case token_t::neq: { return "!="; }
-    case token_t::srli: { return ">>"; }
-    case token_t::slli: { return "<<"; }
-    case token_t::floating_point: { return "<float>"; }
-    case token_t::num: { return "<number>"; }
-    case token_t::symbol: { return "<symbol>"; }
-    case token_t::string_literal: { return "<string literal>"; }
-    case token_t::none: { return "<none>"; }
-    case token_t::end_of_data: { return "<EOF>"; }
-    case token_t::kw_lambda_decl: { return "<lambda>"; }
-    case token_t::kw_for: { return "<for>"; }
-    case token_t::kw_while: { return "<while>"; }
-    case token_t::kw_if: { return "<if>"; }
-    case token_t::kw_load: { return "<load>"; }
-    case token_t::kw_new: { return "<new>"; }
+    case token_t::DOT: { return "."; }
+    case token_t::COMMA: { return ","; }
+    case token_t::PLUS: { return "+"; }
+    case token_t::MINUS: { return "-"; }
+    case token_t::INC: { return "++"; }
+    case token_t::DEC: { return "--"; }
+    case token_t::STAR: { return "*"; }
+    case token_t::SLASH: { return "/"; }
+    case token_t::ASSIGN: { return "="; }
+    case token_t::PLUS_ASSIGN: { return "+="; }
+    case token_t::MINUS_ASSIGN: { return "-="; }
+    case token_t::STAR_ASSIGN: { return "*="; }
+    case token_t::SLASH_ASSIGN: { return "/="; }
+    case token_t::MOD: { return "%"; }
+    case token_t::LEFT_PAREN: { return "("; }
+    case token_t::RIGHT_PAREN: { return ")"; }
+    case token_t::LEFT_BRACE: { return "{"; }
+    case token_t::RIGHT_BRACE: { return "}"; }
+    case token_t::LEFT_BOX_BRACE: { return "["; }
+    case token_t::RIGHT_BOX_BRACE: { return "]"; }
+    case token_t::COLON: { return ":"; }
+    case token_t::SEMICOLON: { return ";"; }
+    case token_t::EQ: { return "=="; }
+    case token_t::GT: { return ">"; }
+    case token_t::GE: { return ">="; }
+    case token_t::LT: { return "<"; }
+    case token_t::LE: { return "<="; }
+    case token_t::NEGATION: { return "!"; }
+    case token_t::NEQ: { return "!="; }
+    case token_t::SRLI: { return ">>"; }
+    case token_t::SLLI: { return "<<"; }
+    case token_t::FLOAT: { return "<float>"; }
+    case token_t::NUM: { return "<number>"; }
+    case token_t::SYMBOL: { return "<symbol>"; }
+    case token_t::STRING_LITERAL: { return "<string literal>"; }
+    case token_t::NONE: { return "<none>"; }
+    case token_t::END_OF_DATA: { return "<EOF>"; }
+    case token_t::LAMBDA: { return "<lambda>"; }
+    case token_t::FOR: { return "<for>"; }
+    case token_t::WHILE: { return "<while>"; }
+    case token_t::IF: { return "<if>"; }
+    case token_t::LOAD: { return "<load>"; }
+    case token_t::NEW: { return "<new>"; }
     default: { return "<unknown>"; }
   }
   // clang-format on
@@ -130,15 +129,15 @@ namespace token_traits {
 
 ALWAYS_INLINE constexpr bool is_assign_operator(token_t tok) noexcept(true) {
   switch (tok) {
-    case token_t::plus_assign:
-    case token_t::minus_assign:
-    case token_t::slash_assign:
-    case token_t::star_assign:
-    case token_t::xor_assign:
-    case token_t::or_assign:
-    case token_t::and_assign:
-    case token_t::srli_assign:
-    case token_t::slli_assign:
+    case token_t::PLUS_ASSIGN:
+    case token_t::MINUS_ASSIGN:
+    case token_t::SLASH_ASSIGN:
+    case token_t::STAR_ASSIGN:
+    case token_t::XOR_ASSIGN:
+    case token_t::OR_ASSIGN:
+    case token_t::AND_ASSIGN:
+    case token_t::SRLI_ASSIGN:
+    case token_t::SLLI_ASSIGN:
       return true;
     default:
       return false;
@@ -147,22 +146,22 @@ ALWAYS_INLINE constexpr bool is_assign_operator(token_t tok) noexcept(true) {
 
 ALWAYS_INLINE constexpr bool is_binary(token_t tok) noexcept(true) {
   switch (tok) {
-    case token_t::plus:
-    case token_t::minus:
-    case token_t::star:
-    case token_t::slash:
-    case token_t::bit_and:
-    case token_t::bit_or:
-    case token_t::bit_xor:
-    case token_t::slli:
-    case token_t::srli:
-    case token_t::mod:
-    case token_t::eq:
-    case token_t::neq:
-    case token_t::gt:
-    case token_t::ge:
-    case token_t::lt:
-    case token_t::le:
+    case token_t::PLUS:
+    case token_t::MINUS:
+    case token_t::STAR:
+    case token_t::SLASH:
+    case token_t::BIT_AND:
+    case token_t::BIT_OR:
+    case token_t::BIT_XOR:
+    case token_t::SLLI:
+    case token_t::SRLI:
+    case token_t::MOD:
+    case token_t::EQ:
+    case token_t::NEQ:
+    case token_t::GT:
+    case token_t::GE:
+    case token_t::LT:
+    case token_t::LE:
       return true;
     default:
       return false;
@@ -171,9 +170,9 @@ ALWAYS_INLINE constexpr bool is_binary(token_t tok) noexcept(true) {
 
 }// namespace token_traits
 
-struct Lexeme {
+struct Token {
   std::string data;
-  token_t type = token_t::none;
+  token_t type = token_t::NONE;
 };
 
 #endif// WEAK_LEXER_TOKEN_HPP

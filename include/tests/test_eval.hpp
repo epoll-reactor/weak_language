@@ -47,19 +47,21 @@ void run_test(std::string_view program, std::string_view expected_output, bool e
   std::cout << "OK\n";
 }
 
-//#define ENABLE_FUZZING
+#define ENABLE_FUZZING
 void expect_error(std::string_view program) {
 #ifndef ENABLE_FUZZING
   (void)program;
 #else
   std::cout << "Run fuzz test " << test_counter++ << " => ";
   bool error = true;
-  trace_error(program, [evaluator = create_eval_context(program, /*enable_optimizing=*/false), &error]() mutable {
+  trace_error(program, [&program, &error]() mutable {
+    Evaluator evaluator = create_eval_context(program, /*enable_optimizing=*/false);
     evaluator.eval();
-    /// Will false if exception thrown
     error = false;
   });
-  assert(error);
+  if (!error) {
+    throw EvalError("fuzz test: error expected in program\n\t{}", program);
+  }
 #endif// ENABLE_FUZZING
 }
 #undef ENABLE_FUZZING
@@ -81,6 +83,7 @@ void eval_print_tests() {
 void eval_empty_lambda_tests() {
   eval_detail::run_test("lambda main() {}", "");
   eval_detail::run_test("lambda f1() {} lambda f2() {} lambda f3() {} lambda main() { f1(); f2(); f3(); }", "");
+  eval_detail::expect_error("lambda main() { lambda x(){}(); }");
 }
 
 void eval_inner_lambdas_tests() {
@@ -96,8 +99,8 @@ void eval_arithmetic_tests() {
   eval_detail::run_test("lambda main() { print(1.5 + 1); }", "2.5");
   eval_detail::run_test("lambda main() { print(1.5 + 1.5); }", "3");
   eval_detail::run_test("lambda main() { print(123 % 7); }", "4");
-  //  eval_detail::run_test("lambda main() { print(2 * (2 + 2)); }", "8");
-  //  eval_detail::run_test("lambda main() { print((1 + 1) * (1 + 1)); }", "4");
+  eval_detail::run_test("lambda main() { print(2 * (2 + 2)); }", "8");
+//  eval_detail::run_test("lambda main() { print((2 + 2) * 2); }", "8");
   eval_detail::run_test("lambda main() { print(2 << 2, 2 << 9, 2 << 10); }", "8 1024 2048");
   eval_detail::run_test("lambda main() { print(1 * 2 * 3 * 4 * 5); }", "120");
   eval_detail::run_test("lambda main() { print(++1); }", "2");
@@ -135,6 +138,8 @@ void eval_while_loop_tests() {
 }
 
 void eval_array_access_tests() {
+  eval_detail::run_test("lambda main() { array = []; print(array); }", "[]");
+  eval_detail::run_test("lambda main() { array = [0]; print(array); }", "[0]");
   eval_detail::run_test("lambda main() { array = [1, 2, 3]; print(array-get(array, 2)); }", "3");
   eval_detail::run_test("lambda main() { array = [1.1, 2.2, 3.3]; print(array-get(array, 1)); }", "2.2");
   eval_detail::run_test("lambda main() { array = [\"Text1\", \"Text2\", \"Text3\"]; print(array-get(array, 2)); }", "Text3");
@@ -155,11 +160,11 @@ void eval_typecheck_tests() {
 }
 
 void eval_user_types_tests() {
-  //  eval_detail::run_test("define-type structure(a, b, c); lambda main() { obj = new structure(1, 2, 3); print(obj); }", "(1, 2, 3)");
-  //  eval_detail::run_test("define-type structure(a, b, c); lambda main() { obj = new structure(1, 2, 3); print(obj.a); }", "1");
-  //  eval_detail::run_test("define-type structure(a); lambda get_field(struct) { struct.a; } lambda main() { obj = new structure(1); print(get_field(obj)); }", "1");
-  //  eval_detail::expect_error("define-type structure(a, b, c); lambda main() { obj = new structure(1); print(obj.a); }");
-  //  eval_detail::expect_error("define-type structure(a, b, c); lambda main() { obj = new structure(1, 2, 3); print(obj.field); }");
+  eval_detail::run_test("define-type structure(a, b, c); lambda main() { obj = new structure(1, 2, 3); print(obj); }", "(1, 2, 3)");
+  eval_detail::run_test("define-type structure(a, b, c); lambda main() { obj = new structure(1, 2, 3); print(obj.a); }", "1");
+  eval_detail::run_test("define-type structure(a); lambda get_field(struct) { struct.a; } lambda main() { obj = new structure(1); print(get_field(obj)); }", "1");
+  eval_detail::expect_error("define-type structure(a, b, c); lambda main() { obj = new structure(1); print(obj.a); }");
+  eval_detail::expect_error("define-type structure(a, b, c); lambda main() { obj = new structure(1, 2, 3); print(obj.field); }");
 }
 
 void eval_simple_algorithms() {
@@ -307,9 +312,9 @@ void eval_fuzz_tests() {
   eval_detail::expect_error("lambda simple() { var; } lambda main() { simple(); }");
   eval_detail::expect_error("lambda main() { for (var = 0; var != 10; ++var) { } print(var); }");
   eval_detail::expect_error("lambda main() { for (var = 0; var != 10; ++var) { for (var_2 = 0; var_2 != 10; var_2 = var_2 + 1) { print(var); } print(var_2); } }");
-  eval_detail::expect_error("lambda main() { array = [1, 2, 3]; print(array[0], array[1], array[2], array[3]); }");
-  eval_detail::expect_error("lambda main() { array = [1, 2, 3]; print(array[0], array[1.44], array[2]); }");
-  eval_detail::expect_error("lambda main() { array = [1, 2, 3]; index = 1.25; array[index]; }");
+  eval_detail::expect_error("lambda main() { array = [1, 2, 3]; print(array-get(array, 0), array-get(array, 1), array-get(array, 2), array-get(array, 3)); }");
+  eval_detail::expect_error("lambda main() { array = [1, 2, 3]; print(array-get(array, 0), array-get(array, 1.44), array-get(array, 2)); }");
+  eval_detail::expect_error("lambda main() { array = [1, 2, 3]; index = 1.25; array-get(array, index); }");
   eval_detail::expect_error("lambda main() { a = 1; b = \"Text\"; print(a + b); }");
   eval_detail::expect_error("lambda main() { a = 1 % 1.5; }");
 }

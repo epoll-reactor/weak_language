@@ -160,7 +160,7 @@ void Evaluator::eval_block(const boost::local_shared_ptr<ast::Block>& block) noe
 
 boost::local_shared_ptr<ast::Object> Evaluator::eval_binary(const boost::local_shared_ptr<ast::Binary>& binary) noexcept(false) {
   const token_t type = binary->type();
-  if (type == token_t::assign) {
+  if (type == token_t::ASSIGN) {
     const auto variable = boost::static_pointer_cast<ast::Symbol>(binary->lhs());
     storage_.overwrite(variable->name(), eval(binary->rhs()));
     return binary;
@@ -181,13 +181,13 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_unary(const boost::local_sh
   auto& operand = unary->operand();
   const token_t type = unary->type();
   const ast::type_t ast_type = operand->ast_type();
-  if (bool failed = false; eval_context::unary_implementation(ast_type, type, operand, failed), !failed) {
+  if (bool failed = false; eval_context::unary_implementation(type, operand, failed), !failed) {
     return operand;
   }
   do_typecheck(ast_type, ast::type_t::SYMBOL, "Unknown unary operand type");
   const auto variable = boost::static_pointer_cast<ast::Symbol>(operand);
   auto& symbol = storage_.lookup(variable->name());
-  if (bool failed = false; eval_context::unary_implementation(symbol->ast_type(), type, symbol, failed), !failed) {
+  if (bool failed = false; eval_context::unary_implementation(type, symbol, failed), !failed) {
     storage_.overwrite(variable->name(), symbol);
   }
   return symbol;

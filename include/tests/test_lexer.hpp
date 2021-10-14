@@ -10,17 +10,17 @@
 
 namespace lexer_detail {
 
-void run_test(std::string_view data, std::vector<Lexeme> assertion_lexemes) {
+void run_test(std::string_view data, std::vector<Token> assertion_tokens) {
   Lexer lexer(std::istringstream{data.data()});
-  const std::vector<Lexeme> lexemes = lexer.tokenize();
-  assertion_lexemes.emplace_back(Lexeme{"", token_t::end_of_data});
-  assert(lexemes.size() == assertion_lexemes.size());
-  for (size_t i = 0; i < lexemes.size(); i++) {
-    if (lexemes[i].type != assertion_lexemes[i].type) {
-      throw LexicalError(dispatch_token(lexemes[i].type) + " got, but " + dispatch_token(assertion_lexemes[i].type) + " required");
+  const std::vector<Token> tokens = lexer.tokenize();
+  assertion_tokens.emplace_back(Token{"", token_t::END_OF_DATA});
+  assert(tokens.size() == assertion_tokens.size());
+  for (size_t i = 0; i < tokens.size(); i++) {
+    if (tokens[i].type != assertion_tokens[i].type) {
+      throw LexicalError(dispatch_token(tokens[i].type) + " got, but " + dispatch_token(assertion_tokens[i].type) + " required");
     }
-    if (lexemes[i].data != assertion_lexemes[i].data) {
-      throw LexicalError(lexemes[i].data + " got, but " + assertion_lexemes[i].data + " required");
+    if (tokens[i].data != assertion_tokens[i].data) {
+      throw LexicalError(tokens[i].data + " got, but " + assertion_tokens[i].data + " required");
     }
   }
 }
@@ -39,18 +39,18 @@ void assert_exception(std::string_view data) {
 
 // clang-format off
 void lexer_number_literal_tests() {
-    lexer_detail::run_test("2 2", { Lexeme{"2", token_t::num}, Lexeme{"2", token_t::num} });
-    lexer_detail::run_test("2 2 ", { Lexeme{"2", token_t::num}, Lexeme{"2", token_t::num} });
-    lexer_detail::run_test(" 2 2", { Lexeme{"2", token_t::num}, Lexeme{"2", token_t::num} });
-    lexer_detail::run_test("        2       2       ", { Lexeme{"2", token_t::num}, Lexeme{"2", token_t::num} });
-    lexer_detail::run_test("111.111", {  Lexeme{"111.111", token_t::floating_point}, });
-    lexer_detail::run_test("111.111 222.222", { Lexeme{"111.111", token_t::floating_point}, Lexeme{"222.222", token_t::floating_point} });
+    lexer_detail::run_test("2 2", { Token{"2", token_t::NUM}, Token{"2", token_t::NUM} });
+    lexer_detail::run_test("2 2 ", { Token{"2", token_t::NUM}, Token{"2", token_t::NUM} });
+    lexer_detail::run_test(" 2 2", { Token{"2", token_t::NUM}, Token{"2", token_t::NUM} });
+    lexer_detail::run_test("        2       2       ", { Token{"2", token_t::NUM}, Token{"2", token_t::NUM} });
+    lexer_detail::run_test("111.111", {  Token{"111.111", token_t::FLOAT}, });
+    lexer_detail::run_test("111.111 222.222", { Token{"111.111", token_t::FLOAT}, Token{"222.222", token_t::FLOAT} });
     lexer_detail::run_test(" 111.111 222.222 333.333 444.444 555.555 ", {
-        Lexeme{"111.111", token_t::floating_point},
-        Lexeme{"222.222", token_t::floating_point},
-        Lexeme{"333.333", token_t::floating_point},
-        Lexeme{"444.444", token_t::floating_point},
-        Lexeme{"555.555", token_t::floating_point},
+        Token{"111.111", token_t::FLOAT},
+        Token{"222.222", token_t::FLOAT},
+        Token{"333.333", token_t::FLOAT},
+        Token{"444.444", token_t::FLOAT},
+        Token{"555.555", token_t::FLOAT},
     });
 
     lexer_detail::assert_exception("1.");
@@ -59,73 +59,73 @@ void lexer_number_literal_tests() {
 }
 
 void lexer_string_literal_tests() {
-  lexer_detail::run_test("\"\"", {Lexeme{"", token_t::string_literal}});
-  lexer_detail::run_test("\"text\"", {Lexeme{"text", token_t::string_literal}});
-  lexer_detail::run_test("\"111.222\"", {Lexeme{"111.222", token_t::string_literal}});
-  lexer_detail::run_test("\"text \\\" with escaped character \"", {Lexeme{"text \" with escaped character ", token_t::string_literal}});
-  lexer_detail::run_test("\"Текст на русском языке\"", {Lexeme{"Текст на русском языке", token_t::string_literal}});
-  lexer_detail::run_test("\"Türkçe metin\"", {Lexeme{"Türkçe metin", token_t::string_literal}});
-  lexer_detail::run_test("\"\n\r\v\f\n\r\v\f\n\r\v\f\n\r\v\f\"", {Lexeme{"\n\r\v\f\n\r\v\f\n\r\v\f\n\r\v\f", token_t::string_literal}});
-  lexer_detail::run_test("\" \\\"\"", {Lexeme{" \"", token_t::string_literal}});
-  lexer_detail::run_test("\"\\\"", {Lexeme{"\\", token_t::string_literal}});
-  lexer_detail::run_test("\" \\\\\"", {Lexeme{" \\", token_t::string_literal}});
-  lexer_detail::run_test("\" \"", {Lexeme{" ", token_t::string_literal}});
-  lexer_detail::run_test(" \"?\\\"\\\"\" \"?\\\"\\\"\\\"\" ", {Lexeme{"?\"\"", token_t::string_literal}, Lexeme{"?\"\"\"", token_t::string_literal}});
+  lexer_detail::run_test("\"\"", {Token{"", token_t::STRING_LITERAL}});
+  lexer_detail::run_test("\"text\"", {Token{"text", token_t::STRING_LITERAL}});
+  lexer_detail::run_test("\"111.222\"", {Token{"111.222", token_t::STRING_LITERAL}});
+  lexer_detail::run_test("\"text \\\" with escaped character \"", {Token{"text \" with escaped character ", token_t::STRING_LITERAL}});
+  lexer_detail::run_test("\"Текст на русском языке\"", {Token{"Текст на русском языке", token_t::STRING_LITERAL}});
+  lexer_detail::run_test("\"Türkçe metin\"", {Token{"Türkçe metin", token_t::STRING_LITERAL}});
+  lexer_detail::run_test("\"\n\r\v\f\n\r\v\f\n\r\v\f\n\r\v\f\"", {Token{"\n\r\v\f\n\r\v\f\n\r\v\f\n\r\v\f", token_t::STRING_LITERAL}});
+  lexer_detail::run_test("\" \\\"\"", {Token{" \"", token_t::STRING_LITERAL}});
+  lexer_detail::run_test("\"\\\"", {Token{"\\", token_t::STRING_LITERAL}});
+  lexer_detail::run_test("\" \\\\\"", {Token{" \\", token_t::STRING_LITERAL}});
+  lexer_detail::run_test("\" \"", {Token{" ", token_t::STRING_LITERAL}});
+  lexer_detail::run_test(" \"?\\\"\\\"\" \"?\\\"\\\"\\\"\" ", {Token{"?\"\"", token_t::STRING_LITERAL}, Token{"?\"\"\"", token_t::STRING_LITERAL}});
 
   lexer_detail::assert_exception("\"text without closing quote");
 //  lexer_detail::assert_exception("\"\\");
 }
 
 void lexer_symbol_tests() {
-  lexer_detail::run_test("Symbol", {Lexeme{"Symbol", token_t::symbol}});
-  lexer_detail::run_test("A B C", {Lexeme{"A", token_t::symbol}, Lexeme{"B", token_t::symbol}, Lexeme{"C", token_t::symbol}});
-  lexer_detail::run_test("a1b2c3d4 a000000a", {Lexeme{"a1b2c3d4", token_t::symbol}, Lexeme{"a000000a", token_t::symbol}});
-  lexer_detail::run_test("     a1b2c3d4      a000000a       ", {Lexeme{"a1b2c3d4", token_t::symbol}, Lexeme{"a000000a", token_t::symbol}});
-  lexer_detail::run_test("test?", {Lexeme{"test?", token_t::symbol}});
+  lexer_detail::run_test("Symbol", {Token{"Symbol", token_t::SYMBOL}});
+  lexer_detail::run_test("A B C", {Token{"A", token_t::SYMBOL}, Token{"B", token_t::SYMBOL}, Token{"C", token_t::SYMBOL}});
+  lexer_detail::run_test("a1b2c3d4 a000000a", {Token{"a1b2c3d4", token_t::SYMBOL}, Token{"a000000a", token_t::SYMBOL}});
+  lexer_detail::run_test("     a1b2c3d4      a000000a       ", {Token{"a1b2c3d4", token_t::SYMBOL}, Token{"a000000a", token_t::SYMBOL}});
+  lexer_detail::run_test("test?", {Token{"test?", token_t::SYMBOL}});
 
   lexer_detail::assert_exception("1A");
   lexer_detail::assert_exception("0_0");
 }
 
 void lexer_operator_tests() {
-  lexer_detail::run_test("((((((((((", std::vector<Lexeme>(10, Lexeme{"", token_t::left_paren}));
-  lexer_detail::run_test("))))))))))", std::vector<Lexeme>(10, Lexeme{"", token_t::right_paren}));
+  lexer_detail::run_test("((((((((((", std::vector<Token>(10, Token{"", token_t::LEFT_PAREN}));
+  lexer_detail::run_test("))))))))))", std::vector<Token>(10, Token{"", token_t::RIGHT_PAREN}));
 
   std::string increments(200, '+');
-  lexer_detail::run_test(increments, std::vector<Lexeme>(100, Lexeme{"", token_t::inc}));
+  lexer_detail::run_test(increments, std::vector<Token>(100, Token{"", token_t::INC}));
 
   std::string decrements(200, '-');
-  lexer_detail::run_test(decrements, std::vector<Lexeme>(100, Lexeme{"", token_t::dec}));
+  lexer_detail::run_test(decrements, std::vector<Token>(100, Token{"", token_t::DEC}));
 
-  lexer_detail::run_test("!", { Lexeme{"", token_t::negation} });
-  lexer_detail::run_test("==", { Lexeme{"", token_t::eq} });
-  lexer_detail::run_test("!=", { Lexeme{"", token_t::neq} });
-  lexer_detail::run_test("+", { Lexeme{"", token_t::plus} });
-  lexer_detail::run_test("++", { Lexeme{"", token_t::inc} });
-  lexer_detail::run_test("+++", {Lexeme{"", token_t::inc}, Lexeme{"", token_t::plus}});
-  lexer_detail::run_test("++++", { Lexeme{"", token_t::inc}, Lexeme{"", token_t::inc}, });
-  lexer_detail::run_test("+++++", {Lexeme{"", token_t::inc}, Lexeme{"", token_t::inc}, Lexeme{"", token_t::plus}});
-  lexer_detail::run_test("++ ++ +", {Lexeme{"", token_t::inc}, Lexeme{"", token_t::inc}, Lexeme{"", token_t::plus}});
-  lexer_detail::run_test("+ ++ + +", {Lexeme{"", token_t::plus}, Lexeme{"", token_t::inc}, Lexeme{"", token_t::plus}, Lexeme{"", token_t::plus}});
-  lexer_detail::run_test("+ += /=", {Lexeme{"", token_t::plus}, Lexeme{"", token_t::plus_assign}, Lexeme{"", token_t::slash_assign}});
-  lexer_detail::run_test("++=/=", {Lexeme{"", token_t::inc}, Lexeme{"", token_t::assign}, Lexeme{"", token_t::slash_assign}});
-  lexer_detail::run_test("...,,,", {Lexeme{"", token_t::dot}, Lexeme{"", token_t::dot}, Lexeme{"", token_t::dot}, Lexeme{"", token_t::comma}, Lexeme{"", token_t::comma}, Lexeme{"", token_t::comma}});
+  lexer_detail::run_test("!", { Token{"", token_t::NEGATION} });
+  lexer_detail::run_test("==", { Token{"", token_t::EQ} });
+  lexer_detail::run_test("!=", { Token{"", token_t::NEQ} });
+  lexer_detail::run_test("+", { Token{"", token_t::PLUS} });
+  lexer_detail::run_test("++", { Token{"", token_t::INC} });
+  lexer_detail::run_test("+++", {Token{"", token_t::INC}, Token{"", token_t::PLUS}});
+  lexer_detail::run_test("++++", { Token{"", token_t::INC}, Token{"", token_t::INC}, });
+  lexer_detail::run_test("+++++", {Token{"", token_t::INC}, Token{"", token_t::INC}, Token{"", token_t::PLUS}});
+  lexer_detail::run_test("++ ++ +", {Token{"", token_t::INC}, Token{"", token_t::INC}, Token{"", token_t::PLUS}});
+  lexer_detail::run_test("+ ++ + +", {Token{"", token_t::PLUS}, Token{"", token_t::INC}, Token{"", token_t::PLUS}, Token{"", token_t::PLUS}});
+  lexer_detail::run_test("+ += /=", {Token{"", token_t::PLUS}, Token{"", token_t::PLUS_ASSIGN}, Token{"", token_t::SLASH_ASSIGN}});
+  lexer_detail::run_test("++=/=", {Token{"", token_t::INC}, Token{"", token_t::ASSIGN}, Token{"", token_t::SLASH_ASSIGN}});
+  lexer_detail::run_test("...,,,", {Token{"", token_t::DOT}, Token{"", token_t::DOT}, Token{"", token_t::DOT}, Token{"", token_t::COMMA}, Token{"", token_t::COMMA}, Token{"", token_t::COMMA}});
   lexer_detail::run_test("++--++--+-+-++--+++---+", {
-    Lexeme{"", token_t::inc},
-    Lexeme{"", token_t::dec},
-    Lexeme{"", token_t::inc},
-    Lexeme{"", token_t::dec},
-    Lexeme{"", token_t::plus},
-    Lexeme{"", token_t::minus},
-    Lexeme{"", token_t::plus},
-    Lexeme{"", token_t::minus},
-    Lexeme{"", token_t::inc},
-    Lexeme{"", token_t::dec},
-    Lexeme{"", token_t::inc},
-    Lexeme{"", token_t::plus},
-    Lexeme{"", token_t::dec},
-    Lexeme{"", token_t::minus},
-    Lexeme{"", token_t::plus},
+    Token{"", token_t::INC},
+    Token{"", token_t::DEC},
+    Token{"", token_t::INC},
+    Token{"", token_t::DEC},
+    Token{"", token_t::PLUS},
+    Token{"", token_t::MINUS},
+    Token{"", token_t::PLUS},
+    Token{"", token_t::MINUS},
+    Token{"", token_t::INC},
+    Token{"", token_t::DEC},
+    Token{"", token_t::INC},
+    Token{"", token_t::PLUS},
+    Token{"", token_t::DEC},
+    Token{"", token_t::MINUS},
+    Token{"", token_t::PLUS},
   });
   lexer_detail::run_test("\0", { /* None */ });
   // Unknown operators
@@ -143,39 +143,39 @@ void lexer_expression_tests() {
       "    string literal-1 = \"Lorem ipsum\";"
       "  }"
       "}",
-      {Lexeme{"void", token_t::symbol},
-       Lexeme{"f", token_t::symbol},
-       Lexeme{"", token_t::left_paren},
-       Lexeme{"int", token_t::symbol},
-       Lexeme{"a", token_t::symbol},
-       Lexeme{"", token_t::comma},
-       Lexeme{"int", token_t::symbol},
-       Lexeme{"b", token_t::symbol},
-       Lexeme{"", token_t::comma},
-       Lexeme{"int", token_t::symbol},
-       Lexeme{"c", token_t::symbol},
-       Lexeme{"", token_t::right_paren},
-       Lexeme{"", token_t::left_brace},
-       Lexeme{"", token_t::kw_if},
-       Lexeme{"", token_t::left_paren},
-       Lexeme{"true", token_t::symbol},
-       Lexeme{"", token_t::right_paren},
-       Lexeme{"", token_t::left_brace},
-       Lexeme{"int", token_t::symbol},
-       Lexeme{"variable-0", token_t::symbol},
-       Lexeme{"", token_t::assign},
-       Lexeme{"123", token_t::num},
-       Lexeme{"", token_t::semicolon},
-       Lexeme{"", token_t::right_brace},
-       Lexeme{"", token_t::kw_else},
-       Lexeme{"", token_t::left_brace},
-       Lexeme{"string", token_t::symbol},
-       Lexeme{"literal-1", token_t::symbol},
-       Lexeme{"", token_t::assign},
-       Lexeme{"Lorem ipsum", token_t::string_literal},
-       Lexeme{"", token_t::semicolon},
-       Lexeme{"", token_t::right_brace},
-       Lexeme{"", token_t::right_brace}});
+      {Token{"void", token_t::SYMBOL},
+       Token{"f", token_t::SYMBOL},
+       Token{"", token_t::LEFT_PAREN},
+       Token{"int", token_t::SYMBOL},
+       Token{"a", token_t::SYMBOL},
+       Token{"", token_t::COMMA},
+       Token{"int", token_t::SYMBOL},
+       Token{"b", token_t::SYMBOL},
+       Token{"", token_t::COMMA},
+       Token{"int", token_t::SYMBOL},
+       Token{"c", token_t::SYMBOL},
+       Token{"", token_t::RIGHT_PAREN},
+       Token{"", token_t::LEFT_BRACE},
+       Token{"", token_t::IF},
+       Token{"", token_t::LEFT_PAREN},
+       Token{"true", token_t::SYMBOL},
+       Token{"", token_t::RIGHT_PAREN},
+       Token{"", token_t::LEFT_BRACE},
+       Token{"int", token_t::SYMBOL},
+       Token{"variable-0", token_t::SYMBOL},
+       Token{"", token_t::ASSIGN},
+       Token{"123", token_t::NUM},
+       Token{"", token_t::SEMICOLON},
+       Token{"", token_t::RIGHT_BRACE},
+       Token{"", token_t::ELSE},
+       Token{"", token_t::LEFT_BRACE},
+       Token{"string", token_t::SYMBOL},
+       Token{"literal-1", token_t::SYMBOL},
+       Token{"", token_t::ASSIGN},
+       Token{"Lorem ipsum", token_t::STRING_LITERAL},
+       Token{"", token_t::SEMICOLON},
+       Token{"", token_t::RIGHT_BRACE},
+       Token{"", token_t::RIGHT_BRACE}});
 }
 
 std::string random_bytes(size_t count) {
@@ -242,7 +242,7 @@ void lexer_speed_tests() {
 
   std::cout << "\nLexer speed test - input size (" << data.size() / 1024.0 / 1024.0 << " MiB.)\n";
   speed_benchmark(1, [&lexer] {
-    const std::vector<Lexeme> lexemes = lexer.tokenize();
+    const std::vector<Token> tokens = lexer.tokenize();
   });
 }
 
