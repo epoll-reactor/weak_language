@@ -14,7 +14,11 @@ const std::unordered_map<std::string, builtin_function_t> builtins{
     {"procedure-arity", procedure_arity},
     /// arrays
     {"array-get", array_get},
-    {"array-set", array_set},
+    {"array-replace", array_replace},
+    {"array-insert", array_insert},
+    {"array-slice", array_slice},
+    {"array-length", array_length},
+    {"array-merge", array_merge},
     /// io
     {"print", print},
     {"println", println}};

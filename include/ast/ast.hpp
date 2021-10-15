@@ -32,7 +32,6 @@ enum struct type_t : uint32_t {
   TYPE_OBJECT     = (1 << 17),
   TYPE_FIELD      = (1 << 18)
 };
-//enum struct type_t { OBJECT, INTEGER, FLOAT, STRING, SYMBOL, ARRAY, UNARY, BINARY, BLOCK, WHILE, FOR, IF, LAMBDA, LAMBDA_CALL, TYPE_CREATOR, TYPE_DEFINITION, TYPE_OBJECT, TYPE_FIELD };
 // clang-format on
 
 constexpr uint32_t operator&(type_t lhs, type_t rhs) noexcept(true) {

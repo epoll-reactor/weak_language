@@ -81,9 +81,6 @@ void semantic_analyzer_test_syntax() {
   semantic_detail::assert_correct("array-get(array, 1 + 1);");
   semantic_detail::assert_correct("array-get(array, type_name);");
   semantic_detail::assert_correct("array-get(array, function_call());");
-  //  semantic_detail::expect_error("array-get(array, \"String\");");
-  //  semantic_detail::expect_error("array-get(array, lambda main() {});");
-  //  semantic_detail::expect_error("array-get(array, 1.42);");
 }
 
 void run_semantic_analyzer_tests() {

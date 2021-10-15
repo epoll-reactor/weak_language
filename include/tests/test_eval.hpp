@@ -100,7 +100,7 @@ void eval_arithmetic_tests() {
   eval_detail::run_test("lambda main() { print(1.5 + 1.5); }", "3");
   eval_detail::run_test("lambda main() { print(123 % 7); }", "4");
   eval_detail::run_test("lambda main() { print(2 * (2 + 2)); }", "8");
-//  eval_detail::run_test("lambda main() { print((2 + 2) * 2); }", "8");
+  //  eval_detail::run_test("lambda main() { print((2 + 2) * 2); }", "8");
   eval_detail::run_test("lambda main() { print(2 << 2, 2 << 9, 2 << 10); }", "8 1024 2048");
   eval_detail::run_test("lambda main() { print(1 * 2 * 3 * 4 * 5); }", "120");
   eval_detail::run_test("lambda main() { print(++1); }", "2");
@@ -144,8 +144,20 @@ void eval_array_access_tests() {
   eval_detail::run_test("lambda main() { array = [1.1, 2.2, 3.3]; print(array-get(array, 1)); }", "2.2");
   eval_detail::run_test("lambda main() { array = [\"Text1\", \"Text2\", \"Text3\"]; print(array-get(array, 2)); }", "Text3");
 
-  eval_detail::run_test("lambda main() { array = [1, 2, 3]; array-set(array, 0, 3); print(array-get(array, 0)); }", "3");
-  eval_detail::run_test("lambda main() { array = [\"Text1\", \"Text2\", \"Text3\"]; array-set(array, 0, \"Text123\"); print(array-get(array, 0)); }", "Text123");
+  eval_detail::run_test("lambda main() { array = [1, 2, 3]; array-replace(array, 0, 3); print(array-get(array, 0)); }", "3");
+  eval_detail::run_test("lambda main() { array = [\"Text1\", \"Text2\", \"Text3\"]; array-replace(array, 0, \"Text123\"); print(array-get(array, 0)); }", "Text123");
+
+  eval_detail::run_test("lambda main() { array = []; print(array-slice(array, 0, 0)); }", "[]");
+  eval_detail::run_test("lambda main() { array = [1, 2, 3, 4, 5, 6, 7]; print(array-slice(array, 3, 3)); }", "[4, 5, 6]");
+  eval_detail::run_test("lambda main() { array = [\"A\", \"B\", \"C\"]; print(array-slice(array, 1, 1)); }", "[B]");
+
+  eval_detail::run_test("lambda main() { array = []; print(array-length(array)); }", "0");
+  eval_detail::run_test("lambda main() { array = [1, 2, 3, 4, 5, 6, 7]; print(array-length(array)); }", "7");
+
+  eval_detail::run_test("lambda main() { left = [1]; right = [2, 3]; print(array-merge(left, right)); }", "[1, 2, 3]");
+  eval_detail::run_test("lambda main() { print(array-merge([1], [2, 3])); }", "[1, 2, 3]");
+
+  eval_detail::run_test("lambda main() { array = [1, 2]; array-insert(array, 0, 999); print(array); }", "[999, 1, 2]");
 }
 
 void eval_typecheck_tests() {
@@ -222,7 +234,7 @@ void eval_simple_algorithms() {
     lambda main() {
       array = [0, 1];
       for (i = 0; i < 2; ++i) {
-        array-set(array, i, 10);
+        array-replace(array, i, 10);
       }
       print(array);
     }
