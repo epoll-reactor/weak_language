@@ -79,7 +79,7 @@ void semantic_analyzer_test_syntax() {
 
   semantic_detail::assert_correct("array-get(array, 1);");
   semantic_detail::assert_correct("array-get(array, 1 + 1);");
-  semantic_detail::assert_correct("array-get(array, type_name);");
+  semantic_detail::assert_correct("array-get(array, name);");
   semantic_detail::assert_correct("array-get(array, function_call());");
 }
 

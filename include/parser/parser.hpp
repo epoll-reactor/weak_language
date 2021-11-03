@@ -7,13 +7,17 @@
 
 #include <boost/pool/pool_alloc.hpp>
 #include <optional>
+#include <utility>
 
 /// LL Syntax analyzer.
 class Parser {
 public:
+  template <typename T>
+  using ast_ptr = boost::local_shared_ptr<T>;
+
   explicit Parser(std::vector<Token> tokens) noexcept(true);
 
-  boost::local_shared_ptr<ast::RootObject> parse() noexcept(false);
+  ast_ptr<ast::RootObject> parse() noexcept(false);
 
 private:
   /// @throws std::out_of_range
@@ -33,12 +37,6 @@ private:
   /// @return true if peek() returns an meaningful token
   bool has_next() const noexcept(false);
 
-  /// @return true if statement is raw block
-  static bool is_block(const boost::local_shared_ptr<ast::Object>& statement) noexcept(true);
-
-  /// @return true if statement is block-based statement, but not block
-  static bool is_block_statement(const boost::local_shared_ptr<ast::Object>& statement) noexcept(true);
-
   /// @throws std::out_of_range from current() and peek()
   /// @brief  get current token and match with one of samples
   /// @return correct token, std::nullopt if input find no more tokens
@@ -50,76 +48,76 @@ private:
   Token require(const std::vector<token_t>& expected_types) noexcept(false);
 
   /// @brief main parse lambda
-  boost::local_shared_ptr<ast::Object> primary() noexcept(false);
+  ast_ptr<ast::Object> primary() noexcept(false);
 
   /// @return array parse tree
-  boost::local_shared_ptr<ast::Object> array() noexcept(false);
+  ast_ptr<ast::Object> array() noexcept(false);
 
   /// @return parse tree if ptr is additive operation, unchanged ptr otherwise
-  boost::local_shared_ptr<ast::Object> additive() noexcept(false);
+  ast_ptr<ast::Object> additive() noexcept(false);
 
   /// @return parse tree if ptr is multiplicative operation, unchanged ptr otherwise
-  boost::local_shared_ptr<ast::Object> multiplicative() noexcept(false);
+  ast_ptr<ast::Object> multiplicative() noexcept(false);
 
   /// @note   this lambda does not check operation types
   /// @pre    previous() returns number or symbol token
   /// @post   previous() returns first token after parsed binary expression
   /// @return binary parse tree
-  boost::local_shared_ptr<ast::Object> binary(const boost::local_shared_ptr<ast::Object>& ptr) noexcept(false);
+  ast_ptr<ast::Object> binary(const ast_ptr<ast::Object>& ptr) noexcept(false);
 
   /// @pre    previous() returns unary operator
   /// @post   previous() returns first token after parsed unary expression
-  boost::local_shared_ptr<ast::Object> unary() noexcept(false);
+  ast_ptr<ast::Object> unary() noexcept(false);
 
   /// @pre    previous() returns '{' token
   /// @post   current() returns '}' token
   /// @return block parse tree of recursively parsed expressions
-  boost::local_shared_ptr<ast::Block> block() noexcept(false);
+  ast_ptr<ast::Block> block() noexcept(false);
 
   /// @pre    previous() returns 'if' token
   /// @post   previous() returns first token after parsed if
   /// @return if parse tree with or without else block
-  boost::local_shared_ptr<ast::Object> if_statement() noexcept(false);
+  ast_ptr<ast::Object> if_statement() noexcept(false);
 
   /// @pre    previous() returns 'while' token
   /// @post   previous() returns first token after parsed while
   /// @return while parse tree
-  boost::local_shared_ptr<ast::Object> while_statement() noexcept(false);
+  ast_ptr<ast::Object> while_statement() noexcept(false);
 
   /// @note   any number of C-style for blocks (for ( 1 ; 2 ; 3 )) can be empty
   /// @pre    previous() returns 'for' token
   /// @post   previous() returns first token after parsed for
   /// @return for parse tree
-  boost::local_shared_ptr<ast::Object> for_statement() noexcept(false);
+  ast_ptr<ast::Object> for_statement() noexcept(false);
 
   /// @pre    previous() returns 'fun' token
   /// @post   previous() returns first token after lambda declaration
-  /// @return lambda parse tree that contains lambda type_name, argument list and body (block)
-  boost::local_shared_ptr<ast::Object> lambda_declare_statement() noexcept(false);
+  /// @return lambda parse tree that contains lambda name, argument list and body (block)
+  ast_ptr<ast::Object> lambda_declare_statement() noexcept(false);
 
   /// @pre    previous() returns 'define-type' token
   /// @post   previous() returns first token after type definition
-  /// @return parsed type definition with only field names
-  boost::local_shared_ptr<ast::Object> define_type_statement() noexcept(false);
+  /// @return parsed type definition with only field fields
+  ast_ptr<ast::Object> define_type_statement() noexcept(false);
 
   /// @pre    previous() returns '(' token
   /// @post   previous() returns ')' token
   /// @return correct lambda argument list
-  std::vector<boost::local_shared_ptr<ast::Object>> resolve_lambda_arguments() noexcept(false);
+  std::vector<ast_ptr<ast::Object>> resolve_lambda_arguments() noexcept(false);
 
   /// @pre    previous() returns symbol token
   /// @post   previous() returns ')' token if lambda call argument processed, symbol token otherwise
   /// @return symbol object, lambda call object if '(' token placed after symbol
-  boost::local_shared_ptr<ast::Object> resolve_symbol() noexcept(false);
+  ast_ptr<ast::Object> resolve_symbol() noexcept(false);
 
-  boost::local_shared_ptr<ast::Object> resolve_braced_expression() noexcept(false);
+  ast_ptr<ast::Object> resolve_braced_expression() noexcept(false);
 
   /// @pre    previous() returns symbol token
   /// @post   previous() returns token after type field
   /// @return field access parse tree
-  boost::local_shared_ptr<ast::Object> resolve_type_field_operator() noexcept(false);
+  ast_ptr<ast::Object> resolve_type_field_operator() noexcept(false);
 
-  boost::local_shared_ptr<ast::Object> type_creator() noexcept(false);
+  ast_ptr<ast::Object> type_creator() noexcept(false);
 
   std::vector<Token> input_;
   size_t current_index_;

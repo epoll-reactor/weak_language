@@ -60,10 +60,10 @@ void Evaluator::eval() noexcept(false) {
 }
 
 void Evaluator::add_type_definition(const boost::local_shared_ptr<ast::TypeDefinition>& definition) noexcept(false) {
-  type_creators_.emplace(definition->type_name(), [&definition](const std::vector<boost::local_shared_ptr<ast::Object>>& names) {
-    const auto& type_names = definition->names();
+  type_creators_.emplace(definition->name(), [&definition](const std::vector<boost::local_shared_ptr<ast::Object>>& names) {
+    const auto& type_names = definition->fields();
     if (type_names.size() != names.size()) {
-      throw EvalError("new {}: wrong arguments size", definition->type_name());
+      throw EvalError("new {}: wrong arguments size", definition->name());
     }
     std::vector<std::pair<std::string, boost::local_shared_ptr<ast::Object>>> arguments;
     for (const auto& pair : boost::combine(type_names, names)) {
@@ -84,7 +84,6 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_type_field_access(const boo
   const auto& name = type_field->name();
   const auto& field = type_field->field();
   const auto& object = storage_.lookup(name);
-
   if (object->ast_type() != ast::type_t::TYPE_OBJECT) {
     throw EvalError("Type object expected");
   }
@@ -101,24 +100,23 @@ boost::local_shared_ptr<ast::Object> Evaluator::eval_type_field_access(const boo
 
 boost::local_shared_ptr<ast::Object> Evaluator::call_lambda(std::string_view name, const std::vector<boost::local_shared_ptr<ast::Object>>& arguments) noexcept(false) {
   auto find_lambda = [this, &name] {
-    const auto& stored_lambda = storage_.lookup(name.data()).get();
-    do_typecheck(stored_lambda, ast::type_t::LAMBDA, "Try to call not a lambda");
-    return static_cast<ast::Lambda*>(stored_lambda);
+    const auto& lambda = storage_.lookup(name.data()).get();
+    do_typecheck(lambda, ast::type_t::LAMBDA, "Try to call not a lambda");
+    return static_cast<ast::Lambda*>(lambda);
   };
 
   const auto lambda = find_lambda();
-  const auto& args = lambda->arguments();
+  const auto& call_args_names = lambda->arguments();
   const auto& body = lambda->body()->statements();
-
   if (body.empty()) {
     return {};
   }
-  if (args.size() != arguments.size()) {
+  if (call_args_names.size() != arguments.size()) {
     throw EvalError("Wrong arguments size");
   }
   storage_.scope_begin();
-  for (size_t i = 0; i < args.size(); ++i) {
-    const std::string& argument_name = static_cast<ast::Symbol*>(args[i].get())->name();
+  for (size_t i = 0; i < arguments.size(); ++i) {
+    const std::string& argument_name = static_cast<ast::Symbol*>(call_args_names[i].get())->name();
     storage_.push(argument_name, arguments[i]);
   }
   for (const auto& statement : cut_last(body)) {
@@ -225,8 +223,8 @@ void Evaluator::eval_for(const boost::local_shared_ptr<ast::For>& stmt) noexcept
 void Evaluator::eval_while(const boost::local_shared_ptr<ast::While>& stmt) noexcept(false) {
   const auto exit_cond = eval(stmt->exit_condition());
   const auto exit_cond_type = exit_cond->ast_type();
-  auto implementation = [this, &stmt, &exit_cond]<typename Numeric>() {
-    const auto& body = stmt->body();
+  const auto& body = stmt->body();
+  auto implementation = [this, &stmt, &exit_cond, &body]<typename Numeric>() {
     auto exit_cond_ = boost::static_pointer_cast<Numeric>(exit_cond);
     while (exit_cond_->value()) {
       eval(body);

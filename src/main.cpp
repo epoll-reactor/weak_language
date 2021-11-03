@@ -55,7 +55,7 @@ float run_tests() {
   run_semantic_analyzer_tests();
   run_storage_tests();
   run_eval_tests();
-  run_eval_speed_tests();
+  //run_eval_speed_tests();
 
   auto time_spent = std::chrono::high_resolution_clock::now() - start;
   return std::chrono::duration_cast<std::chrono::duration<float>>(time_spent).count();

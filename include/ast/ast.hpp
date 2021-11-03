@@ -240,14 +240,14 @@ private:
 
 class TypeDefinition : public Object {
 public:
-  TypeDefinition(std::string_view name, std::vector<std::string> fields) noexcept(true);
-  const std::string& type_name() const noexcept(true);
-  const std::vector<std::string>& names() const noexcept(true);
+  TypeDefinition(std::string name, std::vector<std::string> fields) noexcept(true);
+  const std::string& name() const noexcept(true);
+  const std::vector<std::string>& fields() const noexcept(true);
   constexpr type_t ast_type() const noexcept(true) override;
 
 private:
-  std::string type_name_;
-  std::vector<std::string> names_;
+  std::string name_;
+  std::vector<std::string> fields_;
 };
 
 class TypeObject : public Object {
